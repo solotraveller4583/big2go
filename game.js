@@ -54,6 +54,12 @@
     confettiLayer: null
   };
 
+  const audio = {
+    context: null,
+    master: null,
+    victoryTimer: null
+  };
+
   const els = {
     home: document.querySelector('#home-screen'),
     game: document.querySelector('#game-screen'),
@@ -467,6 +473,137 @@
     if (amount >= 2) renderConfetti(8 + amount * 4);
   }
 
+  function getAudioContext() {
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return null;
+    if (!audio.context) {
+      audio.context = new Ctor();
+      audio.master = audio.context.createGain();
+      audio.master.gain.value = 0.05;
+      audio.master.connect(audio.context.destination);
+    }
+    return audio.context;
+  }
+
+  async function unlockAudio() {
+    if (!state.sound) return null;
+    const ctx = getAudioContext();
+    if (!ctx) return null;
+    if (ctx.state === 'suspended') {
+      try { await ctx.resume(); } catch (_) {}
+    }
+    return ctx;
+  }
+
+  function playTone(freq, duration, type = 'sine', gain = 0.04, when = 0, detune = 0) {
+    const ctx = getAudioContext();
+    if (!ctx || !state.sound) return;
+    const start = ctx.currentTime + when;
+    const osc = ctx.createOscillator();
+    const amp = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, start);
+    if (detune) osc.detune.setValueAtTime(detune, start);
+    amp.gain.setValueAtTime(0.0001, start);
+    amp.gain.exponentialRampToValueAtTime(gain, start + 0.015);
+    amp.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    osc.connect(amp);
+    amp.connect(audio.master);
+    osc.start(start);
+    osc.stop(start + duration + 0.05);
+  }
+
+  function playChord(freqs, duration, type = 'triangle', gain = 0.035, when = 0) {
+    freqs.forEach(freq => playTone(freq, duration, type, gain, when));
+  }
+
+  function playUiSound(kind) {
+    if (!state.sound) return;
+    unlockAudio().then(ctx => {
+      if (!ctx) return;
+      const tones = {
+        start: [[261.63, 0.08], [329.63, 0.08, 0.08], [392, 0.12, 0.16]],
+        tap: [[523.25, 0.06], [659.25, 0.05, 0.05]],
+        play: [[392, 0.08], [493.88, 0.08, 0.08], [659.25, 0.12, 0.16]],
+        pass: [[220, 0.09], [174.61, 0.1, 0.08]],
+        error: [[196, 0.12], [174.61, 0.14, 0.1], [146.83, 0.18, 0.2]],
+        ai: [[329.63, 0.05], [392, 0.06, 0.06]],
+        win: [[523.25, 0.12], [659.25, 0.12, 0.12], [783.99, 0.14, 0.24]]
+      };
+      const plan = tones[kind] || tones.tap;
+      plan.forEach(([freq, duration, when = 0, type = 'sine', gain = 0.04]) => {
+        playTone(freq, duration, type, gain, when);
+      });
+    });
+  }
+
+  function showVictoryCelebration(winner) {
+    const existing = document.querySelector('#victory-overlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'victory-overlay';
+    overlay.className = 'victory-overlay';
+
+    const card = document.createElement('div');
+    card.className = 'victory-card';
+
+    const badge = document.createElement('div');
+    badge.className = 'victory-badge';
+    badge.textContent = winner.isHuman ? 'Moon Market Champion' : 'Moon Market Match Over';
+
+    const title = document.createElement('h2');
+    title.className = 'victory-title';
+    title.textContent = winner.isHuman ? 'You win!' : `${winner.name} wins`;
+
+    const message = document.createElement('p');
+    message.className = 'victory-message';
+    message.textContent = winner.isHuman
+      ? 'You emptied your hand first. The lanterns burst and the crowd cheers your name.'
+      : `${winner.name} emptied their hand first. Tap New Market to try again.`;
+
+    const stats = document.createElement('div');
+    stats.className = 'victory-stats';
+    stats.innerHTML = `<span>${state.round} rounds</span><span>${state.sparks} sparks</span><span>${state.players.length} players</span>`;
+
+    const actions = document.createElement('div');
+    actions.className = 'victory-actions';
+
+    const newButton = document.createElement('button');
+    newButton.className = 'primary';
+    newButton.textContent = 'New Market';
+    newButton.addEventListener('click', () => {
+      overlay.remove();
+      newGame();
+    });
+
+    const shareButton = document.createElement('button');
+    shareButton.className = 'secondary';
+    shareButton.textContent = 'Share Win';
+    shareButton.addEventListener('click', shareGame);
+
+    actions.appendChild(newButton);
+    actions.appendChild(shareButton);
+    card.appendChild(badge);
+    card.appendChild(title);
+    card.appendChild(message);
+    card.appendChild(stats);
+    card.appendChild(actions);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+  }
+
+  function announceVictory(winner) {
+    state.gameOver = true;
+    state.busy = false;
+    cancelAiTimer();
+    clearSelection();
+    clearSave();
+    renderConfetti(winner.isHuman ? 56 : 42);
+    playUiSound('win');
+    showVictoryCelebration(winner);
+    render();
+  }
+
   function showHelp(title, text) {
     els.helpTitle.textContent = title;
     els.helpText.innerHTML = text.includes('<ul>') ? text : `<p>${text}</p>`;
@@ -492,6 +629,7 @@
   function newGame() {
     const count = Number(els.playerCount.value) || 4;
     cancelAiTimer();
+    document.querySelector('#victory-overlay')?.remove();
     createPlayers(count);
     const hands = dealCards(count);
     state.players.forEach((player, index) => {
@@ -517,6 +655,7 @@
     logState(`The market begins. ${state.players[state.startingPlayer].name} holds the 3♦ and opens the table.`);
     render();
     saveGame();
+    playUiSound('start');
     scheduleAiTurn();
   }
 
@@ -656,6 +795,7 @@
     if (!canHumanAct()) return;
     if (state.selected.has(cardId)) state.selected.delete(cardId);
     else state.selected.add(cardId);
+    playUiSound('tap');
     renderHand();
   }
 
@@ -703,10 +843,7 @@
     const player = state.players[playerIndex];
     if (player.hand.length === 0) {
       player.finished = true;
-      state.gameOver = true;
-      clearSave();
-      renderConfetti(32);
-      showOracle('Market winner!', `${player.isHuman ? 'You win!' : `${player.name} wins!`} That player emptied their hand first. Tap New Market to play again.`);
+      announceVictory(player);
       return true;
     }
     return false;
@@ -728,6 +865,7 @@
       single: 6, pair: 9, triple: 12, straight: 16, flush: 18, 'full-house': 24, 'four-kind': 30, 'straight-flush': 38
     }[play.kind] || 6;
     updateHeat(Math.min(heatBoost, 40), comment);
+    playUiSound(player.isHuman ? 'play' : 'ai');
     if (play.count === 5) {
       sparkle(2);
       renderConfetti(14 + heatBoost / 2);
@@ -744,6 +882,7 @@
     state.trick.passes += 1;
     state.heat = Math.max(0, state.heat - 8);
     logState(`${state.players[playerIndex].name} passed. The market keeps moving.`);
+    playUiSound('pass');
     if (state.trick.passes >= state.players.length - 1) {
       const leader = state.trick.leader;
       state.currentPlayer = leader;
@@ -918,10 +1057,8 @@
   function finishGameIfEnded() {
     const winner = state.players.find(player => player.hand.length === 0);
     if (!winner) return false;
-    state.gameOver = true;
-    clearSave();
-    renderConfetti(30);
-    showOracle(winner.isHuman ? 'You win!' : 'Market closed', `${winner.name} emptied their hand first. Tap New Market for another run.`);
+    winner.finished = true;
+    announceVictory(winner);
     return true;
   }
 
@@ -931,6 +1068,7 @@
     const result = validateHumanPlay(cards);
     if (!result.ok) {
       showOracle('Not a legal play', result.reason);
+      playUiSound('error');
       return;
     }
     state.busy = true;
@@ -942,6 +1080,7 @@
       const comment = playComment(play);
       logState(`You played ${describePlay(play)}. ${comment}`);
       advanceTurnAfterPlay(state.humanIndex, play);
+      playUiSound('play');
       const heatBoost = {
         single: 6, pair: 9, triple: 12, straight: 16, flush: 18, 'full-house': 24, 'four-kind': 30, 'straight-flush': 38
       }[play.kind] || 6;
@@ -966,6 +1105,7 @@
   function humanPass() {
     if (!canHumanAct() || !state.trick.play) return;
     clearSelection();
+    playUiSound('pass');
     passTurn(state.humanIndex);
   }
 
@@ -989,6 +1129,7 @@
     els.sound.addEventListener('click', () => {
       state.sound = !state.sound;
       els.sound.textContent = state.sound ? '🔊' : '🔇';
+      playUiSound('tap');
       saveGame();
     });
     els.play.addEventListener('click', playSelectedCards);

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'big-two-moon-market-v8';
+const CACHE_NAME = 'big-two-moon-market-v9';
 const ASSETS = [
   './',
   './index.html',

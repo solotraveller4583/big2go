@@ -474,6 +474,76 @@ select {
   animation: confetti-fall var(--d) ease-out forwards;
 }
 
+.victory-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: radial-gradient(circle at top, rgba(128, 112, 255, 0.3), transparent 48%), rgba(4, 6, 16, 0.72);
+  backdrop-filter: blur(12px);
+}
+.victory-card {
+  width: min(100%, 420px);
+  border-radius: 28px;
+  padding: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(103, 221, 255, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(24, 26, 54, 0.98), rgba(12, 15, 33, 0.98));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255,255,255,0.08);
+  color: #fff;
+  text-align: center;
+}
+.victory-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(255, 224, 138, 0.22), rgba(103, 221, 255, 0.22));
+  color: #ffe8a3;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.victory-title {
+  margin: 14px 0 8px;
+  font-size: clamp(1.7rem, 6vw, 2.45rem);
+  line-height: 1;
+}
+.victory-message {
+  margin: 0;
+  color: rgba(255,255,255,0.84);
+  line-height: 1.45;
+}
+.victory-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 16px 0 18px;
+}
+.victory-stats span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  font-size: 0.8rem;
+}
+.victory-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.victory-actions button {
+  min-height: 48px;
+}
+.victory-actions .primary {
+  background: linear-gradient(135deg, #ffe08a 0%, #8a75ff 50%, #67ddff 100%);
+  color: #fff;
+}
+
 @keyframes floaty {
   0%, 100% { transform: translateY(0) rotate(-2deg); }
   50% { transform: translateY(-8px) rotate(2deg); }
