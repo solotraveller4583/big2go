@@ -490,22 +490,74 @@ select {
 @media (max-width: 560px) {
   .app-shell {
     width: min(100%, 100vw);
-    padding-inline: 10px;
+    padding: 8px 8px 14px;
+    gap: 8px;
+  }
+
+  .panel {
+    padding: 14px;
+    border-radius: 26px;
+  }
+
+  .hero {
+    gap: 12px;
   }
 
   .hero-top {
     grid-template-columns: 1fr;
     justify-items: start;
+    gap: 10px;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 11vw, 3rem);
+  }
+
+  .intro {
+    font-size: 0.94rem;
+  }
+
+  .mascot-wrap {
+    width: 92px;
+  }
+
+  .mascot {
+    width: 92px;
+    height: 92px;
   }
 
   .feature-strip { grid-template-columns: 1fr; }
-  .home-actions, .actions { grid-template-columns: 1fr; }
+  .home-actions, .actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .status-grid { grid-template-columns: 1fr 1fr; }
   .section-head { flex-direction: column; }
   .game-header { grid-template-columns: auto 1fr; }
   .game-header .icon-button:last-child { grid-column: 1 / -1; justify-self: end; }
-  .mascot-wrap { width: 108px; }
-  .mascot { width: 108px; height: 108px; }
+
+  .rules-card,
+  .footer-links,
+  .opponents-card,
+  .center-card {
+    display: none;
+  }
+
+  .home-actions .primary,
+  .actions .primary {
+    grid-column: 1 / -1;
+    min-height: 54px;
+    font-size: 1rem;
+  }
+
+  .home-actions button,
+  .actions button {
+    min-height: 44px;
+  }
+
+  .settings-card,
+  .heat-card,
+  .trick-card,
+  .hand-card {
+    padding: 12px;
+  }
 
   .hand {
     flex-wrap: nowrap;
