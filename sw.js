@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lucky2-v8';
+const CACHE_NAME = 'lucky2-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
   './lucky2-casino-portrait.css',
   './lucky2-casino-landscape.css',
   './lucky2-premium.css',
+  './lucky2-final-mobile.css',
   './game.js',
   './manifest.webmanifest',
   './icon.svg',

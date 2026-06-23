@@ -1144,6 +1144,10 @@
     });
     els.rules.addEventListener('click', () => showHelp('How to Play', RULES_HTML));
     els.share.addEventListener('click', shareGame);
+    document.querySelector('#settings-button')?.addEventListener('click', () => showHelp('Lucky2 Settings', '<ul><li><strong>Sound:</strong> use the sound button at the table.</li><li><strong>Players:</strong> choose 2, 3, or 4 players before Play Now.</li><li><strong>Progress:</strong> Continue returns to your saved table.</li></ul>'));
+    document.querySelector('#leaderboard-button')?.addEventListener('click', () => showHelp('Leaderboard', '<ul><li><strong>You</strong> are the table challenger.</li><li>Win by clearing every card first.</li><li>Online ranking can be added after launch.</li></ul>'));
+    document.querySelector('#bonus-button')?.addEventListener('click', () => showHelp('Daily Bonus', '<ul><li>Come back and play a fresh Lucky2 table.</li><li>Daily rewards can be connected later.</li></ul>'));
+    document.querySelector('#achievements-button')?.addEventListener('click', () => showHelp('Goals', '<ul><li>Win with singles, pairs, and 5-card combos.</li><li>Try to beat the AI with fewer passes.</li></ul>'));
     els.back.addEventListener('click', () => {
       cancelAiTimer();
       state.busy = false;

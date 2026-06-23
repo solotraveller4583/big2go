@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="lucky2-casino-portrait.css" />
   <link rel="stylesheet" href="lucky2-casino-landscape.css" />
   <link rel="stylesheet" href="lucky2-premium.css" />
+  <link rel="stylesheet" href="lucky2-final-mobile.css" />
 </head>
 <body>
   <main class="app-shell">
@@ -38,7 +39,7 @@
           <strong>12.5K</strong>
           <small><i></i>Players online</small>
         </div>
-        <button class="settings-pill" type="button" aria-label="Settings">⚙️ <span>Settings</span></button>
+        <button class="settings-pill" id="settings-button" type="button" aria-label="Settings">⚙️ <span>Settings</span></button>
       </header>
 
       <section class="casino-logo" aria-label="Lucky2">
@@ -75,10 +76,10 @@
         </select>
       </section>
 
-      <nav class="casino-bottom" aria-label="Extra links">
-        <a href="privacy.html"><span>🏆</span><strong>LEADERBOARD</strong></a>
-        <a href="terms.html"><span>🎁</span><strong>DAILY BONUS</strong></a>
-        <a href="credits.html"><span>⭐</span><strong>ACHIEVEMENTS</strong></a>
+      <nav class="casino-bottom" aria-label="Extra actions">
+        <button type="button" id="leaderboard-button"><span>🏆</span><strong>RANK</strong></button>
+        <button type="button" id="bonus-button"><span>🎁</span><strong>BONUS</strong></button>
+        <button type="button" id="achievements-button"><span>⭐</span><strong>GOALS</strong></button>
       </nav>
     </section>
 
