@@ -795,7 +795,7 @@
     const human = getHumanPlayer();
     sortCards(human.hand).forEach((card, index) => {
       const tile = renderCardTile(card, true);
-      tile.style.zIndex = String(index + (state.selected.has(card.id) ? 60 : 1));
+      tile.style.zIndex = String(index + 1);
       els.hand.appendChild(tile);
     });
     els.selectedCount.textContent = `${state.selected.size} selected`;
