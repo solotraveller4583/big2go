@@ -1,32 +1,51 @@
-# Lucky2
+# Big2Go
 
-A standalone browser game for the Big Two card game (also known as Deuces, Dai Di, or Pusoy Dos).
+Big2Go is a mobile-first browser card game based on Big Two (also known as Deuces, Dai Di, or Pusoy Dos). Players race to clear their cards first against AI opponents using singles, pairs, triples, and five-card poker-style combinations.
 
 ## Features
 
 - 2–4 player support with AI opponents
 - Full 52-card deck
 - Big Two ordering: 3 low, 2 high
-- Validates singles, pairs, triples, straights, flushes, full houses, four of a kind, and straight flushes
 - 3♦ opening rule
+- Validates singles, pairs, triples, straights, flushes, full houses, four of a kind, and straight flushes
+- Clean mobile landing page with player selection
+- Large touch-friendly card layout
 - Saved progress in localStorage
-- Mobile-friendly responsive layout
-- PWA manifest and service worker
+- PWA manifest and service worker for install/offline support
 
 ## Run locally
+
+From this project folder:
 
 ```bash
 python -m http.server 8090 --bind 127.0.0.1
 ```
 
-Then open `http://127.0.0.1:8090/BigTwo/`.
+Then open:
 
-## Files
+```text
+http://127.0.0.1:8090/
+```
 
-- `index.html` — home screen and table UI
-- `styles.css` — game styling
-- `game.js` — rules, AI, rendering, and save/resume logic
-- `manifest.webmanifest` — install metadata
+## Main files
+
+- `index.html` — home screen and game table UI
+- `styles.css` — shared game styling
+- `big2go-final-mobile.css` — final mobile landing polish
+- `big2go-casino.css` and related `big2go-*` CSS files — landing visual layers
+- `game.js` — Big Two rules, AI, rendering, and save/resume logic
+- `manifest.webmanifest` — PWA install metadata
 - `sw.js` — offline caching
-- `icon.svg` — original app icon
-- `privacy.html`, `terms.html`, `credits.html` — basic public-site pages
+- `icon.svg` — Big2Go app icon
+- `privacy.html`, `terms.html`, `credits.html` — public-site support pages
+
+## Deployment
+
+The Render static site name is configured as:
+
+```yaml
+name: big2go
+```
+
+Publish directory should be the repository root: `.`

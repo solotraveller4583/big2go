@@ -3,71 +3,109 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#17122f" />
+  <meta name="theme-color" content="#08051f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Lucky2" />
+  <meta name="apple-mobile-web-app-title" content="Big2Go" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="description" content="Lucky2 is a fast, stylish Big Two card game with AI rivals, big mobile cards, and an oracle-inspired game feel." />
-  <meta property="og:title" content="Lucky2" />
-  <meta property="og:description" content="Play Lucky2 — a fast mobile Big Two game where the 3♦ starts the action." />
+  <meta name="description" content="Big2Go is a premium mobile-first Big Two card battler with AI rivals, ranked progression, rewards, and fast one-thumb gameplay." />
+  <meta property="og:title" content="Big2Go" />
+  <meta property="og:description" content="Play Big2Go — fast mobile Big Two battles where the 3♦ starts the action and the 2 rules the table." />
   <meta property="og:type" content="website" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()" />
-  <title>Lucky2</title>
+  <title>Big2Go</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="lucky2-casino.css" />
-  <link rel="stylesheet" href="lucky2-casino-fix.css" />
-  <link rel="stylesheet" href="lucky2-casino-fix2.css" />
-  <link rel="stylesheet" href="lucky2-casino-portrait.css" />
-  <link rel="stylesheet" href="lucky2-casino-landscape.css" />
-  <link rel="stylesheet" href="lucky2-premium.css" />
-  <link rel="stylesheet" href="lucky2-final-mobile.css" />
+  <link rel="stylesheet" href="big2go-casino.css" />
+  <link rel="stylesheet" href="big2go-casino-fix.css" />
+  <link rel="stylesheet" href="big2go-casino-fix2.css" />
+  <link rel="stylesheet" href="big2go-casino-portrait.css" />
+  <link rel="stylesheet" href="big2go-casino-landscape.css" />
+  <link rel="stylesheet" href="big2go-premium.css" />
+  <link rel="stylesheet" href="big2go-final-mobile.css" />
+  <link rel="stylesheet" href="big2go-app-redesign.css" />
+  <link rel="stylesheet" href="big2go-cascade-guard.css" />
+  <link rel="stylesheet" href="big2go-polish-guard.css" />
+  <link rel="stylesheet" href="big2go-hand-guard.css" />
+  <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=17" />
 </head>
 <body>
   <main class="app-shell">
-    <section class="panel hero casino-home" id="home-screen" aria-label="Lucky2 home screen">
-      <div class="casino-bg-card bg-left" aria-hidden="true">A♥</div>
-      <div class="casino-bg-card bg-right" aria-hidden="true">7♦</div>
-      <div class="casino-chip chip-a" aria-hidden="true"></div>
-      <div class="casino-chip chip-b" aria-hidden="true"></div>
+    <section class="panel hero casino-home b2g-home" id="home-screen" aria-label="Big2Go home screen">
+      <div class="arena-orb orb-one" aria-hidden="true"></div>
+      <div class="arena-orb orb-two" aria-hidden="true"></div>
+      <div class="table-glow" aria-hidden="true"></div>
 
-      <header class="casino-topbar">
-        <div class="online-pill" aria-label="Players online">
-          <span class="avatar-stack" aria-hidden="true"><b>🙂</b><b>😎</b><b>😁</b></span>
+      <header class="home-topbar">
+        <button class="profile-pill" id="profile-button" type="button" aria-label="Open profile">
+          <span class="profile-avatar">B2</span>
+          <span><strong>Guest Pro</strong><small>Bronze III</small></span>
+        </button>
+        <div class="online-pill live-pill" aria-label="Players online">
+          <span class="avatar-stack" aria-hidden="true"><b></b><b></b><b></b></span>
           <strong>12.5K</strong>
-          <small><i></i>Players online</small>
+          <small><i></i>online</small>
         </div>
-        <button class="settings-pill" id="settings-button" type="button" aria-label="Settings">⚙️ <span>Settings</span></button>
+        <button class="settings-pill" id="settings-button" type="button" aria-label="Settings">⚙️</button>
       </header>
 
-      <section class="casino-logo" aria-label="Lucky2">
-        <div class="royal-cards" aria-hidden="true">
-          <div class="royal-card rc-three"><strong>3</strong><span>♦</span></div>
-          <div class="royal-card rc-ace"><strong>A</strong><span>♥</span></div>
-          <div class="royal-card rc-two"><strong>2</strong><span>♠</span></div>
-          <div class="gold-two">2<span class="crown">♛</span></div>
+      <section class="hero-stage" aria-label="Big2Go game intro">
+        <div class="flying-cards" aria-hidden="true">
+          <div class="hero-card card-a"><strong>3</strong><span>♦</span></div>
+          <div class="hero-card card-b"><strong>A</strong><span>♥</span></div>
+          <div class="hero-card card-c"><strong>2</strong><span>♠</span></div>
         </div>
-        <h1>Lucky<span>2</span></h1>
-        <div class="blue-ribbon">PLAY CARDS. BEAT THE TABLE.</div>
-        <div class="suit-row" aria-hidden="true"><b>♥</b><b>♦</b><b>♠</b><b>♣</b></div>
+        <h1>Big2<span>Go</span></h1>
+        <p class="hero-kicker">Fast Big 2 Battles</p>
+        <p class="hero-promise">Empty your hand first. Beat the table. Climb the ranks.</p>
       </section>
 
-      <button class="play-now primary" id="start-button">PLAY NOW <span>›</span></button>
+      <section class="cta-zone" aria-label="Start playing">
+        <button class="play-now primary" id="start-button">PLAY NOW <span>›</span></button>
+        <p>4-player quick table · 2-minute rounds</p>
+      </section>
+
+      <section class="lobby-panel" aria-label="Home lobby">
+        <div class="rank-card">
+          <div>
+            <small>Current League</small>
+            <strong>Bronze III</strong>
+          </div>
+          <span class="rank-badge">🏆</span>
+          <div class="progress-track"><i style="width: 58%"></i></div>
+          <em>145 / 250 RP</em>
+        </div>
+        <button class="reward-card" id="bonus-button" type="button">
+          <span>🎁</span>
+          <strong>Daily Chest</strong>
+          <small>Ready to claim</small>
+        </button>
+        <button class="mission-card" id="achievements-button" type="button">
+          <span>⭐</span>
+          <strong>Goals</strong>
+          <small>2 / 5 wins</small>
+        </button>
+      </section>
 
       <div class="quick-actions" aria-label="Quick actions">
-        <button class="menu-card" id="continue-button"><span>👥</span><strong>CONTINUE</strong><small>Keep playing</small></button>
-        <button class="menu-card" id="rules-button"><span>📖</span><strong>RULES</strong><small>How to play</small></button>
-        <button class="menu-card share-card" id="share-button"><span>↗</span><strong>SHARE</strong><small>Invite friends</small></button>
+        <button class="menu-card" id="continue-button"><span>▶</span><strong>CONTINUE</strong><small>Saved table</small></button>
+        <button class="menu-card" id="rules-button"><span>?</span><strong>RULES</strong><small>Learn Big 2</small></button>
+        <button class="menu-card share-card" id="share-button"><span>↗</span><strong>SHARE</strong><small>Invite</small></button>
       </div>
 
-      <section class="player-panel" aria-label="Choose players">
-        <h2>CHOOSE PLAYERS</h2>
+      <section class="player-panel table-select" aria-label="Choose players">
+        <div class="panel-title-row">
+          <div>
+            <small>Choose Table</small>
+            <h2>Match Mode</h2>
+          </div>
+          <button type="button" id="leaderboard-button" class="mini-rank-button">Rank</button>
+        </div>
         <div class="player-options" role="group" aria-label="Number of players">
-          <button class="player-option selected" type="button" data-player-choice="4"><span>👥</span><strong>4 PLAYERS</strong><small>Classic</small><i>✓</i></button>
-          <button class="player-option" type="button" data-player-choice="3"><span>👥</span><strong>3 PLAYERS</strong><small>Quick</small><i>✓</i></button>
-          <button class="player-option" type="button" data-player-choice="2"><span>👥</span><strong>2 PLAYERS</strong><small>Duel</small><i>✓</i></button>
+          <button class="player-option selected" type="button" data-player-choice="4"><span>👥</span><strong>4P CLASSIC</strong><small>Full table</small><i>✓</i></button>
+          <button class="player-option" type="button" data-player-choice="3"><span>⚡</span><strong>3P FAST</strong><small>Quick</small><i>✓</i></button>
+          <button class="player-option" type="button" data-player-choice="2"><span>⚔️</span><strong>2P DUEL</strong><small>Head-to-head</small><i>✓</i></button>
         </div>
         <select id="player-count" class="sr-select" aria-label="Number of players">
           <option value="4" selected>4 players — classic table</option>
@@ -76,98 +114,84 @@
         </select>
       </section>
 
-      <nav class="casino-bottom" aria-label="Extra actions">
-        <button type="button" id="leaderboard-button"><span>🏆</span><strong>RANK</strong></button>
-        <button type="button" id="bonus-button"><span>🎁</span><strong>BONUS</strong></button>
-        <button type="button" id="achievements-button"><span>⭐</span><strong>GOALS</strong></button>
+      <nav class="bottom-tabs" aria-label="Main sections">
+        <button type="button" data-home-tab="play" class="active"><span>♠</span><strong>Play</strong></button>
+        <button type="button" data-home-tab="rank"><span>🏆</span><strong>Rank</strong></button>
+        <button type="button" data-home-tab="rewards"><span>🎁</span><strong>Rewards</strong></button>
+        <button type="button" data-home-tab="profile"><span>👤</span><strong>Me</strong></button>
       </nav>
     </section>
 
-    <section class="panel game-screen hidden" id="game-screen" aria-label="Lucky2 table">
-      <header class="game-header">
+    <section class="panel game-screen hidden b2g-match" id="game-screen" aria-label="Big2Go table">
+      <header class="match-topbar">
         <button class="icon-button" id="back-button" aria-label="Back to menu">‹</button>
-        <div class="header-copy">
+        <div class="match-title">
           <p class="eyebrow" id="turn-label">Ready</p>
-          <h2 id="table-title">Lucky2</h2>
+          <h2 id="table-title">Big2Go Arena</h2>
           <p class="header-subtitle" id="table-subtitle">Beat the trick or let the table pass to the next player.</p>
         </div>
         <button class="icon-button" id="sound-button" aria-label="Toggle sound">🔊</button>
       </header>
 
-      <section class="heat-card" aria-label="Crowd energy">
+      <section class="match-hud" aria-label="Match status">
+        <div class="hud-card"><span id="player-left-count">13</span><small>Your cards</small></div>
+        <div class="hud-card"><span id="trick-count">Open</span><small>Trick</small></div>
+        <div class="hud-card"><span id="round-count">1</span><small>Round</small></div>
+        <div class="hud-card"><span id="spark-count">0</span><small>Sparks</small></div>
+      </section>
+
+      <section class="opponent-rail" aria-label="Other players">
+        <div id="opponent-area" class="opponent-list"></div>
+      </section>
+
+      <section class="table-arena" aria-label="Current trick">
+        <div class="arena-header">
+          <div>
+            <small>Last Play</small>
+            <h2>The current trick</h2>
+          </div>
+          <span id="selected-count" class="pill">0 selected</span>
+        </div>
+        <div id="trick-play" class="trick-play empty">The table is quiet. The opening player must lead 3♦.</div>
+        <p id="trick-help" class="trick-help">Lead the opening move with 3♦.</p>
+        <div id="trick-meta" class="trick-meta"></div>
+      </section>
+
+      <section class="momentum-card" aria-label="Crowd energy">
         <div class="heat-head">
           <div>
-            <strong>Lucky Glow</strong>
+            <strong>Table Momentum</strong>
             <p id="heat-text">The table is waiting for a spark.</p>
           </div>
           <span id="heat-value">0%</span>
         </div>
-        <div class="heat-bar" aria-hidden="true">
-          <div id="heat-fill" class="heat-fill"></div>
-        </div>
-      </section>
-
-      <section class="status-grid" aria-label="Match status">
-        <div class="status-card">
-          <span id="player-left-count">13</span>
-          <small>Your cards</small>
-        </div>
-        <div class="status-card">
-          <span id="trick-count">Open</span>
-          <small>Current trick</small>
-        </div>
-        <div class="status-card">
-          <span id="round-count">1</span>
-          <small>Round</small>
-        </div>
-        <div class="status-card">
-          <span id="spark-count">0</span>
-          <small>Sparks</small>
-        </div>
-      </section>
-
-      <section class="trick-card" aria-label="Current trick">
-        <div class="section-head">
-          <h2>The current trick</h2>
-          <p id="trick-help">Lead the opening move with 3♦.</p>
-        </div>
-        <div id="trick-play" class="trick-play empty">The table is quiet. The opening player must lead 3♦.</div>
-        <div id="trick-meta" class="trick-meta"></div>
-      </section>
-
-      <section class="opponents-card" aria-label="Other players">
-        <div class="section-head">
-          <h2>Rival players</h2>
-          <p>AI rivals will play automatically.</p>
-        </div>
-        <div id="opponent-area" class="opponent-list"></div>
-      </section>
-
-      <section class="center-card" aria-label="Play log">
-        <div class="section-head">
-          <h2>Table sparks</h2>
-          <p>Play-by-play from the Lucky2 table.</p>
-        </div>
-        <div id="log-list" class="log-list" aria-live="polite"></div>
+        <div class="heat-bar" aria-hidden="true"><div id="heat-fill" class="heat-fill"></div></div>
       </section>
 
       <section class="hand-card" aria-label="Your hand">
         <div class="hand-head">
           <div>
             <h2>Your hand</h2>
-            <p>Tap cards to select them, then launch the move.</p>
+            <p>Tap cards to lift them. Play a stronger combo or pass.</p>
           </div>
-          <span id="selected-count" class="pill">0 selected</span>
         </div>
         <div id="hand" class="hand" aria-label="Cards in your hand"></div>
       </section>
 
-      <div class="actions">
-        <button class="primary" id="play-button">Play Selected</button>
-        <button class="secondary" id="pass-button">Pass</button>
-        <button class="secondary" id="hint-button">Ask Oracle</button>
-        <button class="secondary" id="sort-button">Sort Hand</button>
-        <button class="secondary" id="restart-button">New Game</button>
+      <section class="center-card match-log" aria-label="Play log">
+        <div class="section-head">
+          <h2>Table Feed</h2>
+          <p>Recent moves and combo reactions.</p>
+        </div>
+        <div id="log-list" class="log-list" aria-live="polite"></div>
+      </section>
+
+      <div class="actions action-dock">
+        <button class="secondary pass-action" id="pass-button">Pass</button>
+        <button class="secondary" id="sort-button">Sort</button>
+        <button class="secondary" id="hint-button">Hint</button>
+        <button class="primary play-action" id="play-button">Play Selected</button>
+        <button class="secondary restart-action" id="restart-button">New Game</button>
       </div>
     </section>
 

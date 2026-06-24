@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: lucky2
+    name: big2go
     env: static
     buildCommand: ""
     staticPublishPath: .

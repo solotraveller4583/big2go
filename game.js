@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const SAVE_KEY = 'lucky2-save-v1';
+  const SAVE_KEY = 'big2go-save-v1';
   const RULES_HTML = `
     <ul>
       <li><strong>Card order:</strong> 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A, 2. In Big Two, 2 is the highest rank.</li>
@@ -26,7 +26,7 @@
     single: ['Small spark, big nerve.', 'The alley hushes for a beat.', 'A neat little slash through the night.'],
     pair: ['Two cards, one rhythm.', 'The crowd hears the bass line.', 'A tidy little power chord.'],
     triple: ['Three-card thunder!', 'That move rattled the lanterns.', 'Triple pressure — nice.'],
-    straight: ['The lucky path starts to snake forward.', 'Five in a row, smooth as silk.', 'A sleek line through the crowd.'],
+    straight: ['The Big2Go path starts to snake forward.', 'Five in a row, smooth as silk.', 'A sleek line through the crowd.'],
     flush: ['All one suit — very stylish.', 'The lights lean in to watch.', 'A polished color wave.'],
     'full-house': ['Full house! The crowd loses its mind.', 'That is a heavyweight combo.', 'That trick just got dramatic.'],
     'four-kind': ['Four of a kind! Massive flex.', 'That was a thunder clap.', 'The lane is on fire.'],
@@ -444,7 +444,7 @@
     state.heat = Math.max(0, Math.min(100, state.heat + delta));
     els.heatFill.style.width = `${state.heat}%`;
     els.heatValue.textContent = `${state.heat}%`;
-    els.heatText.textContent = note || (state.heat >= 80 ? 'The lucky crowd is roaring.' : state.heat >= 50 ? 'The lucky crowd is leaning in.' : 'The lucky crowd is waiting for a spark.');
+    els.heatText.textContent = note || (state.heat >= 80 ? 'The Big2Go crowd is roaring.' : state.heat >= 50 ? 'The Big2Go crowd is leaning in.' : 'The Big2Go crowd is waiting for a spark.');
   }
 
   function renderConfetti(intensity = 12) {
@@ -550,7 +550,7 @@
 
     const badge = document.createElement('div');
     badge.className = 'victory-badge';
-    badge.textContent = winner.isHuman ? 'Lucky2 Champion' : 'Lucky2 Match Over';
+    badge.textContent = winner.isHuman ? 'Big2Go Champion' : 'Big2Go Match Over';
 
     const title = document.createElement('h2');
     title.className = 'victory-title';
@@ -564,7 +564,13 @@
 
     const stats = document.createElement('div');
     stats.className = 'victory-stats';
-    stats.innerHTML = `<span>${state.round} rounds</span><span>${state.sparks} sparks</span><span>${state.players.length} players</span>`;
+    stats.innerHTML = `<span>+24 RP</span><span>${state.sparks} sparks</span><span>${state.players.length} players</span>`;
+
+    const rewards = document.createElement('div');
+    rewards.className = 'victory-rewards';
+    rewards.innerHTML = winner.isHuman
+      ? `<div class="reward-line">🏆 Bronze III progress +24 rank points</div><div class="reward-line">🎁 Win Chest progress +1 / 5</div><div class="reward-line">⭐ Daily goal updated: Clear one table</div>`
+      : `<div class="reward-line">🏆 Rematch to recover rank momentum</div><div class="reward-line">🎁 Chest progress is waiting for your next win</div>`;
 
     const actions = document.createElement('div');
     actions.className = 'victory-actions';
@@ -588,6 +594,7 @@
     card.appendChild(title);
     card.appendChild(message);
     card.appendChild(stats);
+    card.appendChild(rewards);
     card.appendChild(actions);
     overlay.appendChild(card);
     document.body.appendChild(overlay);
@@ -668,17 +675,29 @@
     return player.hand.length;
   }
 
+  function selectionFeedback() {
+    const cards = selectedCards();
+    if (!cards.length) {
+      if (state.trick.play) return `Select cards to beat ${describePlay(state.trick.play)}, or pass.`;
+      return state.firstTrick ? 'Lead with the 3♦.' : 'You lead. Play any valid combo.';
+    }
+    const result = validateHumanPlay(cards);
+    if (result.ok) return `${describePlay(result.play)} · can play`;
+    return result.reason;
+  }
+
   function updateStatus() {
     const human = getHumanPlayer();
     const current = state.players[state.currentPlayer];
+    const requirement = state.trick.play
+      ? `Beat ${describePlay(state.trick.play)}`
+      : (state.firstTrick ? 'Lead 3♦' : 'You lead');
     els.playerLeftCount.textContent = String(cardsLeft(human));
     els.roundCount.textContent = String(state.round);
     els.trickCount.textContent = state.trick.play ? String(state.trick.play.count) : 'Open';
     els.turnLabel.textContent = state.gameOver ? 'Game over' : `${current.isHuman ? 'Your' : current.name + '\'s'} turn`;
-    els.tableSubtitle.textContent = state.trick.play
-      ? `Beat ${describePlay(state.trick.play)} or pass if the table outsmarts you.`
-      : (state.firstTrick ? 'Open with 3♦ to light the night.' : 'Table open — lead any legal hand.');
-    els.trickHelp.textContent = state.trick.play ? 'Same count only, unless you are leading a fresh trick.' : OPENING_LINE;
+    els.tableSubtitle.textContent = state.gameOver ? 'Match finished.' : `${requirement} · Round ${state.round} · Sparks ${state.sparks}`;
+    els.trickHelp.textContent = selectionFeedback();
   }
 
   function renderOpponents() {
@@ -724,7 +743,7 @@
 
   function renderLogs() {
     els.logList.innerHTML = '';
-    const entries = state.logs.length ? state.logs : ['Tap cards to begin your first Lucky2 move.'];
+    const entries = state.logs.length ? state.logs : ['Tap cards to begin your first Big2Go move.'];
     entries.slice(0, 6).forEach(message => {
       const entry = document.createElement('div');
       entry.className = 'log-entry';
@@ -774,7 +793,11 @@
   function renderHand() {
     els.hand.innerHTML = '';
     const human = getHumanPlayer();
-    sortCards(human.hand).forEach(card => els.hand.appendChild(renderCardTile(card, true)));
+    sortCards(human.hand).forEach((card, index) => {
+      const tile = renderCardTile(card, true);
+      tile.style.zIndex = String(index + (state.selected.has(card.id) ? 60 : 1));
+      els.hand.appendChild(tile);
+    });
     els.selectedCount.textContent = `${state.selected.size} selected`;
   }
 
@@ -789,7 +812,10 @@
     els.heatValue.textContent = `${state.heat}%`;
     if (!state.gameOver) {
       const humanTurn = state.currentPlayer === state.humanIndex;
-      els.play.disabled = !humanTurn || !canHumanAct();
+      const selected = selectedCards();
+      const result = selected.length ? validateHumanPlay(selected) : null;
+      els.play.textContent = result?.ok ? `Play ${describePlay(result.play)}` : 'Play Selected';
+      els.play.disabled = !humanTurn || !canHumanAct() || !result?.ok;
       els.pass.disabled = !humanTurn || !state.trick.play;
       els.hint.disabled = !humanTurn;
       els.sort.disabled = !humanTurn;
@@ -1053,8 +1079,8 @@
 
   function shareGame() {
     const data = {
-      title: 'Lucky2',
-      text: 'I am playing Lucky2 — a fast Big Two card game where the 3♦ starts the action.',
+      title: 'Big2Go',
+      text: 'I am playing Big2Go — a fast Big Two card game where the 3♦ starts the action.',
       url: window.location.href
     };
     try {
@@ -1063,7 +1089,7 @@
         return;
       }
       navigator.clipboard.writeText(`${data.text} ${data.url}`);
-      showOracle('Link copied', 'The Lucky2 link was copied to your clipboard. Paste it into chats to invite friends.');
+      showOracle('Link copied', 'The Big2Go link was copied to your clipboard. Paste it into chats to invite friends.');
     } catch (_) {
       showOracle('Share this game', `${data.text}<br><br>${data.url}`);
     }
@@ -1144,9 +1170,23 @@
     });
     els.rules.addEventListener('click', () => showHelp('How to Play', RULES_HTML));
     els.share.addEventListener('click', shareGame);
-    document.querySelector('#settings-button')?.addEventListener('click', () => showHelp('Lucky2 Settings', '<ul><li><strong>Sound:</strong> use the sound button at the table.</li><li><strong>Players:</strong> choose 2, 3, or 4 players before Play Now.</li><li><strong>Progress:</strong> Continue returns to your saved table.</li></ul>'));
+    document.querySelector('#profile-button')?.addEventListener('click', () => showHelp('Player Profile', '<div class="profile-modal"><div class="modal-row"><strong>Guest Pro</strong><span>Level 8</span></div><div class="modal-row"><strong>League</strong><span>Bronze III</span></div><div class="modal-row"><strong>Best Streak</strong><span>3 wins</span></div><div class="modal-row"><strong>Card Back</strong><span>Neon Starter</span></div></div>'));
+    document.querySelectorAll('[data-home-tab]').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-home-tab]').forEach(tab => tab.classList.toggle('active', tab === button));
+        const tab = button.dataset.homeTab;
+        const copy = {
+          play: ['Play', '<p>Choose your table and tap <strong>PLAY NOW</strong> to start a fast Big Two match.</p>'],
+          rank: ['Rank Ladder', '<div class="rank-modal"><div class="modal-row"><strong>Bronze III</strong><span>145 / 250 RP</span></div><div class="modal-row"><strong>Next Rank</strong><span>Bronze II</span></div><div class="modal-row"><strong>Reward</strong><span>Gold Trim Card Back</span></div></div>'],
+          rewards: ['Rewards', '<div class="reward-modal"><div class="modal-row"><strong>Daily Chest</strong><span>Ready</span></div><div class="modal-row"><strong>Win Chest</strong><span>2 / 5 wins</span></div><div class="modal-row"><strong>Today\'s Goal</strong><span>Win 1 match</span></div></div>'],
+          profile: ['Profile', '<div class="profile-modal"><div class="modal-row"><strong>Guest Pro</strong><span>Level 8</span></div><div class="modal-row"><strong>League</strong><span>Bronze III</span></div><div class="modal-row"><strong>Collection</strong><span>3 card backs</span></div></div>']
+        }[tab] || ['Big2Go', '<p>Play fast Big Two battles and climb the table.</p>'];
+        showHelp(copy[0], copy[1]);
+      });
+    });
+    document.querySelector('#settings-button')?.addEventListener('click', () => showHelp('Big2Go Settings', '<ul><li><strong>Sound:</strong> use the sound button at the table.</li><li><strong>Players:</strong> choose 2, 3, or 4 players before Play Now.</li><li><strong>Progress:</strong> Continue returns to your saved table.</li></ul>'));
     document.querySelector('#leaderboard-button')?.addEventListener('click', () => showHelp('Leaderboard', '<ul><li><strong>You</strong> are the table challenger.</li><li>Win by clearing every card first.</li><li>Online ranking can be added after launch.</li></ul>'));
-    document.querySelector('#bonus-button')?.addEventListener('click', () => showHelp('Daily Bonus', '<ul><li>Come back and play a fresh Lucky2 table.</li><li>Daily rewards can be connected later.</li></ul>'));
+    document.querySelector('#bonus-button')?.addEventListener('click', () => showHelp('Daily Bonus', '<ul><li>Come back and play a fresh Big2Go table.</li><li>Daily rewards can be connected later.</li></ul>'));
     document.querySelector('#achievements-button')?.addEventListener('click', () => showHelp('Goals', '<ul><li>Win with singles, pairs, and 5-card combos.</li><li>Try to beat the AI with fewer passes.</li></ul>'));
     els.back.addEventListener('click', () => {
       cancelAiTimer();
@@ -1194,7 +1234,7 @@
     els.helpText.innerHTML = RULES_HTML;
     els.helpTitle.textContent = 'How to Play';
     els.turnLabel.textContent = 'Ready';
-    els.heatText.textContent = 'The lucky crowd is waiting for a spark.';
+    els.heatText.textContent = 'The Big2Go crowd is waiting for a spark.';
     els.heatValue.textContent = '0%';
     els.heatFill.style.width = '0%';
     renderLogs();

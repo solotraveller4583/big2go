@@ -1,0 +1,21 @@
+/* Emergency cascade guard for redesign decorative layers. */
+#home-screen .arena-orb,
+#home-screen .table-glow {
+  position: absolute !important;
+  display: block !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+#home-screen .orb-one { left: -80px !important; bottom: -45px !important; top: auto !important; }
+#home-screen .orb-two { right: -70px !important; bottom: 12% !important; top: auto !important; left: auto !important; }
+#home-screen .table-glow {
+  left: 50% !important;
+  top: 25% !important;
+  width: 72% !important;
+  height: 42% !important;
+  transform: translateX(-50%) !important;
+}
+#home-screen > *:not(.arena-orb):not(.table-glow) {
+  position: relative !important;
+  z-index: 2 !important;
+}

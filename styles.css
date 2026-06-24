@@ -134,7 +134,7 @@ button:disabled { opacity: 0.58; cursor: not-allowed; }
   display: grid;
   place-items: center;
 }
-.lucky-orb:not(.poster-orb) {
+.big2go-orb:not(.poster-orb) {
   width: 172px;
   height: 172px;
   border-radius: 48px;
@@ -145,7 +145,7 @@ button:disabled { opacity: 0.58; cursor: not-allowed; }
   box-shadow: 0 24px 54px rgba(0,0,0,.34), inset 0 0 0 2px rgba(255,255,255,.52);
   transform: rotate(-4deg);
 }
-.lucky-orb:not(.poster-orb)::after {
+.big2go-orb:not(.poster-orb)::after {
   content: '2';
   position: absolute;
   inset: 0;
@@ -177,7 +177,7 @@ button:disabled { opacity: 0.58; cursor: not-allowed; }
 .hero-card span { display: grid; place-items: center; font-size: 2rem; }
 .hero-card-left { left: -14px; bottom: 25px; color: var(--pink); transform: rotate(-13deg); }
 .hero-card-right { right: -10px; top: 24px; transform: rotate(14deg); }
-.lucky-chip {
+.big2go-chip {
   position: absolute;
   left: 50%;
   bottom: 18px;
@@ -473,12 +473,12 @@ dialog::backdrop { background:rgba(3,4,18,.68); backdrop-filter:blur(6px); }
   .mini-pill { min-height: 32px; padding: 0 6px; font-size: .68rem; }
   .landing-hero-grid { grid-template-columns: 116px 1fr; gap: 12px; }
   .brand-stage { min-height: 128px; }
-  .lucky-orb:not(.poster-orb) { width: 112px; height: 112px; border-radius: 32px; }
-  .lucky-orb:not(.poster-orb)::after { font-size: 4.4rem; }
+  .big2go-orb:not(.poster-orb) { width: 112px; height: 112px; border-radius: 32px; }
+  .big2go-orb:not(.poster-orb)::after { font-size: 4.4rem; }
   .hero-card { width: 42px; height: 60px; border-radius: 14px; padding: 7px; }
   .hero-card strong { font-size: .85rem; }
   .hero-card span { font-size: 1.35rem; }
-  .lucky-chip { bottom: 9px; font-size: .56rem; padding: 5px 8px; }
+  .big2go-chip { bottom: 9px; font-size: .56rem; padding: 5px 8px; }
   .spark-a { left: 13px; top: 12px; font-size: 1rem; }
   .spark-b { right: 12px; bottom: 25px; font-size: .9rem; }
   h1 { font-size: clamp(3.35rem, 19vw, 5.2rem); }
@@ -530,8 +530,8 @@ dialog::backdrop { background:rgba(3,4,18,.68); backdrop-filter:blur(6px); }
   .poster-actions .ghost { min-height: 44px; }
   .landing-hero-grid { grid-template-columns: 104px 1fr; }
   .brand-stage { min-height: 114px; }
-  .lucky-orb:not(.poster-orb) { width: 100px; height: 100px; border-radius: 29px; }
-  .lucky-orb:not(.poster-orb)::after { font-size: 4rem; }
+  .big2go-orb:not(.poster-orb) { width: 100px; height: 100px; border-radius: 29px; }
+  .big2go-orb:not(.poster-orb)::after { font-size: 4rem; }
   h1 { font-size: clamp(3rem, 18vw, 4.5rem); }
   .intro { font-size: .88rem; }
   .preview-table { min-height: 78px; }

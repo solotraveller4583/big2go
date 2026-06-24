@@ -1,0 +1,27 @@
+/* Match hand readability override: prevent older hand-fan transforms from stacking cards. */
+#hand {
+  display: grid !important;
+  grid-auto-flow: column !important;
+  grid-auto-columns: 42px !important;
+  justify-content: start !important;
+  align-items: end !important;
+}
+#hand .card-tile {
+  transform: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  flex: none !important;
+  width: 54px !important;
+  height: 76px !important;
+}
+#hand .card-tile.selected {
+  transform: translateY(-18px) !important;
+}
+@media (max-width: 390px), (max-height: 720px) {
+  #hand .card-tile {
+    flex-basis: 46px !important;
+    width: 46px !important;
+    height: 66px !important;
+    margin-right: -12px !important;
+  }
+}
