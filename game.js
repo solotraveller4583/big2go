@@ -53,7 +53,8 @@
     sortMode: 'rank',
     aiTimer: null,
     confettiLayer: null,
-    roomSocket: null
+    roomSocket: null,
+    liveRoom: null
   };
 
   const audio = {
@@ -378,7 +379,7 @@
   }
 
   function saveGame() {
-    if (state.gameOver) return;
+    if (state.liveRoom || state.gameOver) return;
     try {
       const payload = {
         version: 2,
@@ -728,6 +729,7 @@
 
   function newGame() {
     const count = Number(els.playerCount.value) || 4;
+    state.liveRoom = null;
     cancelAiTimer();
     document.querySelector('#victory-overlay')?.remove();
     createPlayers(count);
@@ -1130,7 +1132,7 @@
 
   function scheduleAiTurn() {
     cancelAiTimer();
-    if (state.gameOver || state.busy || state.currentPlayer === state.humanIndex) return;
+    if (state.liveRoom || state.gameOver || state.busy || state.currentPlayer === state.humanIndex) return;
     state.aiTimer = setTimeout(() => {
       state.aiTimer = null;
       takeAiTurn();
@@ -1174,6 +1176,61 @@
     status.dataset.tone = tone;
   }
 
+  function sendLiveRoomMessage(message) {
+    if (!state.roomSocket || state.roomSocket.readyState !== WebSocket.OPEN) {
+      showOracle('Room connection lost', 'Reopen Private Room and join again to reconnect.');
+      return false;
+    }
+    state.roomSocket.send(JSON.stringify(message));
+    return true;
+  }
+
+  function applyLiveGame(game, room) {
+    if (!game) return;
+    cancelAiTimer();
+    document.querySelector('#help-dialog')?.close?.();
+    state.liveRoom = {
+      code: room?.code || state.liveRoom?.code,
+      playerId: game.playerId,
+      playerIndex: game.playerIndex
+    };
+    state.settings.players = game.players.length;
+    state.humanIndex = game.playerIndex;
+    state.currentPlayer = game.currentPlayer;
+    state.startingPlayer = game.startingPlayer;
+    state.firstTrick = Boolean(game.firstTrick);
+    state.round = Number(game.round) || 1;
+    state.trick = {
+      play: game.trick?.play ? {
+        kind: game.trick.play.kind,
+        count: game.trick.play.count,
+        cards: (game.trick.play.cards || []).map(card => cardFromId(card.id || card)).filter(Boolean),
+        score: game.trick.play.score || []
+      } : null,
+      leader: Number(game.trick?.leader) || 0,
+      passes: Number(game.trick?.passes) || 0
+    };
+    state.players = game.players.map((player, index) => ({
+      name: index === game.playerIndex ? 'You' : player.name,
+      isHuman: index === game.playerIndex,
+      finished: Boolean(player.finished),
+      hand: index === game.playerIndex
+        ? (game.hand || []).map(card => cardFromId(card.id || card)).filter(Boolean)
+        : Array.from({ length: Number(player.handCount) || 0 }, () => ({ id: 'hidden' }))
+    }));
+    state.logs = Array.isArray(game.logs) ? game.logs.slice(0, 8) : [];
+    state.selected = new Set([...state.selected].filter(id => getHumanPlayer()?.hand.some(card => card.id === id)));
+    state.gameOver = Boolean(game.gameOver);
+    state.busy = false;
+    els.playerCount.value = String(game.players.length);
+    showGameScreen();
+    render();
+    if (game.gameOver) {
+      const winner = state.players[game.winnerIndex];
+      if (winner) announceVictory(winner);
+    }
+  }
+
   function renderRoomState(room) {
     const codeEl = document.querySelector('#room-code-display');
     const countEl = document.querySelector('#room-player-count');
@@ -1189,8 +1246,14 @@
         playersEl.appendChild(item);
       });
     }
-    if (startEl) startEl.disabled = room.playerCount < 2;
-    setRoomStatus(room.playerCount >= 2 ? 'Friend joined — room is ready!' : 'Waiting for friend to enter this code…', room.playerCount >= 2 ? 'ready' : 'waiting');
+    if (startEl) {
+      startEl.disabled = room.playerCount < 2 || room.status === 'playing';
+      startEl.textContent = room.status === 'playing' ? 'Game Started' : 'Start Game';
+    }
+    const readyMessage = room.status === 'playing'
+      ? 'Live game started — play from the table.'
+      : room.playerCount >= 2 ? 'Friend joined — room is ready!' : 'Waiting for friend to enter this code…';
+    setRoomStatus(readyMessage, room.playerCount >= 2 ? 'ready' : 'waiting');
   }
 
   function connectRoomSocket(code, playerId) {
@@ -1205,8 +1268,16 @@
     socket.addEventListener('message', event => {
       try {
         const message = JSON.parse(event.data);
-        if (message.type === 'room:update') renderRoomState(message.room);
-        if (message.type === 'room:error') setRoomStatus(message.error || 'Room connection error.', 'error');
+        if (message.type === 'room:update' || message.type === 'game:update') {
+          if (message.room) renderRoomState(message.room);
+          if (message.game) applyLiveGame(message.game, message.room);
+        }
+        if (message.type === 'room:error') {
+          state.busy = false;
+          setRoomStatus(message.error || 'Room connection error.', 'error');
+          if (!document.querySelector('#help-dialog')?.open) showOracle('Room action failed', message.error || 'Room connection error.');
+          render();
+        }
       } catch (_) {
         // Ignore malformed realtime messages.
       }
@@ -1238,6 +1309,7 @@
     const createButton = document.querySelector('#room-create-button');
     const joinButton = document.querySelector('#room-join-button');
     const shareButton = document.querySelector('#room-share-button');
+    const startButton = document.querySelector('#room-start-button');
     const input = document.querySelector('#room-code-input');
 
     createButton?.addEventListener('click', async () => {
@@ -1245,6 +1317,7 @@
       setRoomStatus('Creating private room…', 'waiting');
       try {
         const payload = await createBackendRoom();
+        state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: 0 };
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
         if (shareButton) shareButton.disabled = false;
@@ -1265,6 +1338,7 @@
       setRoomStatus('Joining room…', 'waiting');
       try {
         const payload = await joinBackendRoom(code);
+        state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: Math.max(0, payload.room.playerCount - 1) };
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
         if (shareButton) shareButton.disabled = false;
@@ -1273,6 +1347,12 @@
         joinButton.disabled = false;
         setRoomStatus(error.message || 'Could not join that room.', 'error');
       }
+    });
+
+    startButton?.addEventListener('click', () => {
+      startButton.disabled = true;
+      setRoomStatus('Starting live game for everyone…', 'waiting');
+      sendLiveRoomMessage({ type: 'room:start' });
     });
 
     shareButton?.addEventListener('click', async () => {
@@ -1310,6 +1390,7 @@
           <span>Players</span>
           <strong id="room-player-count">0/4</strong>
         </div>
+        <button type="button" class="primary room-start" id="room-start-button" disabled>Start Game</button>
         <p id="room-status" class="room-status" data-tone="neutral">Tap Create Room to get a code instantly.</p>
         <ul id="room-player-list" class="room-player-list"></ul>
       </div>`);
@@ -1351,6 +1432,12 @@
       playUiSound('error');
       return;
     }
+    if (state.liveRoom) {
+      state.busy = true;
+      sendLiveRoomMessage({ type: 'game:play', cards: cards.map(card => card.id) });
+      clearSelection();
+      return;
+    }
     state.busy = true;
     render();
     setTimeout(() => {
@@ -1386,6 +1473,12 @@
     if (!canHumanAct() || !state.trick.play) return;
     clearSelection();
     playUiSound('pass');
+    if (state.liveRoom) {
+      state.busy = true;
+      sendLiveRoomMessage({ type: 'game:pass' });
+      render();
+      return;
+    }
     passTurn(state.humanIndex);
   }
 
