@@ -12,7 +12,7 @@
   <meta property="og:title" content="Big2Go" />
   <meta property="og:description" content="Play Big2Go — fast mobile Big Two battles where the 3♦ starts the action and the 2 rules the table." />
   <meta property="og:type" content="website" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws: wss:; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()" />
   <title>Big2Go</title>
   <link rel="manifest" href="manifest.webmanifest" />
@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="big2go-polish-guard.css" />
   <link rel="stylesheet" href="big2go-hand-guard.css" />
   <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=25" />
+  <link rel="stylesheet" href="big2go-room.css?v=2" />
 </head>
 <body>
   <main class="app-shell">
@@ -207,6 +208,6 @@
     </dialog>
   </main>
 
-  <script src="game.js?v=24" defer></script>
+  <script src="game.js?v=26" defer></script>
 </body>
 </html>

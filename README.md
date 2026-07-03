@@ -1,51 +1,44 @@
 # Big2Go
 
-Big2Go is a mobile-first browser card game based on Big Two (also known as Deuces, Dai Di, or Pusoy Dos). Players race to clear their cards first against AI opponents using singles, pairs, triples, and five-card poker-style combinations.
-
-## Features
-
-- 2–4 player support with AI opponents
-- Full 52-card deck
-- Big Two ordering: 3 low, 2 high
-- 3♦ opening rule
-- Validates singles, pairs, triples, straights, flushes, full houses, four of a kind, and straight flushes
-- Clean mobile landing page with player selection
-- Large touch-friendly card layout
-- Saved progress in localStorage
-- PWA manifest and service worker for install/offline support
+Big2Go is a mobile-first Big Two card game built with plain HTML, CSS, and JavaScript.
 
 ## Run locally
 
-From this project folder:
-
 ```bash
-python -m http.server 8090 --bind 127.0.0.1
+npm install
+npm start
 ```
 
-Then open:
+Open:
 
 ```text
-http://127.0.0.1:8090/
+http://127.0.0.1:8093
 ```
 
-## Main files
+## Private rooms
 
-- `index.html` — home screen and game table UI
-- `styles.css` — shared game styling
-- `big2go-final-mobile.css` — final mobile landing polish
-- `big2go-casino.css` and related `big2go-*` CSS files — landing visual layers
-- `game.js` — Big Two rules, AI, rendering, and save/resume logic
-- `manifest.webmanifest` — PWA install metadata
-- `sw.js` — offline caching
-- `icon.svg` — Big2Go app icon
-- `privacy.html`, `terms.html`, `credits.html` — public-site support pages
+Private rooms use the Node/WebSocket backend in `server.js`.
 
-## Deployment
+Flow:
 
-The Render static site name is configured as:
+1. Tap **ROOM**.
+2. Tap **Create Room**.
+3. Big2Go creates a backend room and shows a short room code.
+4. Tap **Share Code** or tell the code to a friend.
+5. Friend taps **ROOM**, enters the code, and taps **Join**.
+6. The room updates live when the second player joins.
 
-```yaml
-name: big2go
-```
+The UI intentionally does not show invite URLs.
 
-Publish directory should be the repository root: `.`
+## Render deployment
+
+This project now needs a Render **Web Service** for realtime rooms, not a Static Site.
+
+Render settings:
+
+- Environment: `Node`
+- Build Command: `npm install`
+- Start Command: `npm start`
+- Health Check Path: `/api/health`
+
+`render.yaml` is included for blueprint-style setup.

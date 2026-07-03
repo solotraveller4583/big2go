@@ -52,7 +52,8 @@
     busy: false,
     sortMode: 'rank',
     aiTimer: null,
-    confettiLayer: null
+    confettiLayer: null,
+    roomSocket: null
   };
 
   const audio = {
@@ -1161,10 +1162,158 @@
     render();
   }
 
+  function roomSocketUrl(code, playerId) {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${window.location.host}/rooms?code=${encodeURIComponent(code)}&playerId=${encodeURIComponent(playerId)}`;
+  }
+
+  function setRoomStatus(message, tone = 'neutral') {
+    const status = document.querySelector('#room-status');
+    if (!status) return;
+    status.textContent = message;
+    status.dataset.tone = tone;
+  }
+
+  function renderRoomState(room) {
+    const codeEl = document.querySelector('#room-code-display');
+    const countEl = document.querySelector('#room-player-count');
+    const playersEl = document.querySelector('#room-player-list');
+    const startEl = document.querySelector('#room-start-button');
+    if (codeEl) codeEl.textContent = room.code;
+    if (countEl) countEl.textContent = `${room.playerCount}/${room.maxPlayers}`;
+    if (playersEl) {
+      playersEl.innerHTML = '';
+      room.players.forEach((player, index) => {
+        const item = document.createElement('li');
+        item.textContent = `${index + 1}. ${player.name}${player.id === room.hostId ? ' · Host' : ''}`;
+        playersEl.appendChild(item);
+      });
+    }
+    if (startEl) startEl.disabled = room.playerCount < 2;
+    setRoomStatus(room.playerCount >= 2 ? 'Friend joined — room is ready!' : 'Waiting for friend to enter this code…', room.playerCount >= 2 ? 'ready' : 'waiting');
+  }
+
+  function connectRoomSocket(code, playerId) {
+    if (state.roomSocket) state.roomSocket.close();
+    if (!('WebSocket' in window)) {
+      setRoomStatus('This browser does not support realtime rooms.', 'error');
+      return;
+    }
+    const socket = new WebSocket(roomSocketUrl(code, playerId));
+    state.roomSocket = socket;
+    socket.addEventListener('open', () => setRoomStatus('Realtime room connected. Share the code with your friend.', 'ready'));
+    socket.addEventListener('message', event => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === 'room:update') renderRoomState(message.room);
+        if (message.type === 'room:error') setRoomStatus(message.error || 'Room connection error.', 'error');
+      } catch (_) {
+        // Ignore malformed realtime messages.
+      }
+    });
+    socket.addEventListener('close', () => {
+      if (state.roomSocket === socket) setRoomStatus('Room realtime connection closed. Reopen Room to reconnect.', 'error');
+    });
+    socket.addEventListener('error', () => setRoomStatus('Could not connect to realtime room server.', 'error'));
+  }
+
+  async function createBackendRoom() {
+    const response = await fetch('/api/rooms', { method: 'POST', headers: { 'Accept': 'application/json' } });
+    if (!response.ok) throw new Error('Could not create room');
+    return response.json();
+  }
+
+  async function joinBackendRoom(code) {
+    const response = await fetch('/api/rooms/join', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ code, name: 'Friend' })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Could not join room');
+    return payload;
+  }
+
+  function attachRoomModalEvents() {
+    const createButton = document.querySelector('#room-create-button');
+    const joinButton = document.querySelector('#room-join-button');
+    const shareButton = document.querySelector('#room-share-button');
+    const input = document.querySelector('#room-code-input');
+
+    createButton?.addEventListener('click', async () => {
+      createButton.disabled = true;
+      setRoomStatus('Creating private room…', 'waiting');
+      try {
+        const payload = await createBackendRoom();
+        renderRoomState(payload.room);
+        connectRoomSocket(payload.room.code, payload.playerId);
+        if (shareButton) shareButton.disabled = false;
+        playUiSound('start');
+      } catch (error) {
+        createButton.disabled = false;
+        setRoomStatus('Room backend is not online yet. Deploy the Node/WebSocket service to enable live rooms.', 'error');
+      }
+    });
+
+    joinButton?.addEventListener('click', async () => {
+      const code = String(input?.value || '').trim().toUpperCase();
+      if (!code) {
+        setRoomStatus('Enter your friend’s room code first.', 'error');
+        return;
+      }
+      joinButton.disabled = true;
+      setRoomStatus('Joining room…', 'waiting');
+      try {
+        const payload = await joinBackendRoom(code);
+        renderRoomState(payload.room);
+        connectRoomSocket(payload.room.code, payload.playerId);
+        if (shareButton) shareButton.disabled = false;
+        playUiSound('start');
+      } catch (error) {
+        joinButton.disabled = false;
+        setRoomStatus(error.message || 'Could not join that room.', 'error');
+      }
+    });
+
+    shareButton?.addEventListener('click', async () => {
+      const code = document.querySelector('#room-code-display')?.textContent?.trim();
+      if (!code || code === '-----') return;
+      const text = `Join my Big2Go private room. Code: ${code}`;
+      try {
+        if (navigator.share) await navigator.share({ title: 'Big2Go Room Code', text });
+        else await navigator.clipboard.writeText(code);
+        setRoomStatus('Room code shared/copied. Friend only needs to enter the code.', 'ready');
+      } catch (_) {
+        setRoomStatus(`Share this code: ${code}`, 'ready');
+      }
+    });
+  }
+
   function showPrivateRoom() {
-    const code = Math.random().toString(36).slice(2, 7).toUpperCase();
-    const joinUrl = `${window.location.origin}${window.location.pathname}?room=${code}`;
-    showHelp('Private Room', `<div class="room-modal"><div class="modal-row"><strong>Room Code</strong><span>${code}</span></div><p>Private rooms need a realtime backend before two real users can play together. This button is now visible as the room entry point; next build should connect it to WebSocket/Firebase/Supabase matchmaking.</p><p><strong>Invite link:</strong><br>${joinUrl}</p></div>`);
+    showHelp('Private Room', `
+      <div class="room-modal room-simple">
+        <p class="room-copy">Create Room → share the code → friend enters code. No URL needed.</p>
+        <div class="room-code-card">
+          <span>Room Code</span>
+          <strong id="room-code-display">-----</strong>
+        </div>
+        <div class="room-actions">
+          <button type="button" class="primary" id="room-create-button">Create Room</button>
+          <button type="button" class="secondary" id="room-share-button" disabled>Share Code</button>
+        </div>
+        <label class="room-join-label" for="room-code-input">Join with code</label>
+        <div class="room-join-row">
+          <input id="room-code-input" maxlength="5" inputmode="text" autocomplete="off" placeholder="ABCDE" aria-label="Enter room code" />
+          <button type="button" class="secondary" id="room-join-button">Join</button>
+        </div>
+        <div class="room-live-row">
+          <span>Players</span>
+          <strong id="room-player-count">0/4</strong>
+        </div>
+        <p id="room-status" class="room-status" data-tone="neutral">Tap Create Room to get a code instantly.</p>
+        <ul id="room-player-list" class="room-player-list"></ul>
+      </div>`);
+    setTimeout(attachRoomModalEvents, 0);
   }
 
   function shareGame() {

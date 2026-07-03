@@ -1,0 +1,17 @@
+{
+  "name": "big2go",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Big2Go mobile Big Two game with realtime private room matchmaking.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check game.js && node --check sw.js && node --check server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
