@@ -72,3 +72,47 @@ test('non-host cannot start and invalid plays are rejected', () => {
   });
   assert.equal(room.game.currentPlayer, current.index);
 });
+
+test('HTTP fallback action and state endpoints keep players synced without WebSocket', async () => {
+  const app = server.createHttpServer();
+  await new Promise(resolve => app.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${app.address().port}`;
+  const post = async (path, body) => {
+    const response = await fetch(`${base}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body || {})
+    });
+    const payload = await response.json();
+    assert.equal(response.ok, true, payload.error || path);
+    return payload;
+  };
+  const get = async path => {
+    const response = await fetch(`${base}${path}`, { headers: { 'Accept': 'application/json' } });
+    const payload = await response.json();
+    assert.equal(response.ok, true, payload.error || path);
+    return payload;
+  };
+
+  try {
+    const created = await post('/api/rooms', { name: 'Nok' });
+    const joined = await post('/api/rooms/join', { code: created.room.code, name: 'Jack' });
+    await post('/api/rooms/action', { type: 'room:start', code: created.room.code, playerId: created.playerId });
+
+    const hostState = await get(`/api/rooms/state?code=${created.room.code}&playerId=${created.playerId}`);
+    const current = hostState.game.players[hostState.game.currentPlayer];
+    const currentPlayerId = current.id;
+    const currentState = await get(`/api/rooms/state?code=${created.room.code}&playerId=${currentPlayerId}`);
+    const playedCard = currentState.game.hand[0].id;
+
+    await post('/api/rooms/action', { type: 'game:play', code: created.room.code, playerId: currentPlayerId, cards: [playedCard] });
+
+    const hostAfter = await get(`/api/rooms/state?code=${created.room.code}&playerId=${created.playerId}`);
+    const friendAfter = await get(`/api/rooms/state?code=${created.room.code}&playerId=${joined.playerId}`);
+    assert.equal(hostAfter.game.trick.play.cards[0].id, playedCard);
+    assert.equal(friendAfter.game.trick.play.cards[0].id, playedCard);
+    assert.equal(hostAfter.game.currentPlayer, friendAfter.game.currentPlayer);
+  } finally {
+    await new Promise(resolve => app.close(resolve));
+  }
+});

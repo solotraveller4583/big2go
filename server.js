@@ -269,6 +269,34 @@ function privateRoomState(room, playerId) {
   return { room: publicRoom(room), game: publicGameState(room, playerId) };
 }
 
+function roomForPlayer(code, playerId) {
+  const room = rooms.get(String(code || '').trim().toUpperCase());
+  if (!room) return { error: 'Room not found' };
+  if (!room.players.some(player => player.id === playerId)) return { error: 'Player not in room' };
+  return { room };
+}
+
+function applyRoomAction(code, playerId, action) {
+  const lookup = roomForPlayer(code, playerId);
+  if (lookup.error) return { ok: false, error: lookup.error };
+  const { room } = lookup;
+  try {
+    if (action.type === 'room:start') startRoomGame(room.code, playerId);
+    else if (action.type === 'game:play') {
+      const result = applyRoomPlay(room.code, playerId, action.cards);
+      if (!result.ok) return result;
+    } else if (action.type === 'game:pass') {
+      const result = applyRoomPass(room.code, playerId);
+      if (!result.ok) return result;
+    } else {
+      return { ok: false, error: 'Unknown room action' };
+    }
+    return { ok: true, ...privateRoomState(room, playerId) };
+  } catch (error) {
+    return { ok: false, error: error.message || 'Room action failed' };
+  }
+}
+
 function sendPrivate(socket, room, type = 'room:update') {
   if (socket.readyState !== socket.OPEN) return;
   socket.send(JSON.stringify({ type, ...privateRoomState(room, socket.playerId) }));
@@ -482,6 +510,31 @@ function createHttpServer() {
       return;
     }
 
+    if (req.method === 'GET' && req.url.startsWith('/api/rooms/state')) {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const code = url.searchParams.get('code');
+      const playerId = url.searchParams.get('playerId');
+      const lookup = roomForPlayer(code, playerId);
+      if (lookup.error) return json(res, 404, { error: lookup.error });
+      return json(res, 200, privateRoomState(lookup.room, playerId));
+    }
+
+    if (req.method === 'POST' && req.url === '/api/rooms/action') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; if (body.length > 4096) req.destroy(); });
+      req.on('end', () => {
+        try {
+          const parsed = body ? JSON.parse(body) : {};
+          const result = applyRoomAction(parsed.code, parsed.playerId, parsed);
+          if (!result.ok) return json(res, 400, { error: result.error || 'Room action failed' });
+          return json(res, 200, result);
+        } catch (_) {
+          return json(res, 400, { error: 'Invalid room action' });
+        }
+      });
+      return;
+    }
+
     if (req.method === 'GET' && req.url === '/api/health') {
       return json(res, 200, { ok: true, rooms: rooms.size });
     }
@@ -511,13 +564,8 @@ function createHttpServer() {
       try {
         const message = JSON.parse(raw.toString());
         if (message.type === 'room:ping') socket.send(JSON.stringify({ type: 'room:pong', at: Date.now() }));
-        if (message.type === 'room:start') startRoomGame(code, playerId);
-        if (message.type === 'game:play') {
-          const result = applyRoomPlay(code, playerId, message.cards);
-          if (!result.ok) socket.send(JSON.stringify({ type: 'room:error', error: result.error }));
-        }
-        if (message.type === 'game:pass') {
-          const result = applyRoomPass(code, playerId);
+        if (message.type === 'room:start' || message.type === 'game:play' || message.type === 'game:pass') {
+          const result = applyRoomAction(code, playerId, message);
           if (!result.ok) socket.send(JSON.stringify({ type: 'room:error', error: result.error }));
         }
       } catch (error) {
@@ -551,6 +599,7 @@ module.exports = {
   startRoomGame,
   applyRoomPlay,
   applyRoomPass,
+  applyRoomAction,
   createHttpServer,
   cardFromId,
   buildPlay,

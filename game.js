@@ -54,6 +54,7 @@
     aiTimer: null,
     confettiLayer: null,
     roomSocket: null,
+    roomPollTimer: null,
     liveRoom: null
   };
 
@@ -730,6 +731,7 @@
   function newGame() {
     const count = Number(els.playerCount.value) || 4;
     state.liveRoom = null;
+    stopRoomPolling();
     cancelAiTimer();
     document.querySelector('#victory-overlay')?.remove();
     createPlayers(count);
@@ -1176,13 +1178,56 @@
     status.dataset.tone = tone;
   }
 
-  function sendLiveRoomMessage(message) {
-    if (!state.roomSocket || state.roomSocket.readyState !== WebSocket.OPEN) {
-      showOracle('Room connection lost', 'Reopen Private Room and join again to reconnect.');
+  async function fetchLiveRoomState() {
+    if (!state.liveRoom?.code || !state.liveRoom?.playerId) return null;
+    const url = `/api/rooms/state?code=${encodeURIComponent(state.liveRoom.code)}&playerId=${encodeURIComponent(state.liveRoom.playerId)}`;
+    const response = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Could not sync room');
+    if (payload.room) renderRoomState(payload.room);
+    if (payload.game) applyLiveGame(payload.game, payload.room);
+    return payload;
+  }
+
+  function startRoomPolling() {
+    if (state.roomPollTimer) clearInterval(state.roomPollTimer);
+    state.roomPollTimer = setInterval(() => {
+      fetchLiveRoomState().catch(() => {});
+    }, 1800);
+    fetchLiveRoomState().catch(() => {});
+  }
+
+  function stopRoomPolling() {
+    if (state.roomPollTimer) clearInterval(state.roomPollTimer);
+    state.roomPollTimer = null;
+  }
+
+  async function sendLiveRoomMessage(message) {
+    if (!state.liveRoom?.code || !state.liveRoom?.playerId) {
+      showOracle('Room not ready', 'Reopen Private Room and join again to reconnect.');
       return false;
     }
-    state.roomSocket.send(JSON.stringify(message));
-    return true;
+    try {
+      const response = await fetch('/api/rooms/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ ...message, code: state.liveRoom.code, playerId: state.liveRoom.playerId })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Room action failed');
+      if (payload.room) renderRoomState(payload.room);
+      if (payload.game) applyLiveGame(payload.game, payload.room);
+      return true;
+    } catch (error) {
+      if (state.roomSocket && state.roomSocket.readyState === WebSocket.OPEN) {
+        state.roomSocket.send(JSON.stringify(message));
+        return true;
+      }
+      state.busy = false;
+      showOracle('Room sync problem', error.message || 'Please reconnect to the private room.');
+      render();
+      return false;
+    }
   }
 
   function applyLiveGame(game, room) {
@@ -1274,12 +1319,16 @@
   function connectRoomSocket(code, playerId) {
     if (state.roomSocket) state.roomSocket.close();
     if (!('WebSocket' in window)) {
-      setRoomStatus('This browser does not support realtime rooms.', 'error');
+      setRoomStatus('Realtime unavailable. Backup sync is on.', 'waiting');
+      startRoomPolling();
       return;
     }
     const socket = new WebSocket(roomSocketUrl(code, playerId));
     state.roomSocket = socket;
-    socket.addEventListener('open', () => setRoomStatus('Realtime room connected. Share the code with your friend.', 'ready'));
+    socket.addEventListener('open', () => {
+      setRoomStatus('Realtime room connected. Backup sync is on.', 'ready');
+      startRoomPolling();
+    });
     socket.addEventListener('message', event => {
       try {
         const message = JSON.parse(event.data);
@@ -1298,9 +1347,15 @@
       }
     });
     socket.addEventListener('close', () => {
-      if (state.roomSocket === socket) setRoomStatus('Room realtime connection closed. Reopen Room to reconnect.', 'error');
+      if (state.roomSocket === socket) {
+        setRoomStatus('Realtime paused. Backup sync is still on.', 'waiting');
+        startRoomPolling();
+      }
     });
-    socket.addEventListener('error', () => setRoomStatus('Could not connect to realtime room server.', 'error'));
+    socket.addEventListener('error', () => {
+      setRoomStatus('Realtime issue. Backup sync is still on.', 'waiting');
+      startRoomPolling();
+    });
   }
 
   async function createBackendRoom(name) {
@@ -1343,6 +1398,7 @@
         state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: 0 };
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
+        startRoomPolling();
         if (shareButton) shareButton.disabled = false;
         playUiSound('start');
       } catch (error) {
@@ -1364,6 +1420,7 @@
         state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: Math.max(0, payload.room.playerCount - 1) };
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
+        startRoomPolling();
         if (shareButton) shareButton.disabled = false;
         playUiSound('start');
       } catch (error) {
