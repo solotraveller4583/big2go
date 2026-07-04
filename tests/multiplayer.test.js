@@ -5,9 +5,9 @@ const assert = require('node:assert/strict');
 
 const server = require('../server');
 
-test('private room can start a shared multiplayer game and send private hands', () => {
-  const { room, playerId: hostId } = server.createRoom();
-  const joined = server.joinRoom(room.code, 'Friend');
+test('private room can start a shared multiplayer game with custom names and 13-card hands', () => {
+  const { room, playerId: hostId } = server.createRoom('Alex');
+  const joined = server.joinRoom(room.code, 'Maya');
 
   const game = server.startRoomGame(room.code, hostId);
 
@@ -21,8 +21,10 @@ test('private room can start a shared multiplayer game and send private hands', 
   assert.equal(friendView.game.status, 'playing');
   assert.equal(hostView.game.players.length, 2);
   assert.equal(friendView.game.players.length, 2);
-  assert.ok(hostView.game.hand.length > 0, 'host receives only their own hand');
-  assert.ok(friendView.game.hand.length > 0, 'friend receives only their own hand');
+  assert.equal(hostView.game.players[0].name, 'Alex');
+  assert.equal(friendView.game.players[1].name, 'Maya');
+  assert.equal(hostView.game.hand.length, 13, 'host receives 13 cards');
+  assert.equal(friendView.game.hand.length, 13, 'friend receives 13 cards');
   assert.notDeepEqual(hostView.game.hand, friendView.game.hand, 'hands are private and different');
   assert.equal(hostView.game.players[0].handCount, hostView.game.hand.length);
   assert.equal(friendView.game.players[1].handCount, friendView.game.hand.length);

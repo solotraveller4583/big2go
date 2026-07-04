@@ -1303,17 +1303,21 @@
     socket.addEventListener('error', () => setRoomStatus('Could not connect to realtime room server.', 'error'));
   }
 
-  async function createBackendRoom() {
-    const response = await fetch('/api/rooms', { method: 'POST', headers: { 'Accept': 'application/json' } });
+  async function createBackendRoom(name) {
+    const response = await fetch('/api/rooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ name })
+    });
     if (!response.ok) throw new Error('Could not create room');
     return response.json();
   }
 
-  async function joinBackendRoom(code) {
+  async function joinBackendRoom(code, name) {
     const response = await fetch('/api/rooms/join', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ code, name: 'Friend' })
+      body: JSON.stringify({ code, name })
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || 'Could not join room');
@@ -1327,12 +1331,15 @@
     const shareButton = document.querySelector('#room-share-button');
     const startButton = document.querySelector('#room-start-button');
     const input = document.querySelector('#room-code-input');
+    const nameInput = document.querySelector('#room-name-input');
+
+    const playerName = () => String(nameInput?.value || '').replace(/\s+/g, ' ').trim().slice(0, 18) || 'Player';
 
     createButton?.addEventListener('click', async () => {
       createButton.disabled = true;
       setRoomStatus('Creating private room…', 'waiting');
       try {
-        const payload = await createBackendRoom();
+        const payload = await createBackendRoom(playerName());
         state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: 0 };
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
@@ -1353,7 +1360,7 @@
       joinButton.disabled = true;
       setRoomStatus('Joining room…', 'waiting');
       try {
-        const payload = await joinBackendRoom(code);
+        const payload = await joinBackendRoom(code, playerName());
         state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: Math.max(0, payload.room.playerCount - 1) };
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
@@ -1401,6 +1408,8 @@
       <div class="room-modal room-simple">
         <p class="room-copy">Create a room, send the code, then start as soon as 1 friend joins.</p>
         <div class="room-role-pill" id="room-role">Create or join a room</div>
+        <label class="room-join-label" for="room-name-input">Your name</label>
+        <input class="room-name-input" id="room-name-input" maxlength="18" autocomplete="nickname" placeholder="Your name" aria-label="Your player name" />
         <div class="room-code-card">
           <span>Room Code</span>
           <strong id="room-code-display">-----</strong>

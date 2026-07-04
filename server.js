@@ -182,6 +182,16 @@ function dealCards(playerCount) {
   return hands.map(sortCards);
 }
 
+function dealPrivateRoomCards(playerCount) {
+  const deck = shuffle(createDeck());
+  return Array.from({ length: playerCount }, (_, index) => sortCards(deck.slice(index * 13, index * 13 + 13)));
+}
+
+function sanitizeName(name, fallback) {
+  const cleaned = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 18);
+  return cleaned || fallback;
+}
+
 function serializePlay(play) {
   if (!play) return null;
   return {
@@ -277,14 +287,14 @@ function cleanupRooms() {
   }
 }
 
-function createRoom() {
+function createRoom(name = 'Host') {
   const code = generateCode();
   const hostId = crypto.randomUUID();
   const room = {
     code,
     hostId,
     maxPlayers: MAX_PLAYERS,
-    players: [{ id: hostId, name: 'Host', ready: true }],
+    players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true }],
     clients: new Set(),
     game: null,
     createdAt: Date.now(),
@@ -300,7 +310,7 @@ function joinRoom(code, name = 'Friend') {
   if (room.game) return { error: 'Game already started' };
   if (room.players.length >= room.maxPlayers) return { error: 'Room is full' };
   const playerId = crypto.randomUUID();
-  room.players.push({ id: playerId, name: String(name || 'Friend').slice(0, 20), ready: true });
+  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true });
   room.updatedAt = Date.now();
   broadcast(room);
   return { room, playerId };
@@ -319,7 +329,7 @@ function startRoomGame(code, playerId) {
   if (room.hostId !== playerId) throw new Error('Only the host can start the game');
   if (room.players.length < 2) throw new Error('Need at least 2 players');
 
-  const hands = dealCards(room.players.length);
+  const hands = dealPrivateRoomCards(room.players.length);
   const gamePlayers = room.players.map((player, index) => ({
     id: player.id,
     name: player.name,
@@ -442,8 +452,18 @@ function createHttpServer() {
   const server = http.createServer((req, res) => {
     if (req.method === 'POST' && req.url === '/api/rooms') {
       cleanupRooms();
-      const { room, playerId } = createRoom();
-      return json(res, 201, { room: publicRoom(room), playerId });
+      let body = '';
+      req.on('data', chunk => { body += chunk; if (body.length > 2048) req.destroy(); });
+      req.on('end', () => {
+        try {
+          const parsed = body ? JSON.parse(body) : {};
+          const { room, playerId } = createRoom(parsed.name);
+          return json(res, 201, { room: publicRoom(room), playerId });
+        } catch (_) {
+          return json(res, 400, { error: 'Invalid create room request' });
+        }
+      });
+      return;
     }
 
     if (req.method === 'POST' && req.url === '/api/rooms/join') {
