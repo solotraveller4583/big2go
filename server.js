@@ -226,10 +226,11 @@ function publicRoom(room) {
   return {
     code: room.code,
     hostId: room.hostId,
-    status: room.game ? 'playing' : room.players.length >= 2 ? 'ready' : 'waiting',
-    playerCount: room.players.length,
+    status: room.game ? 'playing' : room.players.filter(player => player.connected !== false).length >= 2 ? 'ready' : 'waiting',
+    playerCount: room.players.filter(player => player.connected !== false).length,
     maxPlayers: room.maxPlayers,
-    players: room.players.map(player => ({ id: player.id, name: player.name, ready: player.ready }))
+    notice: room.notice || '',
+    players: room.players.map(player => ({ id: player.id, name: player.name, ready: player.ready, connected: player.connected !== false }))
   };
 }
 
@@ -256,7 +257,8 @@ function publicGameState(room, playerId) {
       name: player.name,
       index: player.index,
       finished: player.finished,
-      handCount: player.hand.length
+      handCount: player.hand.length,
+      connected: room.players.find(roomPlayer => roomPlayer.id === player.id)?.connected !== false
     })),
     hand: own.hand.map(card => ({ ...card })),
     logs: room.game.logs.slice(0, 8),
@@ -282,7 +284,10 @@ function applyRoomAction(code, playerId, action) {
   const { room } = lookup;
   try {
     if (action.type === 'room:start') startRoomGame(room.code, playerId);
-    else if (action.type === 'game:play') {
+    else if (action.type === 'room:leave') {
+      const result = leaveRoom(room.code, playerId);
+      if (!result.ok) return result;
+    } else if (action.type === 'game:play') {
       const result = applyRoomPlay(room.code, playerId, action.cards);
       if (!result.ok) return result;
     } else if (action.type === 'game:pass') {
@@ -322,9 +327,10 @@ function createRoom(name = 'Host') {
     code,
     hostId,
     maxPlayers: MAX_PLAYERS,
-    players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true }],
+    players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true, connected: true }],
     clients: new Set(),
     game: null,
+    notice: '',
     createdAt: Date.now(),
     updatedAt: Date.now()
   };
@@ -336,12 +342,29 @@ function joinRoom(code, name = 'Friend') {
   const room = rooms.get(String(code || '').trim().toUpperCase());
   if (!room) return { error: 'Room not found' };
   if (room.game) return { error: 'Game already started' };
-  if (room.players.length >= room.maxPlayers) return { error: 'Room is full' };
+  if (room.players.filter(player => player.connected !== false).length >= room.maxPlayers) return { error: 'Room is full' };
   const playerId = crypto.randomUUID();
-  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true });
+  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true, connected: true });
+  room.notice = `${room.players[room.players.length - 1].name} joined the room.`;
   room.updatedAt = Date.now();
   broadcast(room);
   return { room, playerId };
+}
+
+function leaveRoom(code, playerId) {
+  const room = rooms.get(String(code || '').trim().toUpperCase());
+  if (!room) return { ok: false, error: 'Room not found' };
+  const player = room.players.find(entry => entry.id === playerId);
+  if (!player) return { ok: false, error: 'Player not in room' };
+  if (player.connected === false) return { ok: true, room };
+  player.connected = false;
+  room.notice = `${player.name} left the room.`;
+  if (room.game && room.game.status === 'playing') {
+    room.game.logs.unshift(room.notice);
+  }
+  room.updatedAt = Date.now();
+  broadcast(room);
+  return { ok: true, room };
 }
 
 function findStartingPlayer(players) {
@@ -355,10 +378,11 @@ function startRoomGame(code, playerId) {
   const room = rooms.get(String(code || '').trim().toUpperCase());
   if (!room) throw new Error('Room not found');
   if (room.hostId !== playerId) throw new Error('Only the host can start the game');
-  if (room.players.length < 2) throw new Error('Need at least 2 players');
+  const activePlayers = room.players.filter(player => player.connected !== false);
+  if (activePlayers.length < 2) throw new Error('Need at least 2 players');
 
-  const hands = dealPrivateRoomCards(room.players.length);
-  const gamePlayers = room.players.map((player, index) => ({
+  const hands = dealPrivateRoomCards(activePlayers.length);
+  const gamePlayers = activePlayers.map((player, index) => ({
     id: player.id,
     name: player.name,
     index,
@@ -366,6 +390,7 @@ function startRoomGame(code, playerId) {
     hand: hands[index]
   }));
   const startingPlayer = findStartingPlayer(gamePlayers);
+  room.notice = '';
   room.game = {
     status: 'playing',
     players: gamePlayers,
@@ -564,7 +589,7 @@ function createHttpServer() {
       try {
         const message = JSON.parse(raw.toString());
         if (message.type === 'room:ping') socket.send(JSON.stringify({ type: 'room:pong', at: Date.now() }));
-        if (message.type === 'room:start' || message.type === 'game:play' || message.type === 'game:pass') {
+        if (message.type === 'room:start' || message.type === 'room:leave' || message.type === 'game:play' || message.type === 'game:pass') {
           const result = applyRoomAction(code, playerId, message);
           if (!result.ok) socket.send(JSON.stringify({ type: 'room:error', error: result.error }));
         }
@@ -594,6 +619,7 @@ module.exports = {
   rooms,
   createRoom,
   joinRoom,
+  leaveRoom,
   publicRoom,
   privateRoomState,
   startRoomGame,

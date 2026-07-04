@@ -55,6 +55,7 @@
     confettiLayer: null,
     roomSocket: null,
     roomPollTimer: null,
+    lastRoomNotice: '',
     liveRoom: null
   };
 
@@ -671,8 +672,18 @@
 
     const newButton = document.createElement('button');
     newButton.className = 'primary';
-    newButton.textContent = 'New Game';
-    newButton.addEventListener('click', () => {
+    const isLiveRoom = Boolean(state.liveRoom?.code && state.liveRoom?.playerId);
+    const isRoomHost = Boolean(isLiveRoom && state.liveRoom.hostId === state.liveRoom.playerId);
+    newButton.textContent = isLiveRoom ? (isRoomHost ? 'Start Room Rematch' : 'Waiting for Host') : 'New Game';
+    newButton.disabled = Boolean(isLiveRoom && !isRoomHost);
+    newButton.addEventListener('click', async () => {
+      if (isLiveRoom) {
+        newButton.disabled = true;
+        newButton.textContent = 'Starting…';
+        const sent = await sendLiveRoomMessage({ type: 'room:start' });
+        if (sent) overlay.remove();
+        return;
+      }
       overlay.remove();
       newGame();
     });
@@ -1202,6 +1213,29 @@
     state.roomPollTimer = null;
   }
 
+  function leaveCurrentRoom({ keepalive = false } = {}) {
+    if (!state.liveRoom?.code || !state.liveRoom?.playerId) return;
+    const payload = JSON.stringify({ type: 'room:leave', code: state.liveRoom.code, playerId: state.liveRoom.playerId });
+    try {
+      if (keepalive && navigator.sendBeacon) {
+        navigator.sendBeacon('/api/rooms/action', new Blob([payload], { type: 'application/json' }));
+      } else {
+        fetch('/api/rooms/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: payload,
+          keepalive
+        }).catch(() => {});
+      }
+    } catch (_) {}
+    stopRoomPolling();
+    if (state.roomSocket) {
+      state.roomSocket.close();
+      state.roomSocket = null;
+    }
+    state.liveRoom = null;
+  }
+
   async function sendLiveRoomMessage(message) {
     if (!state.liveRoom?.code || !state.liveRoom?.playerId) {
       showOracle('Room not ready', 'Reopen Private Room and join again to reconnect.');
@@ -1237,7 +1271,8 @@
     state.liveRoom = {
       code: room?.code || state.liveRoom?.code,
       playerId: game.playerId,
-      playerIndex: game.playerIndex
+      playerIndex: game.playerIndex,
+      hostId: room?.hostId || state.liveRoom?.hostId
     };
     state.settings.players = game.players.length;
     state.humanIndex = game.playerIndex;
@@ -1259,6 +1294,7 @@
       name: index === game.playerIndex ? 'You' : player.name,
       isHuman: index === game.playerIndex,
       finished: Boolean(player.finished),
+      connected: player.connected !== false,
       hand: index === game.playerIndex
         ? (game.hand || []).map(card => cardFromId(card.id || card)).filter(Boolean)
         : Array.from({ length: Number(player.handCount) || 0 }, () => ({ id: 'hidden' }))
@@ -1269,8 +1305,9 @@
     state.busy = false;
     els.playerCount.value = String(game.players.length);
     showGameScreen();
+    if (!game.gameOver) document.querySelector('#victory-overlay')?.remove();
     render();
-    if (game.gameOver) {
+    if (game.gameOver && !document.querySelector('#victory-overlay')) {
       const winner = state.players[game.winnerIndex];
       if (winner) announceVictory(winner);
     }
@@ -1285,6 +1322,7 @@
     const copyEl = document.querySelector('#room-copy-button');
     const shareEl = document.querySelector('#room-share-button');
     const myPlayerId = state.liveRoom?.playerId;
+    if (state.liveRoom && room.hostId) state.liveRoom.hostId = room.hostId;
     const isHost = Boolean(myPlayerId && room.hostId === myPlayerId);
     const hasCode = Boolean(room.code && room.code !== '-----');
     if (codeEl) codeEl.textContent = room.code;
@@ -1299,7 +1337,9 @@
         const displayName = player.id === myPlayerId ? 'You' : player.name;
         const tags = [];
         if (player.id === room.hostId) tags.push('Host');
+        if (player.connected === false) tags.push('Left');
         item.textContent = `${index + 1}. ${displayName}${tags.length ? ` · ${tags.join(' · ')}` : ''}`;
+        if (player.connected === false) item.dataset.left = 'true';
         playersEl.appendChild(item);
       });
     }
@@ -1308,7 +1348,13 @@
       startEl.disabled = !isHost || room.playerCount < 2 || room.status === 'playing';
       startEl.textContent = room.status === 'playing' ? 'Game Started' : 'Start Game';
     }
-    const status = room.status === 'playing'
+    if (room.notice && room.notice !== state.lastRoomNotice) {
+      state.lastRoomNotice = room.notice;
+      if (/left the room/i.test(room.notice)) showOracle('Player left', room.notice);
+    }
+    const status = room.notice && /left the room/i.test(room.notice)
+      ? room.notice
+      : room.status === 'playing'
       ? 'Live game started — play from the table.'
       : room.playerCount >= 2
         ? isHost ? 'Ready — you can start now.' : 'Ready — waiting for host to start.'
@@ -1395,7 +1441,7 @@
       setRoomStatus('Creating private room…', 'waiting');
       try {
         const payload = await createBackendRoom(playerName());
-        state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: 0 };
+        state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: 0, hostId: payload.room.hostId };
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
         startRoomPolling();
@@ -1417,7 +1463,7 @@
       setRoomStatus('Joining room…', 'waiting');
       try {
         const payload = await joinBackendRoom(code, playerName());
-        state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: Math.max(0, payload.room.playerCount - 1) };
+        state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: Math.max(0, payload.room.playerCount - 1), hostId: payload.room.hostId };
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
         startRoomPolling();
@@ -1617,6 +1663,7 @@
     document.querySelector('#bonus-button')?.addEventListener('click', () => showHelp('Daily Bonus', '<ul><li>Come back and play a fresh Big2Go table.</li><li>Daily rewards can be connected later.</li></ul>'));
     document.querySelector('#achievements-button')?.addEventListener('click', () => showHelp('Goals', '<ul><li>Win with singles, pairs, and 5-card combos.</li><li>Try to beat the AI with fewer passes.</li></ul>'));
     els.back.addEventListener('click', () => {
+      leaveCurrentRoom();
       cancelAiTimer();
       state.busy = false;
       showHomeScreen();
@@ -1632,7 +1679,13 @@
     els.pass.addEventListener('click', humanPass);
     els.hint.addEventListener('click', chooseHint);
     els.sort.addEventListener('click', sortHumanHand);
-    els.restart.addEventListener('click', newGame);
+    els.restart.addEventListener('click', () => {
+      if (state.liveRoom?.code) {
+        sendLiveRoomMessage({ type: 'room:start' });
+      } else {
+        newGame();
+      }
+    });
     els.playerCount.addEventListener('change', () => {
       updatePlayerChoiceUI();
       updateContinueButton();
@@ -1645,6 +1698,7 @@
         playUiSound('tap');
       });
     });
+    window.addEventListener('beforeunload', () => leaveCurrentRoom({ keepalive: true }));
   }
 
   function registerServiceWorker() {

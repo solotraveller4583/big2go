@@ -157,6 +157,11 @@ dialog .dialog-card:has(.room-simple) menu {
   width: 100%;
 }
 
+.room-player-list li[data-left="true"] {
+  opacity: .58;
+  text-decoration: line-through;
+}
+
 /* Mobile table clarity fixes: all 13 cards reachable/visible and bigger current trick cards. */
 .b2g-match .table-arena {
   min-height: 150px;
