@@ -1234,26 +1234,41 @@
   function renderRoomState(room) {
     const codeEl = document.querySelector('#room-code-display');
     const countEl = document.querySelector('#room-player-count');
+    const roleEl = document.querySelector('#room-role');
     const playersEl = document.querySelector('#room-player-list');
     const startEl = document.querySelector('#room-start-button');
+    const copyEl = document.querySelector('#room-copy-button');
+    const shareEl = document.querySelector('#room-share-button');
+    const myPlayerId = state.liveRoom?.playerId;
+    const isHost = Boolean(myPlayerId && room.hostId === myPlayerId);
+    const hasCode = Boolean(room.code && room.code !== '-----');
     if (codeEl) codeEl.textContent = room.code;
-    if (countEl) countEl.textContent = `${room.playerCount}/${room.maxPlayers}`;
+    if (countEl) countEl.textContent = String(room.playerCount || 0);
+    if (roleEl) roleEl.textContent = isHost ? 'You are Host' : myPlayerId ? 'You joined as Friend' : 'Create or join a room';
+    if (copyEl) copyEl.disabled = !hasCode;
+    if (shareEl) shareEl.disabled = !hasCode;
     if (playersEl) {
       playersEl.innerHTML = '';
       room.players.forEach((player, index) => {
         const item = document.createElement('li');
-        item.textContent = `${index + 1}. ${player.name}${player.id === room.hostId ? ' · Host' : ''}`;
+        const displayName = player.id === myPlayerId ? 'You' : player.name;
+        const tags = [];
+        if (player.id === room.hostId) tags.push('Host');
+        item.textContent = `${index + 1}. ${displayName}${tags.length ? ` · ${tags.join(' · ')}` : ''}`;
         playersEl.appendChild(item);
       });
     }
     if (startEl) {
-      startEl.disabled = room.playerCount < 2 || room.status === 'playing';
+      startEl.hidden = Boolean(myPlayerId && !isHost);
+      startEl.disabled = !isHost || room.playerCount < 2 || room.status === 'playing';
       startEl.textContent = room.status === 'playing' ? 'Game Started' : 'Start Game';
     }
-    const readyMessage = room.status === 'playing'
+    const status = room.status === 'playing'
       ? 'Live game started — play from the table.'
-      : room.playerCount >= 2 ? 'Friend joined — room is ready!' : 'Waiting for friend to enter this code…';
-    setRoomStatus(readyMessage, room.playerCount >= 2 ? 'ready' : 'waiting');
+      : room.playerCount >= 2
+        ? isHost ? 'Ready — you can start now.' : 'Ready — waiting for host to start.'
+        : isHost ? 'Share the code. Start unlocks when 1 friend joins.' : 'Enter a room code from your friend.';
+    setRoomStatus(status, room.playerCount >= 2 ? 'ready' : 'waiting');
   }
 
   function connectRoomSocket(code, playerId) {
@@ -1308,6 +1323,7 @@
   function attachRoomModalEvents() {
     const createButton = document.querySelector('#room-create-button');
     const joinButton = document.querySelector('#room-join-button');
+    const copyButton = document.querySelector('#room-copy-button');
     const shareButton = document.querySelector('#room-share-button');
     const startButton = document.querySelector('#room-start-button');
     const input = document.querySelector('#room-code-input');
@@ -1355,6 +1371,17 @@
       sendLiveRoomMessage({ type: 'room:start' });
     });
 
+    copyButton?.addEventListener('click', async () => {
+      const code = document.querySelector('#room-code-display')?.textContent?.trim();
+      if (!code || code === '-----') return;
+      try {
+        await navigator.clipboard.writeText(code);
+        setRoomStatus('Code copied. Send it to your friend.', 'ready');
+      } catch (_) {
+        setRoomStatus(`Code: ${code}`, 'ready');
+      }
+    });
+
     shareButton?.addEventListener('click', async () => {
       const code = document.querySelector('#room-code-display')?.textContent?.trim();
       if (!code || code === '-----') return;
@@ -1372,26 +1399,28 @@
   function showPrivateRoom() {
     showHelp('Private Room', `
       <div class="room-modal room-simple">
-        <p class="room-copy">Create Room → share the code → friend enters code. No URL needed.</p>
+        <p class="room-copy">Create a room, send the code, then start as soon as 1 friend joins.</p>
+        <div class="room-role-pill" id="room-role">Create or join a room</div>
         <div class="room-code-card">
           <span>Room Code</span>
           <strong id="room-code-display">-----</strong>
         </div>
         <div class="room-actions">
           <button type="button" class="primary" id="room-create-button">Create Room</button>
-          <button type="button" class="secondary" id="room-share-button" disabled>Share Code</button>
+          <button type="button" class="secondary" id="room-copy-button" disabled>Copy Code</button>
+          <button type="button" class="secondary" id="room-share-button" disabled>Share</button>
         </div>
-        <label class="room-join-label" for="room-code-input">Join with code</label>
+        <label class="room-join-label" for="room-code-input">Friend code</label>
         <div class="room-join-row">
           <input id="room-code-input" maxlength="5" inputmode="text" autocomplete="off" placeholder="ABCDE" aria-label="Enter room code" />
           <button type="button" class="secondary" id="room-join-button">Join</button>
         </div>
         <div class="room-live-row">
-          <span>Players</span>
-          <strong id="room-player-count">0/4</strong>
+          <span>Players joined</span>
+          <strong id="room-player-count">0</strong>
         </div>
         <button type="button" class="primary room-start" id="room-start-button" disabled>Start Game</button>
-        <p id="room-status" class="room-status" data-tone="neutral">Tap Create Room to get a code instantly.</p>
+        <p id="room-status" class="room-status" data-tone="neutral">Create a room or enter your friend’s code.</p>
         <ul id="room-player-list" class="room-player-list"></ul>
       </div>`);
     setTimeout(attachRoomModalEvents, 0);

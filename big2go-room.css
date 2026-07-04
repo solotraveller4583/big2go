@@ -55,6 +55,21 @@ dialog .dialog-card:has(.room-simple) menu {
   gap: 10px;
 }
 
+.room-actions #room-create-button {
+  grid-column: 1 / -1;
+}
+
+.room-role-pill {
+  justify-self: start;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(68, 236, 160, .14);
+  border: 1px solid rgba(68, 236, 160, .24);
+  color: #b7ffd9;
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .room-actions button,
 .room-join-row button,
 .room-start {
