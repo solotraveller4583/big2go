@@ -1,4 +1,4 @@
-const CACHE_NAME = 'big2go-v38';
+const CACHE_NAME = 'big2go-v39';
 const ASSETS = [
   './',
   './index.html',
@@ -16,7 +16,7 @@ const ASSETS = [
   './big2go-hand-guard.css',
   './big2go-gameplay-clarity.css?v=25',
   './big2go-room.css?v=5',
-  './game.js?v=32',
+  './game.js?v=33',
   './manifest.webmanifest',
   './icon.svg',
   './privacy.html',
@@ -31,21 +31,37 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.map(key => (key === CACHE_NAME ? null : caches.delete(key)))))
+    caches.keys()
+      .then(keys => Promise.all(keys.map(key => (key === CACHE_NAME ? null : caches.delete(key)))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
+
+async function networkFirst(request) {
+  try {
+    const networkResponse = await fetch(request, { cache: 'no-store' });
+    const copy = networkResponse.clone();
+    caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+    return networkResponse;
+  } catch (_) {
+    const cached = await caches.match(request);
+    return cached || caches.match('./index.html');
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  const networkResponse = await fetch(request);
+  const copy = networkResponse.clone();
+  caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+  return networkResponse;
+}
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      if (response) return response;
-      return fetch(event.request).then(networkResponse => {
-        const copy = networkResponse.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-        return networkResponse;
-      }).catch(() => caches.match('./index.html'));
-    })
-  );
+  const url = new URL(event.request.url);
+  const isPage = event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html');
+  const isFreshAsset = url.pathname.endsWith('/game.js') || url.pathname.endsWith('/sw.js') || url.pathname.endsWith('.css');
+  event.respondWith((isPage || isFreshAsset) ? networkFirst(event.request) : cacheFirst(event.request));
 });

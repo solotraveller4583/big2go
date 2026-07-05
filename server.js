@@ -493,9 +493,13 @@ function serveStatic(req, res) {
       return;
     }
     const ext = path.extname(filePath).toLowerCase();
+    const baseName = path.basename(filePath).toLowerCase();
+    const cacheControl = ext === '.html' || baseName === 'sw.js' || ext === '.js' || ext === '.css'
+      ? 'no-cache, no-store, must-revalidate'
+      : 'public, max-age=3600';
     res.writeHead(200, {
       'Content-Type': MIME[ext] || 'application/octet-stream',
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600'
+      'Cache-Control': cacheControl
     });
     fs.createReadStream(filePath).pipe(res);
   });
