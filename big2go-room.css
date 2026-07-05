@@ -157,10 +157,10 @@ dialog .dialog-card:has(.room-simple) menu {
   width: 100%;
 }
 
-/* Instant-play landing simplification */
+/* Instant-play landing simplification + hero balance */
 .b2g-home {
-  grid-template-rows: auto minmax(150px, .8fr) auto auto auto;
-  gap: 10px;
+  grid-template-rows: auto minmax(188px, 1fr) auto auto auto;
+  gap: 12px;
 }
 .instant-topbar {
   grid-template-columns: 1fr auto 46px;
@@ -179,9 +179,7 @@ dialog .dialog-card:has(.room-simple) menu {
   padding: 6px 12px 6px 7px;
   font-weight: 1000;
 }
-.instant-topbar .live-pill {
-  min-width: 94px;
-}
+.instant-topbar .live-pill { min-width: 94px; }
 .instant-topbar .live-pill small {
   display: block;
   font-size: .58rem;
@@ -189,23 +187,65 @@ dialog .dialog-card:has(.room-simple) menu {
   line-height: 1;
 }
 .b2g-home .hero-stage {
-  min-height: 150px;
+  min-height: 188px;
+  align-content: start;
+  padding-top: 10px;
 }
+.b2g-home .flying-cards {
+  width: min(88vw, 360px);
+  height: 112px;
+  margin-bottom: -38px;
+  animation: heroFloat 5.8s ease-in-out infinite;
+}
+.b2g-home .hero-card {
+  width: 78px;
+  height: 108px;
+  border-radius: 19px;
+  padding: 10px;
+  transform-origin: 50% 80%;
+  animation: cardFanPulse 4.8s ease-in-out infinite;
+}
+.b2g-home .hero-card span { font-size: 2.35rem; }
+.b2g-home .hero-card strong { font-size: 1.12rem; }
+.b2g-home .card-a { left: 14%; transform: rotate(-12deg); }
+.b2g-home .card-b { left: 39%; transform: rotate(-1deg); animation-delay: .18s; }
+.b2g-home .card-c { left: 64%; transform: rotate(12deg); animation-delay: .36s; }
+.b2g-home .hero-stage h1 {
+  font-size: clamp(4.45rem, 18.8vw, 6.7rem);
+  transform: translateY(-2px);
+  animation: logoBreath 5.2s ease-in-out infinite;
+}
+.b2g-home .hero-kicker { margin-top: 6px; }
 .b2g-home .hero-promise {
-  font-size: .92rem;
-  color: rgba(255,255,255,.9);
+  max-width: 360px;
+  margin-top: 8px;
+  font-size: .96rem;
+  color: rgba(255,255,255,.94);
+  text-shadow: 0 2px 8px rgba(0,0,0,.45);
 }
 .b2g-home .cta-zone {
-  gap: 7px;
+  gap: 10px;
+  margin-top: 2px;
 }
 .b2g-home .play-now {
   width: 100%;
-  min-height: 72px;
-  font-size: clamp(2rem, 8vw, 2.8rem);
-  box-shadow: 0 14px 0 #9e3400, 0 26px 34px rgba(0,0,0,.38), inset 0 2px 0 rgba(255,255,255,.62);
+  min-height: 52px;
+  padding: 0 20px;
+  font-size: clamp(1.55rem, 6.4vw, 2.1rem);
+  box-shadow: 0 7px 0 #9e3400, 0 14px 20px rgba(0,0,0,.24), inset 0 2px 0 rgba(255,255,255,.54);
+}
+.b2g-home .play-now span {
+  width: 30px;
+  height: 30px;
+  margin-left: 8px;
 }
 .b2g-home .cta-zone p {
-  font-size: .82rem;
+  position: relative;
+  z-index: 2;
+  margin-top: 2px;
+  font-size: .84rem;
+  color: rgba(255,255,255,.86);
+  text-shadow: 0 2px 8px rgba(0,0,0,.55);
 }
 .b2g-home .table-select {
   padding: 12px;
@@ -215,15 +255,9 @@ dialog .dialog-card:has(.room-simple) menu {
   justify-content: center;
   text-align: center;
 }
-.b2g-home .panel-title-row h2 {
-  font-size: 1.12rem;
-}
-.b2g-home .player-option {
-  min-height: 74px;
-}
-.b2g-home .player-option strong {
-  font-size: .72rem;
-}
+.b2g-home .panel-title-row h2 { font-size: 1.12rem; }
+.b2g-home .player-option { min-height: 74px; }
+.b2g-home .player-option strong { font-size: .72rem; }
 .b2g-home .instant-actions {
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
@@ -232,25 +266,35 @@ dialog .dialog-card:has(.room-simple) menu {
   min-height: 74px;
   border-radius: 18px;
 }
-.b2g-home .instant-actions .menu-card span {
-  font-size: 1.28rem;
+.b2g-home .instant-actions .menu-card span { font-size: 1.28rem; }
+.b2g-home .instant-actions .menu-card strong { font-size: .72rem; }
+.b2g-home .instant-actions .menu-card small { font-size: .55rem; }
+
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.012); }
 }
-.b2g-home .instant-actions .menu-card strong {
-  font-size: .72rem;
+@keyframes logoBreath {
+  0%, 100% { transform: translateY(-2px) scale(1); }
+  50% { transform: translateY(-5px) scale(1.018); }
 }
-.b2g-home .instant-actions .menu-card small {
-  font-size: .55rem;
+@keyframes cardFanPulse {
+  0%, 100% { filter: drop-shadow(0 10px 12px rgba(0,0,0,.26)); }
+  50% { filter: drop-shadow(0 15px 18px rgba(0,0,0,.34)); }
 }
 
 @media (max-height: 720px) {
   .b2g-home {
-    gap: 7px;
-    grid-template-rows: auto minmax(124px, .65fr) auto auto auto;
+    gap: 8px;
+    grid-template-rows: auto minmax(158px, .8fr) auto auto auto;
   }
-  .b2g-home .hero-stage { min-height: 124px; }
-  .b2g-home .flying-cards { height: 54px; margin-bottom: -16px; }
-  .b2g-home .hero-stage h1 { font-size: clamp(3.2rem, 13vw, 4.6rem); }
-  .b2g-home .play-now { min-height: 62px; }
+  .b2g-home .hero-stage { min-height: 158px; padding-top: 4px; }
+  .b2g-home .flying-cards { height: 88px; margin-bottom: -31px; }
+  .b2g-home .hero-card { width: 64px; height: 88px; border-radius: 16px; }
+  .b2g-home .hero-card span { font-size: 1.85rem; }
+  .b2g-home .hero-stage h1 { font-size: clamp(3.85rem, 15.8vw, 5.35rem); }
+  .b2g-home .hero-promise { font-size: .86rem; margin-top: 5px; }
+  .b2g-home .play-now { min-height: 48px; font-size: clamp(1.42rem, 5.9vw, 1.9rem); }
   .b2g-home .player-option,
   .b2g-home .instant-actions .menu-card { min-height: 64px; }
 }
