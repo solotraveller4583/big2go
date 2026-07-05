@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Big2Go" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="description" content="Big2Go is a premium mobile-first Big Two card battler with AI rivals, ranked progression, rewards, and fast one-thumb gameplay." />
+  <meta name="description" content="Big2Go is a fast mobile-first Big Two card game for instant solo and private-room play." />
   <meta property="og:title" content="Big2Go" />
   <meta property="og:description" content="Play Big2Go — fast mobile Big Two battles where the 3♦ starts the action and the 2 rules the table." />
   <meta property="og:type" content="website" />
@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="big2go-polish-guard.css" />
   <link rel="stylesheet" href="big2go-hand-guard.css" />
   <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=25" />
-  <link rel="stylesheet" href="big2go-room.css?v=5" />
+  <link rel="stylesheet" href="big2go-room.css?v=6" />
 </head>
 <body>
   <main class="app-shell">
@@ -38,15 +38,14 @@
       <div class="arena-orb orb-two" aria-hidden="true"></div>
       <div class="table-glow" aria-hidden="true"></div>
 
-      <header class="home-topbar">
-        <button class="profile-pill" id="profile-button" type="button" aria-label="Open profile">
+      <header class="home-topbar instant-topbar">
+        <div class="brand-pill" aria-label="Big2Go">
           <span class="profile-avatar">B2</span>
-          <span><strong>Guest Pro</strong><small>Bronze III</small></span>
-        </button>
-        <div class="online-pill live-pill" aria-label="Live private rooms">
-          <span class="avatar-stack" aria-hidden="true"><b></b><b></b><b></b></span>
-          <strong>LIVE</strong>
-          <small><i></i>private rooms</small>
+          <strong>Big2Go</strong>
+        </div>
+        <div class="online-pill live-pill" aria-label="Private rooms available">
+          <strong>ROOM</strong>
+          <small>private play</small>
         </div>
         <button class="settings-pill" id="settings-button" type="button" aria-label="Settings">⚙️</button>
       </header>
@@ -59,7 +58,7 @@
         </div>
         <h1>Big2<span>Go</span></h1>
         <p class="hero-kicker">Fast Big 2 Battles</p>
-        <p class="hero-promise">Empty your hand first. Beat the table. Climb the ranks.</p>
+        <p class="hero-promise">Choose a table and start playing in one tap.</p>
       </section>
 
       <section class="cta-zone" aria-label="Start playing">
@@ -67,42 +66,12 @@
         <p>4-player quick table · 2-minute rounds</p>
       </section>
 
-      <section class="lobby-panel" aria-label="Home lobby">
-        <div class="rank-card">
-          <div>
-            <small>Current League</small>
-            <strong>Bronze III</strong>
-          </div>
-          <span class="rank-badge">🏆</span>
-          <div class="progress-track"><i style="width: 58%"></i></div>
-          <em>145 / 250 RP</em>
-        </div>
-        <button class="reward-card" id="bonus-button" type="button">
-          <span>🎁</span>
-          <strong>Daily Chest</strong>
-          <small>Ready to claim</small>
-        </button>
-        <button class="mission-card" id="achievements-button" type="button">
-          <span>⭐</span>
-          <strong>Goals</strong>
-          <small>2 / 5 wins</small>
-        </button>
-      </section>
-
-      <div class="quick-actions" aria-label="Quick actions">
-        <button class="menu-card" id="continue-button"><span>▶</span><strong>CONTINUE</strong><small>Saved table</small></button>
-        <button class="menu-card" id="private-room-button"><span>🔐</span><strong>ROOM</strong><small>Create / join</small></button>
-        <button class="menu-card" id="rules-button"><span>?</span><strong>RULES</strong><small>Learn Big 2</small></button>
-        <button class="menu-card share-card" id="share-button"><span>↗</span><strong>SHARE</strong><small>Invite</small></button>
-      </div>
-
       <section class="player-panel table-select" aria-label="Choose players">
         <div class="panel-title-row">
           <div>
             <small>Choose Table</small>
             <h2>Match Mode</h2>
           </div>
-          <button type="button" id="leaderboard-button" class="mini-rank-button">Rank</button>
         </div>
         <div class="player-options" role="group" aria-label="Number of players">
           <button class="player-option selected" type="button" data-player-choice="4"><span>👥</span><strong>4P CLASSIC</strong><small>Full table</small><i>✓</i></button>
@@ -116,12 +85,12 @@
         </select>
       </section>
 
-      <nav class="bottom-tabs" aria-label="Main sections">
-        <button type="button" data-home-tab="play" class="active"><span>♠</span><strong>Play</strong></button>
-        <button type="button" data-home-tab="rank"><span>🏆</span><strong>Rank</strong></button>
-        <button type="button" data-home-tab="rewards"><span>🎁</span><strong>Rewards</strong></button>
-        <button type="button" data-home-tab="profile"><span>👤</span><strong>Me</strong></button>
-      </nav>
+      <div class="quick-actions instant-actions" aria-label="Quick actions">
+        <button class="menu-card" id="continue-button"><span>▶</span><strong>CONTINUE</strong><small>Resume</small></button>
+        <button class="menu-card" id="private-room-button"><span>🔐</span><strong>ROOM</strong><small>Create / join</small></button>
+        <button class="menu-card" id="rules-button"><span>?</span><strong>RULES</strong><small>How to play</small></button>
+        <button class="menu-card share-card" id="share-button"><span>↗</span><strong>SHARE</strong><small>Invite</small></button>
+      </div>
     </section>
 
     <section class="panel game-screen hidden b2g-match" id="game-screen" aria-label="Big2Go table">
