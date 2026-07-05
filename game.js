@@ -1345,8 +1345,8 @@
     }
     if (startEl) {
       startEl.hidden = Boolean(myPlayerId && !isHost);
-      startEl.disabled = !isHost || room.playerCount < 2 || room.status === 'playing';
-      startEl.textContent = room.status === 'playing' ? 'Game Started' : 'Start Game';
+      startEl.disabled = !isHost || room.status === 'playing';
+      startEl.textContent = room.status === 'playing' ? 'Game Started' : room.playerCount >= 2 ? 'Start Game' : 'Sync / Start';
     }
     if (room.notice && room.notice !== state.lastRoomNotice) {
       state.lastRoomNotice = room.notice;
@@ -1475,10 +1475,12 @@
       }
     });
 
-    startButton?.addEventListener('click', () => {
+    startButton?.addEventListener('click', async () => {
       startButton.disabled = true;
-      setRoomStatus('Starting live game for everyone…', 'waiting');
-      sendLiveRoomMessage({ type: 'room:start' });
+      setRoomStatus('Syncing room and starting…', 'waiting');
+      await fetchLiveRoomState().catch(() => null);
+      const started = await sendLiveRoomMessage({ type: 'room:start' });
+      if (!started) startButton.disabled = false;
     });
 
     copyButton?.addEventListener('click', async () => {
@@ -1699,6 +1701,8 @@
       });
     });
     window.addEventListener('beforeunload', () => leaveCurrentRoom({ keepalive: true }));
+    window.addEventListener('focus', () => fetchLiveRoomState().catch(() => {}));
+    window.addEventListener('pageshow', () => fetchLiveRoomState().catch(() => {}));
   }
 
   function registerServiceWorker() {
