@@ -4,12 +4,12 @@
 #game-screen.b2g-match:not(.hidden) {
   width: min(100vw, 430px) !important;
   max-width: 430px !important;
-  height: 100dvh !important;
-  max-height: 100dvh !important;
+  height: calc(100dvh - 20px) !important;
+  max-height: calc(100dvh - 20px) !important;
   margin: 0 auto !important;
   padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
   display: grid !important;
-  grid-template-rows: auto auto minmax(150px, 164px) minmax(154px, 1fr) minmax(132px, 22dvh) auto !important;
+  grid-template-rows: auto auto minmax(118px, 130px) minmax(104px, 1fr) minmax(136px, 21dvh) 74px !important;
   gap: 7px !important;
   overflow: hidden !important;
   border: 0 !important;
@@ -159,7 +159,7 @@
   min-height: 0 !important;
   padding: 6px 8px !important;
   display: grid !important;
-  grid-template-rows: 16px 26px minmax(42px, 1fr) 30px !important;
+  grid-template-rows: 16px 24px minmax(34px, 1fr) 28px !important;
   gap: 4px !important;
   border-radius: 16px !important;
   overflow: hidden !important;
@@ -278,7 +278,7 @@
   border: 1px solid rgba(255,255,255,.16) !important;
   border-radius: 20px !important;
   display: grid !important;
-  grid-template-rows: auto minmax(126px, 1fr) !important;
+  grid-template-rows: auto minmax(108px, 1fr) !important;
   gap: 3px !important;
   background: rgba(18,13,55,.58) !important;
   box-shadow: none !important;
@@ -316,8 +316,8 @@
 }
 
 #game-screen #trick-play {
-  min-height: 126px !important;
-  padding: 14px 10px !important;
+  min-height: 108px !important;
+  padding: 10px 10px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -436,15 +436,17 @@
 /* 4) Player hand dominates the bottom third. */
 #game-screen .hand-card {
   min-height: 0 !important;
-  padding: 8px 6px 12px !important;
+  padding: 6px 6px 4px !important;
   display: grid !important;
-  grid-template-rows: auto 1fr !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
   gap: 6px !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  overflow: visible !important;
+  overflow: hidden !important;
+  position: relative !important;
+  z-index: 2 !important;
 }
 
 #game-screen .hand-head {
@@ -468,24 +470,28 @@
 }
 
 #game-screen #hand {
-  align-self: end !important;
+  align-self: stretch !important;
   width: 100% !important;
-  min-height: 128px !important;
-  padding: 20px 6px 6px !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 14px 8px 12px !important;
   display: grid !important;
   grid-auto-flow: column !important;
   grid-auto-columns: clamp(23px, 6.2vw, 27px) !important;
   justify-content: start !important;
   align-items: end !important;
-  overflow: visible !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  overscroll-behavior-x: contain !important;
+  -webkit-overflow-scrolling: touch !important;
   border-radius: 18px !important;
   background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)) !important;
 }
 
 #game-screen #hand .card-tile {
-  width: clamp(56px, 14vw, 60px) !important;
-  height: clamp(86px, 23vw, 100px) !important;
-  min-width: clamp(56px, 14vw, 60px) !important;
+  width: clamp(50px, 13vw, 56px) !important;
+  height: clamp(72px, 19vw, 88px) !important;
+  min-width: clamp(50px, 13vw, 56px) !important;
   flex: none !important;
   margin: 0 !important;
   transform: none !important;
@@ -494,7 +500,7 @@
 }
 
 #game-screen #hand .card-tile.selected {
-  transform: translateY(-16px) !important;
+  transform: translateY(-10px) !important;
   outline: 2px solid #ffd84a !important;
   box-shadow: 0 10px 18px rgba(0,0,0,.42) !important;
 }
@@ -521,31 +527,35 @@
 
 /* 5) Action dock: thumb friendly, no restart in main decision area. */
 #game-screen .action-dock {
-  min-height: 88px !important;
-  padding: 0 !important;
+  min-height: 74px !important;
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) * .15) !important;
   display: grid !important;
   grid-template-columns: repeat(3, 1fr) !important;
-  grid-template-rows: 36px 46px !important;
-  gap: 7px !important;
+  grid-template-rows: 30px 38px !important;
+  gap: 6px !important;
   border: 0 !important;
   border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  background: linear-gradient(180deg, rgba(5,4,20,.78), rgba(5,4,20,.96)) !important;
+  box-shadow: 0 -10px 28px rgba(0,0,0,.35) !important;
+  position: relative !important;
+  z-index: 30 !important;
 }
 
 #game-screen .action-dock .secondary,
 #game-screen .action-dock .primary {
   min-height: 0 !important;
   height: auto !important;
-  border-radius: 14px !important;
-  font-size: 15px !important;
-  box-shadow: none !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  box-shadow: 0 3px 8px rgba(0,0,0,.24) !important;
+  position: relative !important;
+  z-index: 31 !important;
 }
 
 #game-screen .action-dock .play-action {
   grid-column: 1 / -1 !important;
-  height: 46px !important;
-  font-size: 19px !important;
+  height: 38px !important;
+  font-size: 17px !important;
 }
 
 #game-screen .action-dock .restart-action {
@@ -556,12 +566,13 @@
   #game-screen.b2g-match:not(.hidden) {
     padding-left: 8px !important;
     padding-right: 8px !important;
-    grid-template-rows: auto auto minmax(140px, 154px) minmax(146px, 1fr) minmax(126px, 21dvh) auto !important;
+    grid-template-rows: auto auto minmax(108px, 118px) minmax(96px, 1fr) minmax(130px, 20dvh) 74px !important;
   }
 
   #game-screen #hand {
-    min-height: 142px !important;
-    grid-auto-columns: clamp(23px, 6.4vw, 27px) !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    grid-auto-columns: clamp(21px, 6vw, 25px) !important;
   }
 
   #game-screen #hand .card-tile {
