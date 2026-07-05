@@ -222,6 +222,19 @@ function generateCode() {
   throw new Error('Could not allocate room code');
 }
 
+function sanitizeChatText(text) {
+  return String(text || '')
+    .replace(/[<>]/g, '')
+    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120);
+}
+
+function publicChat(room) {
+  return (room.chat || []).slice(-30).map(message => ({ ...message }));
+}
+
 function publicRoom(room) {
   return {
     code: room.code,
@@ -268,7 +281,7 @@ function publicGameState(room, playerId) {
 }
 
 function privateRoomState(room, playerId) {
-  return { room: publicRoom(room), game: publicGameState(room, playerId) };
+  return { room: publicRoom(room), game: publicGameState(room, playerId), chat: publicChat(room) };
 }
 
 function roomForPlayer(code, playerId) {
@@ -276,6 +289,26 @@ function roomForPlayer(code, playerId) {
   if (!room) return { error: 'Room not found' };
   if (!room.players.some(player => player.id === playerId)) return { error: 'Player not in room' };
   return { room };
+}
+
+function addRoomChatMessage(room, playerId, text) {
+  const player = room.players.find(entry => entry.id === playerId);
+  if (!player || player.connected === false) return { ok: false, error: 'Player not in room' };
+  const messageText = sanitizeChatText(text);
+  if (!messageText) return { ok: false, error: 'Message is empty' };
+  const now = Date.now();
+  if (player.lastChatAt && now - player.lastChatAt < 900) return { ok: false, error: 'Please wait before sending another message' };
+  player.lastChatAt = now;
+  const message = {
+    id: crypto.randomUUID(),
+    playerId,
+    name: player.name,
+    text: messageText,
+    at: now
+  };
+  room.chat = [...(room.chat || []), message].slice(-30);
+  room.updatedAt = now;
+  return { ok: true, message };
 }
 
 function applyRoomAction(code, playerId, action) {
@@ -286,6 +319,9 @@ function applyRoomAction(code, playerId, action) {
     if (action.type === 'room:start') startRoomGame(room.code, playerId);
     else if (action.type === 'room:leave') {
       const result = leaveRoom(room.code, playerId);
+      if (!result.ok) return result;
+    } else if (action.type === 'room:chat') {
+      const result = addRoomChatMessage(room, playerId, action.text);
       if (!result.ok) return result;
     } else if (action.type === 'game:play') {
       const result = applyRoomPlay(room.code, playerId, action.cards);
@@ -330,6 +366,7 @@ function createRoom(name = 'Host') {
     players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true, connected: true }],
     clients: new Set(),
     game: null,
+    chat: [],
     notice: '',
     createdAt: Date.now(),
     updatedAt: Date.now()
@@ -593,7 +630,7 @@ function createHttpServer() {
       try {
         const message = JSON.parse(raw.toString());
         if (message.type === 'room:ping') socket.send(JSON.stringify({ type: 'room:pong', at: Date.now() }));
-        if (message.type === 'room:start' || message.type === 'room:leave' || message.type === 'game:play' || message.type === 'game:pass') {
+        if (message.type === 'room:start' || message.type === 'room:leave' || message.type === 'room:chat' || message.type === 'game:play' || message.type === 'game:pass') {
           const result = applyRoomAction(code, playerId, message);
           if (!result.ok) socket.send(JSON.stringify({ type: 'room:error', error: result.error }));
         }

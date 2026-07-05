@@ -28,8 +28,8 @@
   <link rel="stylesheet" href="big2go-cascade-guard.css" />
   <link rel="stylesheet" href="big2go-polish-guard.css" />
   <link rel="stylesheet" href="big2go-hand-guard.css" />
-  <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=25" />
-  <link rel="stylesheet" href="big2go-room.css?v=7" />
+  <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=26" />
+  <link rel="stylesheet" href="big2go-room.css?v=9" />
 </head>
 <body>
   <main class="app-shell">
@@ -115,6 +115,25 @@
         <div id="opponent-area" class="opponent-list"></div>
       </section>
 
+      <section class="room-chat-panel hidden" id="room-chat-panel" aria-label="Room chat">
+        <div class="room-chat-head">
+          <strong>Table Chat</strong>
+          <span id="room-chat-count">0</span>
+        </div>
+        <div class="quick-chat-row" aria-label="Quick chat">
+          <button type="button" data-chat-quick="Nice move">Nice move</button>
+          <button type="button" data-chat-quick="Good game">Good game</button>
+          <button type="button" data-chat-quick="Hurry up">Hurry up</button>
+          <button type="button" data-chat-quick="🔥">🔥</button>
+          <button type="button" data-chat-quick="😂">😂</button>
+        </div>
+        <div class="room-chat-messages" id="room-chat-messages" aria-live="polite"></div>
+        <form class="room-chat-form" id="room-chat-form">
+          <input id="room-chat-input" type="text" maxlength="120" autocomplete="off" placeholder="Say something…" aria-label="Chat message" />
+          <button type="submit" id="room-chat-send">Send</button>
+        </form>
+      </section>
+
       <section class="table-arena" aria-label="Current trick">
         <div class="arena-header">
           <div>
@@ -177,6 +196,6 @@
     </dialog>
   </main>
 
-  <script src="game.js?v=33" defer></script>
+  <script src="game.js?v=36" defer></script>
 </body>
 </html>

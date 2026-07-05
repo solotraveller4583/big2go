@@ -56,6 +56,8 @@
     roomSocket: null,
     roomPollTimer: null,
     lastRoomNotice: '',
+    chat: [],
+    lastChatSentAt: 0,
     liveRoom: null
   };
 
@@ -99,7 +101,13 @@
     helpText: document.querySelector('#help-text'),
     heatText: document.querySelector('#heat-text'),
     heatValue: document.querySelector('#heat-value'),
-    heatFill: document.querySelector('#heat-fill')
+    heatFill: document.querySelector('#heat-fill'),
+    chatPanel: document.querySelector('#room-chat-panel'),
+    chatMessages: document.querySelector('#room-chat-messages'),
+    chatCount: document.querySelector('#room-chat-count'),
+    chatForm: document.querySelector('#room-chat-form'),
+    chatInput: document.querySelector('#room-chat-input'),
+    chatSend: document.querySelector('#room-chat-send')
   };
 
   function makeCard(rankIndex, suitIndex) {
@@ -859,6 +867,57 @@
     });
   }
 
+  function applyChatPayload(chat) {
+    state.chat = Array.isArray(chat) ? chat.slice(-30) : [];
+    renderChat();
+  }
+
+  function renderChat() {
+    if (!els.chatPanel || !els.chatMessages) return;
+    const isLive = Boolean(state.liveRoom?.code);
+    els.chatPanel.classList.toggle('hidden', !isLive);
+    if (!isLive) return;
+    els.chatMessages.innerHTML = '';
+    const messages = state.chat.slice(-12);
+    if (!messages.length) {
+      const empty = document.createElement('div');
+      empty.className = 'chat-empty';
+      empty.textContent = 'Say hi or use a quick chat.';
+      els.chatMessages.appendChild(empty);
+    } else {
+      messages.forEach(message => {
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble';
+        bubble.dataset.mine = message.playerId === state.liveRoom?.playerId ? 'true' : 'false';
+        const name = document.createElement('strong');
+        name.textContent = message.playerId === state.liveRoom?.playerId ? 'You' : message.name || 'Player';
+        const text = document.createElement('span');
+        text.textContent = message.text || '';
+        bubble.append(name, text);
+        els.chatMessages.appendChild(bubble);
+      });
+      els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+    }
+    if (els.chatCount) els.chatCount.textContent = String(state.chat.length);
+  }
+
+  async function sendRoomChat(text) {
+    const message = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+    if (!message || !state.liveRoom?.code) return;
+    const now = Date.now();
+    if (now - state.lastChatSentAt < 900) {
+      showOracle('Slow down', 'Please wait a moment before sending another chat message.');
+      return;
+    }
+    state.lastChatSentAt = now;
+    if (els.chatSend) els.chatSend.disabled = true;
+    const result = await sendLiveRoomMessage({ type: 'room:chat', text: message });
+    if (result?.chat) applyChatPayload(result.chat);
+    if (result && els.chatInput) els.chatInput.value = '';
+    if (result) setTimeout(() => fetchLiveRoomState().catch(() => {}), 120);
+    if (els.chatSend) setTimeout(() => { els.chatSend.disabled = false; }, 900);
+  }
+
   function renderCardTile(card, selectable = true) {
     const button = document.createElement('button');
     button.type = 'button';
@@ -912,6 +971,7 @@
     renderOpponents();
     renderTrick();
     renderHand();
+    renderChat();
     updateStatus();
     els.sparkCount.textContent = String(state.sparks);
     els.roundCount.textContent = String(state.round);
@@ -1197,6 +1257,7 @@
     if (!response.ok) throw new Error(payload.error || 'Could not sync room');
     if (payload.room) renderRoomState(payload.room);
     if (payload.game) applyLiveGame(payload.game, payload.room);
+    if (payload.chat) applyChatPayload(payload.chat);
     return payload;
   }
 
@@ -1251,7 +1312,8 @@
       if (!response.ok) throw new Error(payload.error || 'Room action failed');
       if (payload.room) renderRoomState(payload.room);
       if (payload.game) applyLiveGame(payload.game, payload.room);
-      return true;
+      if (payload.chat) applyChatPayload(payload.chat);
+      return payload;
     } catch (error) {
       if (state.roomSocket && state.roomSocket.readyState === WebSocket.OPEN) {
         state.roomSocket.send(JSON.stringify(message));
@@ -1381,6 +1443,7 @@
         if (message.type === 'room:update' || message.type === 'game:update') {
           if (message.room) renderRoomState(message.room);
           if (message.game) applyLiveGame(message.game, message.room);
+          if (message.chat) applyChatPayload(message.chat);
         }
         if (message.type === 'room:error') {
           state.busy = false;
@@ -1646,6 +1709,13 @@
     els.rules.addEventListener('click', () => showHelp('How to Play', RULES_HTML));
     els.privateRoom?.addEventListener('click', showPrivateRoom);
     els.share.addEventListener('click', shareGame);
+    els.chatForm?.addEventListener('submit', event => {
+      event.preventDefault();
+      sendRoomChat(els.chatInput?.value || '');
+    });
+    document.querySelectorAll('[data-chat-quick]').forEach(button => {
+      button.addEventListener('click', () => sendRoomChat(button.dataset.chatQuick || button.textContent || ''));
+    });
     document.querySelector('#profile-button')?.addEventListener('click', () => showHelp('Player Profile', '<div class="profile-modal"><div class="modal-row"><strong>Guest Pro</strong><span>Level 8</span></div><div class="modal-row"><strong>League</strong><span>Bronze III</span></div><div class="modal-row"><strong>Best Streak</strong><span>3 wins</span></div><div class="modal-row"><strong>Card Back</strong><span>Neon Starter</span></div></div>'));
     document.querySelectorAll('[data-home-tab]').forEach(button => {
       button.addEventListener('click', () => {

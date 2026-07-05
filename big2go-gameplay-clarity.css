@@ -9,7 +9,7 @@
   margin: 0 auto !important;
   padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
   display: grid !important;
-  grid-template-rows: auto auto minmax(206px, 1fr) minmax(164px, 29dvh) auto !important;
+  grid-template-rows: auto auto minmax(112px, 128px) minmax(150px, 1fr) minmax(172px, 29dvh) auto !important;
   gap: 7px !important;
   overflow: hidden !important;
   border: 0 !important;
@@ -150,6 +150,102 @@
   box-shadow: none !important;
 }
 
+/* 2b) In-room chat uses the otherwise empty middle lane without blocking cards. */
+#game-screen .room-chat-panel.hidden {
+  display: none !important;
+}
+
+#game-screen .room-chat-panel {
+  min-height: 0 !important;
+  padding: 7px 8px !important;
+  display: grid !important;
+  grid-template-rows: auto 28px 1fr 32px !important;
+  gap: 5px !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+#game-screen .room-chat-head {
+  min-height: 16px !important;
+}
+
+#game-screen .room-chat-head strong {
+  font-size: 10px !important;
+  letter-spacing: .1em !important;
+}
+
+#game-screen #room-chat-count {
+  min-width: 20px !important;
+  height: 20px !important;
+  font-size: 10px !important;
+}
+
+#game-screen .quick-chat-row {
+  gap: 5px !important;
+}
+
+#game-screen .quick-chat-row button {
+  min-height: 28px !important;
+  padding: 0 9px !important;
+  font-size: 11px !important;
+}
+
+#game-screen .room-chat-messages {
+  max-height: 32px !important;
+  min-height: 24px !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  gap: 6px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+}
+
+#game-screen .room-chat-messages::-webkit-scrollbar { display: none !important; }
+
+#game-screen .chat-empty {
+  width: 100% !important;
+  font-size: 11px !important;
+  opacity: .75 !important;
+}
+
+#game-screen .chat-bubble {
+  flex: 0 0 auto !important;
+  max-width: min(78%, 250px) !important;
+  padding: 5px 8px !important;
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 5px !important;
+  border-radius: 999px !important;
+}
+
+#game-screen .chat-bubble strong {
+  font-size: 9px !important;
+}
+
+#game-screen .chat-bubble span {
+  font-size: 12px !important;
+  white-space: nowrap !important;
+}
+
+#game-screen .room-chat-form {
+  display: grid !important;
+  grid-template-columns: 1fr 54px !important;
+  gap: 5px !important;
+}
+
+#game-screen .room-chat-form input,
+#game-screen .room-chat-form button {
+  min-height: 32px !important;
+  height: 32px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+}
+
+#game-screen .room-chat-form button {
+  padding: 0 8px !important;
+}
+
 /* 3) Center table pile: clear, not huge. */
 #game-screen .table-arena {
   min-width: 0 !important;
@@ -160,10 +256,11 @@
   border: 1px solid rgba(255,255,255,.16) !important;
   border-radius: 20px !important;
   display: grid !important;
-  grid-template-rows: auto minmax(116px, 1fr) auto !important;
-  gap: 4px !important;
+  grid-template-rows: auto minmax(96px, 1fr) auto auto !important;
+  gap: 3px !important;
   background: rgba(18,13,55,.58) !important;
   box-shadow: none !important;
+  overflow: hidden !important;
 }
 
 #game-screen .arena-header {
@@ -314,9 +411,13 @@
   position: relative !important;
   z-index: 3 !important;
   margin: 0 !important;
-  min-height: 14px !important;
-  font-size: 12px !important;
-  line-height: 1.15 !important;
+  min-height: 12px !important;
+  max-height: 16px !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  font-size: 11px !important;
+  line-height: 1.12 !important;
   color: rgba(255,255,255,.82) !important;
   text-align: center !important;
 }
@@ -338,7 +439,10 @@
 #game-screen .hand-head {
   display: grid !important;
   grid-template-columns: 1fr !important;
-  padding: 0 2px !important;
+  padding: 4px 8px !important;
+  border-radius: 13px !important;
+  background: rgba(5, 5, 22, .54) !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
 }
 
 #game-screen .hand-head h2 {
@@ -441,7 +545,7 @@
   #game-screen.b2g-match:not(.hidden) {
     padding-left: 8px !important;
     padding-right: 8px !important;
-    grid-template-rows: auto auto minmax(100px, 1fr) minmax(205px, 37dvh) auto !important;
+    grid-template-rows: auto auto minmax(104px, 120px) minmax(136px, 1fr) minmax(166px, 28dvh) auto !important;
   }
 
   #game-screen #hand {

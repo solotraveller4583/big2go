@@ -1,4 +1,4 @@
-const CACHE_NAME = 'big2go-v41';
+const CACHE_NAME = 'big2go-v44';
 const ASSETS = [
   './',
   './index.html',
@@ -14,9 +14,9 @@ const ASSETS = [
   './big2go-cascade-guard.css',
   './big2go-polish-guard.css',
   './big2go-hand-guard.css',
-  './big2go-gameplay-clarity.css?v=25',
-  './big2go-room.css?v=7',
-  './game.js?v=33',
+  './big2go-gameplay-clarity.css?v=26',
+  './big2go-room.css?v=9',
+  './game.js?v=36',
   './manifest.webmanifest',
   './icon.svg',
   './privacy.html',
@@ -61,6 +61,7 @@ async function cacheFirst(request) {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/rooms')) return;
   const isPage = event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html');
   const isFreshAsset = url.pathname.endsWith('/game.js') || url.pathname.endsWith('/sw.js') || url.pathname.endsWith('.css');
   event.respondWith((isPage || isFreshAsset) ? networkFirst(event.request) : cacheFirst(event.request));

@@ -151,3 +151,56 @@ test('leaving a room marks the player as left and announces it', () => {
   assert.equal(leftPlayer.connected, false);
   assert.match(hostView.room.notice, /Lantern left the room/);
 });
+
+test('private room chat sends sanitized messages to every player state', () => {
+  const { room, playerId: hostId } = server.createRoom('Host');
+  const joined = server.joinRoom(room.code, 'Maya');
+
+  const result = server.applyRoomAction(room.code, joined.playerId, { type: 'room:chat', text: '  Nice move <script>  ' });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.chat.length, 1);
+  assert.equal(result.chat[0].playerId, joined.playerId);
+  assert.equal(result.chat[0].name, 'Maya');
+  assert.equal(result.chat[0].text, 'Nice move script');
+
+  const hostView = server.privateRoomState(room, hostId);
+  const friendView = server.privateRoomState(room, joined.playerId);
+  assert.equal(hostView.chat[0].text, 'Nice move script');
+  assert.deepEqual(hostView.chat, friendView.chat);
+});
+
+test('HTTP room chat action and state endpoints sync chat without WebSocket', async () => {
+  const app = server.createHttpServer();
+  await new Promise(resolve => app.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${app.address().port}`;
+  const post = async (path, body) => {
+    const response = await fetch(`${base}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body || {})
+    });
+    const payload = await response.json();
+    assert.equal(response.ok, true, payload.error || path);
+    return payload;
+  };
+  const get = async path => {
+    const response = await fetch(`${base}${path}`, { headers: { 'Accept': 'application/json' } });
+    const payload = await response.json();
+    assert.equal(response.ok, true, payload.error || path);
+    return payload;
+  };
+
+  try {
+    const created = await post('/api/rooms', { name: 'Host' });
+    const joined = await post('/api/rooms/join', { code: created.room.code, name: 'Jack' });
+    await post('/api/rooms/action', { type: 'room:chat', code: created.room.code, playerId: joined.playerId, text: 'Good game 🙌' });
+
+    const hostState = await get(`/api/rooms/state?code=${created.room.code}&playerId=${created.playerId}`);
+    assert.equal(hostState.chat.length, 1);
+    assert.equal(hostState.chat[0].name, 'Jack');
+    assert.equal(hostState.chat[0].text, 'Good game 🙌');
+  } finally {
+    await new Promise(resolve => app.close(resolve));
+  }
+});
