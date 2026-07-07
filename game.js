@@ -58,7 +58,20 @@
     lastRoomNotice: '',
     chat: [],
     lastChatSentAt: 0,
-    liveRoom: null
+    liveRoom: null,
+    voice: {
+      enabled: false,
+      micMuted: true,
+      speakerMuted: false,
+      mutedPlayers: new Set(),
+      statuses: [],
+      stream: null,
+      peers: new Map(),
+      analyser: null,
+      speaking: false,
+      speakingTimer: null,
+      lastStateSentAt: 0
+    }
   };
 
   const audio = {
@@ -107,7 +120,13 @@
     chatCount: document.querySelector('#room-chat-count'),
     chatForm: document.querySelector('#room-chat-form'),
     chatInput: document.querySelector('#room-chat-input'),
-    chatSend: document.querySelector('#room-chat-send')
+    chatSend: document.querySelector('#room-chat-send'),
+    voicePanel: document.querySelector('#voice-panel'),
+    voiceMic: document.querySelector('#voice-mic-button'),
+    voiceSpeaker: document.querySelector('#voice-speaker-button'),
+    voiceMuteAll: document.querySelector('#voice-mute-all-button'),
+    voiceStatus: document.querySelector('#voice-status'),
+    remoteAudio: document.querySelector('#remote-audio')
   };
 
   function makeCard(rankIndex, suitIndex) {
@@ -749,6 +768,7 @@
 
   function newGame() {
     const count = Number(els.playerCount.value) || 4;
+    disableVoiceChat();
     state.liveRoom = null;
     stopRoomPolling();
     cancelAiTimer();
@@ -833,8 +853,22 @@
       const badge = document.createElement('div');
       badge.className = 'opponent-badge';
       badge.textContent = player.finished ? '✓' : String(player.hand.length);
+      const voiceState = voiceStatusFor(player.id);
+      const voice = document.createElement('button');
+      voice.type = 'button';
+      voice.className = `voice-chip${voiceState.speaking ? ' speaking' : ''}${voiceState.muted ? ' muted' : ''}`;
+      voice.textContent = voiceState.muted ? '🔇' : '🎤';
+      voice.title = voiceState.muted ? 'Muted' : voiceState.speaking ? 'Talking' : 'Voice on';
+      voice.setAttribute('aria-label', `Mute ${player.name}`);
+      voice.addEventListener('click', event => {
+        event.stopPropagation();
+        toggleMutePlayer(player.id);
+      });
+      const controls = document.createElement('div');
+      controls.className = 'opponent-controls';
+      controls.append(badge, voice);
       row.appendChild(text);
-      row.appendChild(badge);
+      row.appendChild(controls);
       els.opponents.appendChild(row);
     });
   }
@@ -899,6 +933,224 @@
       els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
     }
     if (els.chatCount) els.chatCount.textContent = String(state.chat.length);
+  }
+
+  function voiceStatusFor(playerId) {
+    const status = state.voice.statuses.find(entry => entry.id === playerId) || {};
+    const mutedByMe = state.voice.mutedPlayers.has(playerId);
+    return {
+      enabled: Boolean(status.enabled),
+      muted: mutedByMe || status.muted !== false || !status.enabled,
+      speaking: Boolean(status.speaking) && !mutedByMe && status.muted === false
+    };
+  }
+
+  function updateRemoteAudioMute() {
+    state.voice.peers.forEach((entry, playerId) => {
+      if (entry.audio) entry.audio.muted = state.voice.speakerMuted || state.voice.mutedPlayers.has(playerId);
+    });
+  }
+
+  function updateVoicePanel() {
+    const isLive = Boolean(state.liveRoom?.code);
+    els.voicePanel?.classList.toggle('hidden', !isLive);
+    if (!isLive) return;
+    els.voiceMic?.classList.toggle('muted', state.voice.micMuted || !state.voice.enabled);
+    els.voiceMic?.classList.toggle('speaking', state.voice.speaking && !state.voice.micMuted);
+    els.voiceMic?.setAttribute('aria-pressed', state.voice.enabled && !state.voice.micMuted ? 'true' : 'false');
+    if (els.voiceMic) els.voiceMic.setAttribute('aria-label', state.voice.micMuted ? 'Turn microphone on' : 'Mute microphone');
+    els.voiceSpeaker?.classList.toggle('muted', state.voice.speakerMuted);
+    els.voiceSpeaker?.setAttribute('aria-pressed', state.voice.speakerMuted ? 'false' : 'true');
+    if (els.voiceSpeaker) els.voiceSpeaker.textContent = state.voice.speakerMuted ? '🔇' : '🔊';
+    if (els.voiceStatus) {
+      els.voiceStatus.textContent = !state.voice.enabled ? 'Voice off' : state.voice.micMuted ? 'Mic muted' : state.voice.speaking ? 'Talking' : 'Voice on';
+    }
+    updateRemoteAudioMute();
+  }
+
+  function sendVoiceState({ force = false } = {}) {
+    if (!state.liveRoom?.code) return;
+    const now = Date.now();
+    if (!force && now - state.voice.lastStateSentAt < 450) return;
+    state.voice.lastStateSentAt = now;
+    const payload = { type: 'voice:state', voice: { enabled: state.voice.enabled, muted: state.voice.micMuted, speaking: state.voice.speaking } };
+    if (state.roomSocket?.readyState === WebSocket.OPEN) state.roomSocket.send(JSON.stringify(payload));
+    else sendLiveRoomMessage(payload).catch?.(() => {});
+  }
+
+  function applyVoicePayload(voice) {
+    state.voice.statuses = Array.isArray(voice) ? voice : [];
+    updateVoicePanel();
+    renderOpponents();
+  }
+
+  function voicePeerIds() {
+    return state.players.map(player => player.id).filter(id => id && id !== state.liveRoom?.playerId);
+  }
+
+  function sendVoiceSignal(targetId, signal) {
+    if (!targetId || !signal || state.roomSocket?.readyState !== WebSocket.OPEN) return;
+    state.roomSocket.send(JSON.stringify({ type: 'voice:signal', targetId, signal }));
+  }
+
+  function createVoicePeer(playerId) {
+    if (state.voice.peers.has(playerId)) return state.voice.peers.get(playerId);
+    const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    const entry = { pc, audio: null };
+    state.voice.peers.set(playerId, entry);
+    if (state.voice.stream) state.voice.stream.getTracks().forEach(track => pc.addTrack(track, state.voice.stream));
+    pc.onicecandidate = event => {
+      if (event.candidate) sendVoiceSignal(playerId, { candidate: event.candidate });
+    };
+    pc.ontrack = event => {
+      const [stream] = event.streams;
+      if (!stream || entry.audio) return;
+      const audioEl = document.createElement('audio');
+      audioEl.autoplay = true;
+      audioEl.playsInline = true;
+      audioEl.srcObject = stream;
+      audioEl.muted = state.voice.speakerMuted || state.voice.mutedPlayers.has(playerId);
+      entry.audio = audioEl;
+      els.remoteAudio?.appendChild(audioEl);
+    };
+    pc.onconnectionstatechange = () => {
+      if (['failed', 'closed', 'disconnected'].includes(pc.connectionState)) closeVoicePeer(playerId);
+    };
+    return entry;
+  }
+
+  function closeVoicePeer(playerId) {
+    const entry = state.voice.peers.get(playerId);
+    if (!entry) return;
+    try { entry.pc.close(); } catch (_) {}
+    entry.audio?.remove();
+    state.voice.peers.delete(playerId);
+  }
+
+  async function callVoicePeer(playerId) {
+    if (!state.voice.enabled || !state.voice.stream || !('RTCPeerConnection' in window)) return;
+    const { pc } = createVoicePeer(playerId);
+    if (pc.signalingState !== 'stable') return;
+    const offer = await pc.createOffer({ offerToReceiveAudio: true });
+    await pc.setLocalDescription(offer);
+    sendVoiceSignal(playerId, { description: pc.localDescription });
+  }
+
+  async function handleVoiceSignal(from, signal) {
+    if (!state.voice.enabled || !from || from === state.liveRoom?.playerId || !('RTCPeerConnection' in window)) return;
+    const { pc } = createVoicePeer(from);
+    if (signal.description) {
+      await pc.setRemoteDescription(signal.description);
+      if (signal.description.type === 'offer') {
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        sendVoiceSignal(from, { description: pc.localDescription });
+      }
+    }
+    if (signal.candidate) await pc.addIceCandidate(signal.candidate).catch(() => {});
+  }
+
+  function startSpeakingMeter(stream) {
+    if (!('AudioContext' in window || 'webkitAudioContext' in window)) return;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const source = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+    state.voice.analyser = { ctx, analyser, data: new Uint8Array(analyser.fftSize) };
+    const tick = () => {
+      if (!state.voice.analyser) return;
+      const meter = state.voice.analyser;
+      meter.analyser.getByteTimeDomainData(meter.data);
+      let sum = 0;
+      for (const value of meter.data) {
+        const centered = value - 128;
+        sum += centered * centered;
+      }
+      const rms = Math.sqrt(sum / meter.data.length);
+      const speaking = state.voice.enabled && !state.voice.micMuted && rms > 9;
+      if (speaking !== state.voice.speaking) {
+        state.voice.speaking = speaking;
+        updateVoicePanel();
+        sendVoiceState({ force: true });
+      }
+      state.voice.speakingTimer = requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  async function ensureVoiceStream() {
+    if (state.voice.stream) return state.voice.stream;
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone is not available in this browser.');
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    state.voice.stream = stream;
+    startSpeakingMeter(stream);
+    return stream;
+  }
+
+  async function enableVoiceChat() {
+    if (!state.liveRoom?.code) return;
+    try {
+      await ensureVoiceStream();
+      state.voice.enabled = true;
+      state.voice.micMuted = false;
+      state.voice.stream.getAudioTracks().forEach(track => { track.enabled = true; });
+      updateVoicePanel();
+      sendVoiceState({ force: true });
+      await Promise.all(voicePeerIds().map(id => callVoicePeer(id).catch(() => {})));
+    } catch (error) {
+      showOracle('Voice unavailable', error.message || 'Allow microphone access to use room voice chat.');
+      state.voice.enabled = false;
+      state.voice.micMuted = true;
+      updateVoicePanel();
+    }
+  }
+
+  function disableVoiceChat() {
+    state.voice.enabled = false;
+    state.voice.micMuted = true;
+    state.voice.speaking = false;
+    if (state.voice.speakingTimer) cancelAnimationFrame(state.voice.speakingTimer);
+    state.voice.speakingTimer = null;
+    state.voice.analyser?.ctx?.close?.();
+    state.voice.analyser = null;
+    state.voice.stream?.getTracks().forEach(track => track.stop());
+    state.voice.stream = null;
+    [...state.voice.peers.keys()].forEach(closeVoicePeer);
+    updateVoicePanel();
+    sendVoiceState({ force: true });
+  }
+
+  async function toggleMic() {
+    if (!state.voice.enabled) {
+      await enableVoiceChat();
+      return;
+    }
+    state.voice.micMuted = !state.voice.micMuted;
+    state.voice.stream?.getAudioTracks().forEach(track => { track.enabled = !state.voice.micMuted; });
+    if (state.voice.micMuted) state.voice.speaking = false;
+    updateVoicePanel();
+    sendVoiceState({ force: true });
+  }
+
+  function toggleSpeaker() {
+    state.voice.speakerMuted = !state.voice.speakerMuted;
+    updateVoicePanel();
+  }
+
+  function toggleMutePlayer(playerId) {
+    if (!playerId) return;
+    if (state.voice.mutedPlayers.has(playerId)) state.voice.mutedPlayers.delete(playerId);
+    else state.voice.mutedPlayers.add(playerId);
+    updateVoicePanel();
+    renderOpponents();
+  }
+
+  function muteAllVoicePlayers() {
+    voicePeerIds().forEach(id => state.voice.mutedPlayers.add(id));
+    updateVoicePanel();
+    renderOpponents();
   }
 
   async function sendRoomChat(text) {
@@ -1258,6 +1510,7 @@
     if (payload.room) renderRoomState(payload.room);
     if (payload.game) applyLiveGame(payload.game, payload.room);
     if (payload.chat) applyChatPayload(payload.chat);
+    if (payload.voice) applyVoicePayload(payload.voice);
     return payload;
   }
 
@@ -1290,6 +1543,7 @@
       }
     } catch (_) {}
     stopRoomPolling();
+    disableVoiceChat();
     if (state.roomSocket) {
       state.roomSocket.close();
       state.roomSocket = null;
@@ -1313,6 +1567,7 @@
       if (payload.room) renderRoomState(payload.room);
       if (payload.game) applyLiveGame(payload.game, payload.room);
       if (payload.chat) applyChatPayload(payload.chat);
+      if (payload.voice) applyVoicePayload(payload.voice);
       return payload;
     } catch (error) {
       if (state.roomSocket && state.roomSocket.readyState === WebSocket.OPEN) {
@@ -1353,6 +1608,7 @@
       passes: Number(game.trick?.passes) || 0
     };
     state.players = game.players.map((player, index) => ({
+      id: player.id,
       name: index === game.playerIndex ? 'You' : player.name,
       isHuman: index === game.playerIndex,
       finished: Boolean(player.finished),
@@ -1444,6 +1700,10 @@
           if (message.room) renderRoomState(message.room);
           if (message.game) applyLiveGame(message.game, message.room);
           if (message.chat) applyChatPayload(message.chat);
+          if (message.voice) applyVoicePayload(message.voice);
+        }
+        if (message.type === 'voice:signal') {
+          handleVoiceSignal(message.from, message.signal).catch(() => {});
         }
         if (message.type === 'room:error') {
           state.busy = false;
@@ -1713,6 +1973,9 @@
       event.preventDefault();
       sendRoomChat(els.chatInput?.value || '');
     });
+    els.voiceMic?.addEventListener('click', toggleMic);
+    els.voiceSpeaker?.addEventListener('click', toggleSpeaker);
+    els.voiceMuteAll?.addEventListener('click', muteAllVoicePlayers);
     document.querySelectorAll('[data-chat-quick]').forEach(button => {
       button.addEventListener('click', () => sendRoomChat(button.dataset.chatQuick || button.textContent || ''));
     });

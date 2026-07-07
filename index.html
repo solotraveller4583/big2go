@@ -30,6 +30,7 @@
   <link rel="stylesheet" href="big2go-hand-guard.css" />
   <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=29" />
   <link rel="stylesheet" href="big2go-room.css?v=9" />
+  <link rel="stylesheet" href="big2go-voice.css?v=1" />
 </head>
 <body>
   <main class="app-shell">
@@ -134,6 +135,14 @@
         </form>
       </section>
 
+      <div class="voice-panel hidden" id="voice-panel" aria-label="Voice chat controls">
+        <button type="button" class="voice-btn mic muted" id="voice-mic-button" aria-pressed="false" aria-label="Turn microphone on">🎤</button>
+        <button type="button" class="voice-btn speaker" id="voice-speaker-button" aria-pressed="true" aria-label="Toggle speaker">🔊</button>
+        <button type="button" class="voice-btn mute-all" id="voice-mute-all-button" aria-label="Mute all players">🔇</button>
+        <span class="voice-status" id="voice-status">Voice off</span>
+      </div>
+      <div id="remote-audio" class="remote-audio" aria-hidden="true"></div>
+
       <section class="table-arena" aria-label="Current trick">
         <div class="arena-header">
           <div>
@@ -196,6 +205,6 @@
     </dialog>
   </main>
 
-  <script src="game.js?v=36" defer></script>
+  <script src="game.js?v=37" defer></script>
 </body>
 </html>

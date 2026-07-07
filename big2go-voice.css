@@ -1,0 +1,121 @@
+/* Big2Go in-room voice chat: small game-native controls, not a call UI. */
+.voice-panel {
+  position: absolute;
+  right: 12px;
+  top: calc(env(safe-area-inset-top, 0px) + 72px);
+  z-index: 42;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: min(72vw, 286px);
+  padding: 6px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(7, 6, 31, .76);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+.voice-panel.hidden { display: none !important; }
+
+.voice-btn {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  box-shadow: none;
+}
+
+.voice-btn.mic:not(.muted) {
+  background: linear-gradient(180deg, rgba(76,255,176,.95), rgba(20,171,103,.95));
+  color: #05180d;
+  border-color: rgba(149,255,203,.85);
+}
+
+.voice-btn.speaking {
+  animation: voicePulse 860ms ease-in-out infinite;
+}
+
+.voice-btn.muted,
+.voice-btn.speaker.muted {
+  background: rgba(255,255,255,.09);
+  color: rgba(255,255,255,.62);
+  filter: grayscale(.25);
+}
+
+.voice-status {
+  min-width: 0;
+  max-width: 96px;
+  color: rgba(255,255,255,.86);
+  font-weight: 900;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remote-audio {
+  position: fixed;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.opponent-controls {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 5px;
+}
+
+.voice-chip {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.11);
+  color: rgba(255,255,255,.74);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: 13px;
+  box-shadow: none;
+}
+
+.voice-chip:not(.muted) {
+  background: rgba(68, 236, 160, .16);
+  border-color: rgba(68, 236, 160, .38);
+  color: #b7ffd9;
+}
+
+.voice-chip.speaking {
+  background: rgba(68, 236, 160, .92);
+  color: #062415;
+  animation: voicePulse 780ms ease-in-out infinite;
+}
+
+.voice-chip.muted {
+  opacity: .62;
+}
+
+@keyframes voicePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(68,236,160,.34); }
+  50% { transform: scale(1.07); box-shadow: 0 0 0 7px rgba(68,236,160,0); }
+}
+
+@media (max-width: 380px) {
+  .voice-panel {
+    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    right: 8px;
+    padding: 5px;
+  }
+  .voice-status { display: none; }
+}

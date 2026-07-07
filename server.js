@@ -235,6 +235,17 @@ function publicChat(room) {
   return (room.chat || []).slice(-30).map(message => ({ ...message }));
 }
 
+function publicVoice(room) {
+  return room.players.map(player => ({
+    id: player.id,
+    name: player.name,
+    muted: player.voiceMuted !== false,
+    speaking: Boolean(player.voiceSpeaking),
+    enabled: Boolean(player.voiceEnabled),
+    connected: player.connected !== false
+  }));
+}
+
 function publicRoom(room) {
   return {
     code: room.code,
@@ -281,7 +292,7 @@ function publicGameState(room, playerId) {
 }
 
 function privateRoomState(room, playerId) {
-  return { room: publicRoom(room), game: publicGameState(room, playerId), chat: publicChat(room) };
+  return { room: publicRoom(room), game: publicGameState(room, playerId), chat: publicChat(room), voice: publicVoice(room) };
 }
 
 function roomForPlayer(code, playerId) {
@@ -289,6 +300,16 @@ function roomForPlayer(code, playerId) {
   if (!room) return { error: 'Room not found' };
   if (!room.players.some(player => player.id === playerId)) return { error: 'Player not in room' };
   return { room };
+}
+
+function updateVoiceState(room, playerId, voice = {}) {
+  const player = room.players.find(entry => entry.id === playerId);
+  if (!player || player.connected === false) return { ok: false, error: 'Player not in room' };
+  player.voiceEnabled = Boolean(voice.enabled);
+  player.voiceMuted = voice.muted !== false;
+  player.voiceSpeaking = Boolean(voice.speaking) && player.voiceEnabled && !player.voiceMuted;
+  room.updatedAt = Date.now();
+  return { ok: true };
 }
 
 function addRoomChatMessage(room, playerId, text) {
@@ -322,6 +343,9 @@ function applyRoomAction(code, playerId, action) {
       if (!result.ok) return result;
     } else if (action.type === 'room:chat') {
       const result = addRoomChatMessage(room, playerId, action.text);
+      if (!result.ok) return result;
+    } else if (action.type === 'voice:state') {
+      const result = updateVoiceState(room, playerId, action.voice || action);
       if (!result.ok) return result;
     } else if (action.type === 'game:play') {
       const result = applyRoomPlay(room.code, playerId, action.cards);
@@ -363,7 +387,7 @@ function createRoom(name = 'Host') {
     code,
     hostId,
     maxPlayers: MAX_PLAYERS,
-    players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true, connected: true }],
+    players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true, connected: true, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false }],
     clients: new Set(),
     game: null,
     chat: [],
@@ -381,7 +405,7 @@ function joinRoom(code, name = 'Friend') {
   if (room.game) return { error: 'Game already started' };
   if (room.players.filter(player => player.connected !== false).length >= room.maxPlayers) return { error: 'Room is full' };
   const playerId = crypto.randomUUID();
-  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true, connected: true });
+  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true, connected: true, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false });
   room.notice = `${room.players[room.players.length - 1].name} joined the room.`;
   room.updatedAt = Date.now();
   broadcast(room);
@@ -395,6 +419,9 @@ function leaveRoom(code, playerId) {
   if (!player) return { ok: false, error: 'Player not in room' };
   if (player.connected === false) return { ok: true, room };
   player.connected = false;
+  player.voiceEnabled = false;
+  player.voiceMuted = true;
+  player.voiceSpeaking = false;
   room.notice = `${player.name} left the room.`;
   if (room.game && room.game.status === 'playing') {
     room.game.logs.unshift(room.notice);
@@ -630,7 +657,21 @@ function createHttpServer() {
       try {
         const message = JSON.parse(raw.toString());
         if (message.type === 'room:ping') socket.send(JSON.stringify({ type: 'room:pong', at: Date.now() }));
-        if (message.type === 'room:start' || message.type === 'room:leave' || message.type === 'room:chat' || message.type === 'game:play' || message.type === 'game:pass') {
+        if (message.type === 'voice:signal') {
+          const targetId = String(message.targetId || '');
+          const signal = message.signal && typeof message.signal === 'object' ? message.signal : null;
+          if (!targetId || !signal || !room.players.some(player => player.id === targetId)) {
+            socket.send(JSON.stringify({ type: 'room:error', error: 'Invalid voice signal' }));
+            return;
+          }
+          for (const client of room.clients) {
+            if (client !== socket && client.readyState === client.OPEN && client.playerId === targetId) {
+              client.send(JSON.stringify({ type: 'voice:signal', from: playerId, signal }));
+            }
+          }
+          return;
+        }
+        if (message.type === 'room:start' || message.type === 'room:leave' || message.type === 'room:chat' || message.type === 'voice:state' || message.type === 'game:play' || message.type === 'game:pass') {
           const result = applyRoomAction(code, playerId, message);
           if (!result.ok) socket.send(JSON.stringify({ type: 'room:error', error: result.error }));
         }
@@ -641,6 +682,12 @@ function createHttpServer() {
 
     socket.on('close', () => {
       room.clients.delete(socket);
+      const player = room.players.find(entry => entry.id === socket.playerId);
+      if (player) {
+        player.voiceEnabled = false;
+        player.voiceMuted = true;
+        player.voiceSpeaking = false;
+      }
       room.updatedAt = Date.now();
       broadcast(room);
     });
@@ -663,6 +710,8 @@ module.exports = {
   leaveRoom,
   publicRoom,
   privateRoomState,
+  publicVoice,
+  updateVoiceState,
   startRoomGame,
   applyRoomPlay,
   applyRoomPass,

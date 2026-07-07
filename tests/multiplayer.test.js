@@ -204,3 +204,29 @@ test('HTTP room chat action and state endpoints sync chat without WebSocket', as
     await new Promise(resolve => app.close(resolve));
   }
 });
+
+test('private room voice state syncs mute and speaking indicators', () => {
+  const { room, playerId: hostId } = server.createRoom('Host');
+  const joined = server.joinRoom(room.code, 'Maya');
+
+  const speaking = server.applyRoomAction(room.code, joined.playerId, {
+    type: 'voice:state',
+    voice: { enabled: true, muted: false, speaking: true }
+  });
+
+  assert.equal(speaking.ok, true);
+  const hostView = server.privateRoomState(room, hostId);
+  const mayaVoice = hostView.voice.find(entry => entry.id === joined.playerId);
+  assert.equal(mayaVoice.enabled, true);
+  assert.equal(mayaVoice.muted, false);
+  assert.equal(mayaVoice.speaking, true);
+
+  const muted = server.applyRoomAction(room.code, joined.playerId, {
+    type: 'voice:state',
+    voice: { enabled: true, muted: true, speaking: true }
+  });
+  assert.equal(muted.ok, true);
+  const mutedView = server.privateRoomState(room, hostId).voice.find(entry => entry.id === joined.playerId);
+  assert.equal(mutedView.muted, true);
+  assert.equal(mutedView.speaking, false);
+});
