@@ -598,7 +598,9 @@
 
 #game-screen.b2g-match:has(.room-chat-panel.hidden) #hand {
   padding: 10px 8px 10px !important;
-  grid-auto-columns: clamp(29px, 7vw, 33px) !important;
+  /* Fit a full 13-card Big2 hand by default: total width = card width + 12 overlap steps. */
+  grid-auto-columns: clamp(21px, calc((100vw - 90px) / 12), 26px) !important;
+  justify-content: center !important;
   border-radius: 20px !important;
   background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.045)) !important;
 }
@@ -615,9 +617,9 @@
 }
 
 #game-screen.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile {
-  width: clamp(58px, 14.5vw, 66px) !important;
-  height: clamp(88px, 22vw, 102px) !important;
-  min-width: clamp(58px, 14.5vw, 66px) !important;
+  width: clamp(46px, 12vw, 52px) !important;
+  height: clamp(76px, 18.5vw, 92px) !important;
+  min-width: clamp(46px, 12vw, 52px) !important;
   border-radius: 13px !important;
   box-shadow: 0 8px 14px rgba(0,0,0,.34) !important;
 }
@@ -682,8 +684,8 @@
 }
 
 #game-screen.b2g-match:has(.room-chat-panel.hidden) .pass-action { grid-column: 1 !important; grid-row: 1 !important; }
-#game-screen.b2g-match:has(.room-chat-panel.hidden) #hint-button { grid-column: 2 !important; grid-row: 1 !important; }
-#game-screen.b2g-match:has(.room-chat-panel.hidden) #sort-button { grid-column: 3 !important; grid-row: 1 !important; }
+#game-screen.b2g-match:has(.room-chat-panel.hidden) #sort-button { grid-column: 2 !important; grid-row: 1 !important; }
+#game-screen.b2g-match:has(.room-chat-panel.hidden) #hint-button { grid-column: 3 !important; grid-row: 1 !important; }
 
 #game-screen.b2g-match:has(.room-chat-panel.hidden) .action-dock {
   border-radius: 18px 18px 0 0 !important;
@@ -724,13 +726,13 @@
   #game-screen #hand {
     min-height: 0 !important;
     height: 100% !important;
-    grid-auto-columns: clamp(21px, 6vw, 25px) !important;
+    grid-auto-columns: clamp(20px, calc((100vw - 88px) / 12), 24px) !important;
   }
 
   #game-screen #hand .card-tile {
-    width: clamp(50px, 14vw, 56px) !important;
-    min-width: clamp(50px, 14vw, 56px) !important;
-    height: clamp(72px, 20vw, 82px) !important;
+    width: clamp(46px, 12.6vw, 52px) !important;
+    min-width: clamp(46px, 12.6vw, 52px) !important;
+    height: clamp(72px, 19vw, 82px) !important;
   }
 }
 
