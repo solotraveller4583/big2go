@@ -24,6 +24,18 @@
   max-width: 100% !important;
 }
 
+/* Single-player has no chat row, so use a dedicated native-card-game stack:
+   compact header, opponents, dominant current trick, hand, protected action dock. */
+#game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) {
+  grid-template-rows: 42px 52px minmax(252px, 1fr) minmax(118px, 20dvh) 82px !important;
+  gap: 6px !important;
+}
+
+/* Private-room keeps the chat row but remains compact. */
+#game-screen.b2g-match:not(.hidden):has(.room-chat-panel:not(.hidden)) {
+  grid-template-rows: auto auto minmax(118px, 130px) minmax(104px, 1fr) minmax(136px, 21dvh) 74px !important;
+}
+
 /* 1) Compact status. No dashboard header. */
 #game-screen .match-topbar {
   min-height: 44px !important;
@@ -285,6 +297,20 @@
   overflow: visible !important;
 }
 
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .table-arena {
+  padding: 12px 14px 14px !important;
+  grid-template-rows: auto minmax(180px, 1fr) !important;
+  gap: 8px !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 50% 56%, rgba(255,216,74,.18), transparent 24%),
+    radial-gradient(ellipse at 50% 50%, rgba(89,56,255,.44), rgba(20,14,70,.76) 62%, rgba(8,7,31,.82) 100%) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  box-shadow: inset 0 0 44px rgba(130,102,255,.18), 0 14px 34px rgba(0,0,0,.28) !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
 #game-screen .arena-header {
   display: grid !important;
   grid-template-columns: 1fr auto !important;
@@ -300,6 +326,21 @@
   margin: 0 !important;
   font-size: 16px !important;
   line-height: 1.05 !important;
+}
+
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .arena-header {
+  align-items: center !important;
+}
+
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .arena-header h2 {
+  text-align: center !important;
+  font-size: 17px !important;
+  letter-spacing: -.01em !important;
+}
+
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .arena-header > div {
+  display: grid !important;
+  justify-items: center !important;
 }
 
 #game-screen #selected-count {
@@ -335,6 +376,19 @@
 
 #game-screen #trick-play.empty {
   padding-inline: 14px !important;
+}
+
+#game-screen.b2g-match:has(.room-chat-panel.hidden) #trick-play {
+  min-height: 180px !important;
+  padding: 14px 16px !important;
+  border-radius: 20px !important;
+  background: radial-gradient(circle at 50% 54%, rgba(255,216,74,.26), rgba(104,78,255,.22) 36%, rgba(12,10,46,.18) 74%) !important;
+  overflow: visible !important;
+}
+
+#game-screen.b2g-match:has(.room-chat-panel.hidden) #trick-play.empty {
+  font-size: 14px !important;
+  color: rgba(255,255,255,.78) !important;
 }
 
 #game-screen #trick-play .card-tile {
@@ -392,12 +446,25 @@
   flex-basis: clamp(78px, 19vw, 88px) !important;
 }
 
+#game-screen.b2g-match:has(.room-chat-panel.hidden) #trick-play:has(.card-tile:only-child) .card-tile {
+  width: clamp(96px, 23vw, 108px) !important;
+  height: clamp(134px, 32vw, 148px) !important;
+  min-width: clamp(96px, 23vw, 108px) !important;
+  flex-basis: clamp(96px, 23vw, 108px) !important;
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,.84),
+    0 0 0 7px rgba(255,216,74,.18),
+    0 0 46px rgba(255,216,74,.42),
+    0 24px 36px rgba(0,0,0,.52),
+    inset 0 2px 0 rgba(255,255,255,1) !important;
+}
+
 #game-screen #trick-play .card-tile:nth-child(1) { transform: translateY(3px) rotate(-5deg) translateZ(0) !important; }
 #game-screen #trick-play .card-tile:nth-child(2) { transform: translateY(-1px) rotate(-2deg) translateZ(0) !important; }
 #game-screen #trick-play .card-tile:nth-child(3) { transform: translateY(-5px) rotate(0deg) translateZ(0) !important; }
 #game-screen #trick-play .card-tile:nth-child(4) { transform: translateY(-1px) rotate(2deg) translateZ(0) !important; }
 #game-screen #trick-play .card-tile:nth-child(5) { transform: translateY(3px) rotate(5deg) translateZ(0) !important; }
-#game-screen #trick-play:has(.card-tile:only-child) .card-tile { transform: translateY(0) rotate(0) translateZ(0) !important; }
+#game-screen #trick-play:has(.card-tile:only-child) .card-tile { transform: translateY(-12px) rotate(0) translateZ(0) !important; }
 
 #game-screen #trick-play:has(.card-tile:only-child) .card-rank {
   font-size: clamp(28px, 7vw, 36px) !important;
@@ -433,6 +500,31 @@
   display: none !important;
 }
 
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .trick-help {
+  display: inline-grid !important;
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 10px !important;
+  transform: translateX(-50%) !important;
+  z-index: 3 !important;
+  min-height: 32px !important;
+  width: min(280px, calc(100% - 44px)) !important;
+  max-width: min(280px, 90%) !important;
+  padding: 0 18px !important;
+  place-items: center !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,216,74,.45) !important;
+  background: rgba(11,10,40,.72) !important;
+  color: #ffe66d !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
 /* 4) Player hand dominates the bottom third. */
 #game-screen .hand-card {
   min-height: 0 !important;
@@ -465,6 +557,22 @@
   color: #fff !important;
 }
 
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .hand-card {
+  padding: 4px 6px 2px !important;
+  gap: 5px !important;
+}
+
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .hand-head {
+  padding: 0 2px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .hand-head h2 {
+  font-size: 15px !important;
+  font-weight: 850 !important;
+}
+
 #game-screen .hand-head p {
   display: none !important;
 }
@@ -488,6 +596,13 @@
   background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)) !important;
 }
 
+#game-screen.b2g-match:has(.room-chat-panel.hidden) #hand {
+  padding: 10px 8px 10px !important;
+  grid-auto-columns: clamp(29px, 7vw, 33px) !important;
+  border-radius: 20px !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.045)) !important;
+}
+
 #game-screen #hand .card-tile {
   width: clamp(50px, 13vw, 56px) !important;
   height: clamp(72px, 19vw, 88px) !important;
@@ -497,6 +612,14 @@
   transform: none !important;
   border-radius: 12px !important;
   box-shadow: 0 5px 10px rgba(0,0,0,.32) !important;
+}
+
+#game-screen.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile {
+  width: clamp(58px, 14.5vw, 66px) !important;
+  height: clamp(88px, 22vw, 102px) !important;
+  min-width: clamp(58px, 14.5vw, 66px) !important;
+  border-radius: 13px !important;
+  box-shadow: 0 8px 14px rgba(0,0,0,.34) !important;
 }
 
 #game-screen #hand .card-tile.selected {
@@ -558,6 +681,24 @@
   font-size: 17px !important;
 }
 
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .pass-action { grid-column: 1 !important; grid-row: 1 !important; }
+#game-screen.b2g-match:has(.room-chat-panel.hidden) #hint-button { grid-column: 2 !important; grid-row: 1 !important; }
+#game-screen.b2g-match:has(.room-chat-panel.hidden) #sort-button { grid-column: 3 !important; grid-row: 1 !important; }
+
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .action-dock {
+  border-radius: 18px 18px 0 0 !important;
+}
+
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .action-dock .play-action {
+  min-height: 42px !important;
+  height: 42px !important;
+  font-size: 18px !important;
+  border-radius: 14px !important;
+  background: linear-gradient(180deg, #ffe986, #e6a841 64%, #b77428) !important;
+  color: #1d0c42 !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.46), 0 0 24px rgba(255,216,74,.42), 0 10px 18px rgba(0,0,0,.38) !important;
+}
+
 #game-screen .action-dock .restart-action {
   display: none !important;
 }
@@ -567,6 +708,17 @@
     padding-left: 8px !important;
     padding-right: 8px !important;
     grid-template-rows: auto auto minmax(108px, 118px) minmax(96px, 1fr) minmax(130px, 20dvh) 74px !important;
+  }
+
+  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) {
+    grid-template-rows: 42px 50px minmax(200px, 1fr) minmax(136px, 21dvh) 82px !important;
+    gap: 7px !important;
+  }
+
+  #game-screen.b2g-match:has(.room-chat-panel.hidden) #trick-play:has(.card-tile:only-child) .card-tile {
+    width: clamp(96px, 27vw, 110px) !important;
+    height: clamp(136px, 38vw, 154px) !important;
+    min-width: clamp(96px, 27vw, 110px) !important;
   }
 
   #game-screen #hand {
