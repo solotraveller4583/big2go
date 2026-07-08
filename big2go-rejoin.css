@@ -1,57 +1,99 @@
 /* Big2Go active room recovery + disconnect status UI */
 .room-recovery-card {
+  position: relative;
+  z-index: 20;
   display: grid;
-  gap: 8px;
-  padding: 12px;
-  margin: 0 2px;
-  border-radius: 20px;
-  border: 1px solid rgba(255,216,74,.32);
-  background: linear-gradient(135deg, rgba(255,216,74,.15), rgba(70,80,180,.14));
-  box-shadow: 0 14px 28px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.12);
+  gap: 6px;
+  padding: 10px;
+  margin: -4px 2px 6px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,216,74,.42);
+  background: linear-gradient(135deg, rgba(255,216,74,.18), rgba(70,80,180,.18));
+  box-shadow: 0 14px 28px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.14);
   color: #fff;
+  overflow: visible;
 }
 
 .room-recovery-card.hidden { display: none !important; }
 
+.room-recovery-card small {
+  margin: 0;
+  color: rgba(255,255,255,.78);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
 .room-recovery-card strong {
   color: #ffe66d;
-  font-size: 14px;
-  line-height: 1.1;
+  font-size: 15px;
+  line-height: 1.05;
 }
 
 .room-recovery-card p {
   margin: 0;
-  color: rgba(255,255,255,.86);
-  font-size: 13px;
-  font-weight: 800;
+  color: rgba(255,255,255,.9);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 850;
 }
 
 .room-recovery-players {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
+  max-height: 42px;
+  overflow: hidden;
 }
 
 .room-recovery-players span {
-  padding: 5px 8px;
+  padding: 4px 7px;
   border-radius: 999px;
-  background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.12);
-  color: rgba(255,255,255,.9);
-  font-size: 11px;
-  font-weight: 900;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.14);
+  color: rgba(255,255,255,.94);
+  font-size: 10px;
+  line-height: 1.1;
+  font-weight: 950;
 }
 
 .room-recovery-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.35fr .9fr;
   gap: 8px;
+  min-height: 42px;
+  position: relative;
+  z-index: 30;
 }
 
 .room-recovery-actions button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
   min-height: 42px;
+  width: 100%;
   border-radius: 14px;
-  font-weight: 950;
+  border: 0;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: .03em;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.room-recovery-actions .primary {
+  color: #261100;
+  background: linear-gradient(180deg, #ffe45c, #ff9f12);
+  box-shadow: 0 8px 16px rgba(255,159,18,.24);
+}
+
+.room-recovery-actions .secondary {
+  color: #fff;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.22);
 }
 
 #game-screen .opponent-row.disconnected {
@@ -72,4 +114,18 @@
 .room-player-list li[data-left="true"] {
   border-color: rgba(255,91,91,.32);
   color: #ffd0d0;
+}
+
+@media (max-height: 760px) {
+  .room-recovery-card {
+    gap: 5px;
+    padding: 8px;
+  }
+  .room-recovery-card p {
+    font-size: 11px;
+  }
+  .room-recovery-actions,
+  .room-recovery-actions button {
+    min-height: 38px;
+  }
 }

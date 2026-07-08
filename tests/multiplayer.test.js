@@ -302,3 +302,45 @@ test('HTTP rejoin endpoint restores active game session', async () => {
     await new Promise(resolve => app.close(resolve));
   }
 });
+
+test('backend active session lookup lets Player B resume without entering room code', async () => {
+  const app = server.createHttpServer();
+  await new Promise(resolve => app.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${app.address().port}`;
+  const post = async (path, body) => {
+    const response = await fetch(`${base}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body || {})
+    });
+    const payload = await response.json();
+    assert.equal(response.ok, true, payload.error || path);
+    return payload;
+  };
+
+  try {
+    const created = await post('/api/rooms', { name: 'Player A' });
+    const joined = await post('/api/rooms/join', { code: created.room.code, name: 'Player B' });
+    await post('/api/rooms/action', { type: 'room:start', code: created.room.code, playerId: created.playerId });
+    const before = await fetch(`${base}/api/rooms/state?code=${created.room.code}&playerId=${joined.playerId}`).then(r => r.json());
+    await post('/api/rooms/action', { type: 'room:leave', code: created.room.code, playerId: joined.playerId });
+
+    const sessionResponse = await fetch(`${base}/api/rooms/session?playerId=${joined.playerId}`);
+    const sessionPayload = await sessionResponse.json();
+    assert.equal(sessionResponse.ok, true, sessionPayload.error);
+    assert.equal(sessionPayload.session.code, created.room.code);
+    assert.equal(sessionPayload.session.playerId, joined.playerId);
+    assert.equal(sessionPayload.session.seat, 2);
+    assert.equal(sessionPayload.session.connected, false);
+    assert.equal(sessionPayload.session.handCount, 13);
+    assert.equal(sessionPayload.session.currentPlayer, before.game.currentPlayer);
+    assert.deepEqual(sessionPayload.session.hand.map(card => card.id), before.game.hand.map(card => card.id));
+
+    const restored = await post('/api/rooms/rejoin', { code: sessionPayload.session.code, playerId: joined.playerId });
+    assert.equal(restored.game.playerIndex, before.game.playerIndex);
+    assert.deepEqual(restored.game.hand.map(card => card.id), before.game.hand.map(card => card.id));
+    assert.equal(restored.room.players.find(player => player.id === joined.playerId).connected, true);
+  } finally {
+    await new Promise(resolve => app.close(resolve));
+  }
+});

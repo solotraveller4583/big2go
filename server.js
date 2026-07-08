@@ -13,6 +13,7 @@ const RECONNECT_WARNING_MS = 1000 * 30;
 const RECONNECT_TIMEOUT_MS = 1000 * 60;
 const MAX_PLAYERS = 4;
 const rooms = new Map();
+const activeSessions = new Map();
 
 const RANKS = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
 const SUITS = [
@@ -337,9 +338,67 @@ function publicGameState(room, playerId) {
   };
 }
 
+function buildActiveSession(room, playerId) {
+  processRoomTimeouts(room);
+  const roomPlayer = room.players.find(player => player.id === playerId);
+  if (!roomPlayer) return null;
+  const game = publicGameState(room, playerId);
+  const playerIndex = game?.playerIndex ?? room.players.findIndex(player => player.id === playerId);
+  return {
+    code: room.code,
+    roomId: room.code,
+    playerId,
+    playerName: roomPlayer.name,
+    playerIndex,
+    seat: playerIndex >= 0 ? playerIndex + 1 : null,
+    hostId: room.hostId,
+    status: room.game?.status || publicRoom(room).status,
+    roomStatus: publicRoom(room).status,
+    connected: roomPlayer.connected !== false,
+    disconnectedAt: roomPlayer.disconnectedAt || null,
+    timedOut: Boolean(roomPlayer.timedOut),
+    currentPlayer: game?.currentPlayer ?? null,
+    currentTurn: game ? game.players[game.currentPlayer]?.name || null : null,
+    hand: game?.hand || [],
+    handCount: game?.hand?.length ?? 0,
+    players: publicRoom(room).players,
+    game,
+    room: publicRoom(room),
+    updatedAt: Date.now()
+  };
+}
+
+function rememberActiveSession(room, playerId) {
+  const session = buildActiveSession(room, playerId);
+  if (session && session.status !== 'finished') activeSessions.set(playerId, session);
+  else activeSessions.delete(playerId);
+  return session;
+}
+
+function rememberRoomSessions(room) {
+  for (const player of room.players) rememberActiveSession(room, player.id);
+}
+
+function forgetActiveSession(playerId) {
+  activeSessions.delete(playerId);
+}
+
+function activeSessionForPlayer(playerId) {
+  const saved = activeSessions.get(String(playerId || ''));
+  if (!saved) return null;
+  const room = rooms.get(saved.code);
+  if (!room) {
+    activeSessions.delete(saved.playerId);
+    return null;
+  }
+  return rememberActiveSession(room, saved.playerId);
+}
+
 function privateRoomState(room, playerId) {
   processRoomTimeouts(room);
-  return { room: publicRoom(room), game: publicGameState(room, playerId), chat: publicChat(room), voice: publicVoice(room) };
+  const state = { room: publicRoom(room), game: publicGameState(room, playerId), chat: publicChat(room), voice: publicVoice(room) };
+  state.session = rememberActiveSession(room, playerId);
+  return state;
 }
 
 function roomForPlayer(code, playerId) {
@@ -427,7 +486,10 @@ function cleanupRooms() {
   for (const [code, room] of rooms.entries()) {
     const noClients = room.clients.size === 0;
     const expired = now - room.updatedAt > ROOM_TTL_MS;
-    if (noClients && expired) rooms.delete(code);
+    if (noClients && expired) {
+      rooms.delete(code);
+      for (const player of room.players) forgetActiveSession(player.id);
+    }
   }
 }
 
@@ -447,6 +509,7 @@ function createRoom(name = 'Host') {
     updatedAt: Date.now()
   };
   rooms.set(code, room);
+  rememberActiveSession(room, hostId);
   return { room, playerId: hostId };
 }
 
@@ -459,6 +522,7 @@ function joinRoom(code, name = 'Friend') {
   room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true, connected: true, disconnectedAt: null, timedOut: false, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false });
   appendRoomNotice(room, `${room.players[room.players.length - 1].name} joined the room.`);
   room.updatedAt = Date.now();
+  rememberRoomSessions(room);
   broadcast(room);
   return { room, playerId };
 }
@@ -478,6 +542,7 @@ function markPlayerDisconnected(room, playerId, { manual = false } = {}) {
     : `🔴 ${player.name} disconnected. Waiting for player to reconnect...`;
   appendRoomNotice(room, message);
   room.updatedAt = Date.now();
+  rememberRoomSessions(room);
   broadcast(room);
   return { ok: true, room };
 }
@@ -499,6 +564,7 @@ function rejoinRoom(code, playerId) {
   }
   if (wasDisconnected) appendRoomNotice(room, `🟢 ${player.name} rejoined the game.`);
   room.updatedAt = Date.now();
+  rememberRoomSessions(room);
   broadcast(room);
   return { ok: true, ...privateRoomState(room, playerId) };
 }
@@ -545,6 +611,7 @@ function startRoomGame(code, playerId) {
     winnerIndex: null
   };
   room.updatedAt = Date.now();
+  rememberRoomSessions(room);
   broadcast(room);
   return room.game;
 }
@@ -593,6 +660,7 @@ function applyRoomPlay(code, playerId, cardIds) {
   room.game.logs.unshift(`${player.name} played ${play.cards.map(card => card.short).join(' ')}.`);
   if (!finishIfNeeded(room, player)) room.game.currentPlayer = nextActivePlayer(room.game, player.index);
   room.updatedAt = Date.now();
+  rememberRoomSessions(room);
   broadcast(room);
   return { ok: true, game: room.game };
 }
@@ -619,6 +687,7 @@ function applyRoomPass(code, playerId) {
     room.game.currentPlayer = nextActivePlayer(room.game, player.index);
   }
   room.updatedAt = Date.now();
+  rememberRoomSessions(room);
   broadcast(room);
   return { ok: true, game: room.game };
 }
@@ -699,6 +768,15 @@ function createHttpServer() {
         }
       });
       return;
+    }
+
+    if (req.method === 'GET' && req.url.startsWith('/api/rooms/session')) {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const playerId = url.searchParams.get('playerId');
+      const session = activeSessionForPlayer(playerId);
+      if (!session) return json(res, 404, { error: 'No active game session' });
+      const room = rooms.get(session.code);
+      return json(res, 200, { session, ...privateRoomState(room, playerId) });
     }
 
     if (req.method === 'GET' && req.url.startsWith('/api/rooms/state')) {
@@ -804,6 +882,8 @@ if (require.main === module) {
 
 module.exports = {
   rooms,
+  activeSessions,
+  activeSessionForPlayer,
   createRoom,
   joinRoom,
   rejoinRoom,

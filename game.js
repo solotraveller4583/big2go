@@ -1495,21 +1495,41 @@
     render();
   }
 
-  function saveRoomSession(room = null) {
+  function saveRoomSession(room = null, game = null, session = null) {
     if (!state.liveRoom?.code || !state.liveRoom?.playerId) return;
-    const players = Array.isArray(room?.players) ? room.players.map(player => ({
+    const previous = getRoomSession();
+    const sourceRoom = room || session?.room || previous?.room || null;
+    const sourceGame = game || session?.game || null;
+    const players = Array.isArray(sourceRoom?.players) ? sourceRoom.players.map(player => ({
       id: player.id,
       name: player.name,
-      connected: player.connected !== false
-    })) : [];
+      connected: player.connected !== false,
+      timedOut: Boolean(player.timedOut)
+    })) : Array.isArray(session?.players) ? session.players : Array.isArray(previous?.players) ? previous.players : [];
+    const playerIndex = sourceGame?.playerIndex ?? session?.playerIndex ?? state.liveRoom.playerIndex ?? state.humanIndex;
+    const hand = Array.isArray(sourceGame?.hand) ? sourceGame.hand : Array.isArray(session?.hand) ? session.hand : [];
+    const currentPlayer = sourceGame?.currentPlayer ?? session?.currentPlayer ?? state.currentPlayer;
+    const currentTurn = sourceGame?.players?.[currentPlayer]?.name || session?.currentTurn || state.players[currentPlayer]?.name || '';
     try {
       localStorage.setItem(ROOM_SESSION_KEY, JSON.stringify({
         code: state.liveRoom.code,
+        roomId: state.liveRoom.code,
         playerId: state.liveRoom.playerId,
-        playerIndex: state.liveRoom.playerIndex ?? state.humanIndex,
-        hostId: state.liveRoom.hostId || room?.hostId || null,
+        playerName: session?.playerName || players.find(player => player.id === state.liveRoom.playerId)?.name || 'You',
+        playerIndex,
+        seat: Number.isFinite(playerIndex) ? playerIndex + 1 : session?.seat || null,
+        hostId: state.liveRoom.hostId || sourceRoom?.hostId || session?.hostId || null,
         players,
-        status: room?.status || 'playing',
+        room: sourceRoom ? { code: sourceRoom.code, status: sourceRoom.status, hostId: sourceRoom.hostId, players } : session?.room || null,
+        status: sourceGame?.status || session?.status || sourceRoom?.status || previous?.status || 'playing',
+        roomStatus: sourceRoom?.status || session?.roomStatus || previous?.roomStatus || 'playing',
+        connected: session?.connected ?? players.find(player => player.id === state.liveRoom.playerId)?.connected ?? true,
+        disconnectedAt: session?.disconnectedAt || previous?.disconnectedAt || null,
+        currentPlayer,
+        currentTurn,
+        hand,
+        handCount: hand.length || session?.handCount || previous?.handCount || 0,
+        game: sourceGame || session?.game || previous?.game || null,
         updatedAt: Date.now()
       }));
     } catch (_) {}
@@ -1529,17 +1549,57 @@
     renderRoomRecovery();
   }
 
+  async function verifySavedRoomSession() {
+    const saved = getRoomSession();
+    if (!saved?.playerId || state.liveRoom?.code) {
+      renderRoomRecovery();
+      return null;
+    }
+    try {
+      const response = await fetch(`/api/rooms/session?playerId=${encodeURIComponent(saved.playerId)}`, {
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store'
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        renderRoomRecovery();
+        return null;
+      }
+      state.liveRoom = {
+        code: payload.session?.code || payload.room?.code || saved.code,
+        playerId: saved.playerId,
+        playerIndex: payload.session?.playerIndex ?? payload.game?.playerIndex ?? saved.playerIndex ?? 0,
+        hostId: payload.session?.hostId || payload.room?.hostId || saved.hostId
+      };
+      saveRoomSession(payload.room, payload.game, payload.session);
+      state.liveRoom = null;
+      renderRoomRecovery();
+      return payload;
+    } catch (_) {
+      renderRoomRecovery();
+      return null;
+    }
+  }
+
   function renderRoomRecovery() {
     const saved = getRoomSession();
     if (!els.roomRecovery) return;
     els.roomRecovery.classList.toggle('hidden', !saved || Boolean(state.liveRoom?.code));
     if (!saved || state.liveRoom?.code) return;
-    if (els.roomRecoverySummary) els.roomRecoverySummary.textContent = `Room: ${saved.code}`;
+    if (els.roomRecoverySummary) {
+      const seat = saved.seat || (Number.isFinite(saved.playerIndex) ? saved.playerIndex + 1 : '?');
+      const status = saved.status || saved.roomStatus || 'Playing';
+      const cards = saved.handCount ? ` · ${saved.handCount} cards` : '';
+      const turn = saved.currentTurn ? ` · Turn: ${saved.currentTurn === saved.playerName ? 'You' : saved.currentTurn}` : '';
+      els.roomRecoverySummary.textContent = `Big2Go Arena · Room ${saved.code} · Seat Player ${seat} · ${status}${cards}${turn}`;
+    }
     if (els.roomRecoveryPlayers) {
       els.roomRecoveryPlayers.innerHTML = '';
       (saved.players || []).slice(0, 4).forEach(player => {
         const chip = document.createElement('span');
-        chip.textContent = `${player.connected === false ? '🔴' : '🟢'} ${player.id === saved.playerId ? 'You' : player.name}`;
+        const isYou = player.id === saved.playerId;
+        const statusIcon = player.connected === false || isYou && saved.connected === false ? '🔴' : '🟢';
+        chip.textContent = `${statusIcon} ${isYou ? 'You disconnected' : player.name}`;
         els.roomRecoveryPlayers.appendChild(chip);
       });
     }
@@ -1569,7 +1629,7 @@
       }
       connectRoomSocket(payload.room.code, saved.playerId);
       startRoomPolling();
-      saveRoomSession(payload.room);
+      saveRoomSession(payload.room, payload.game, payload.session);
       playUiSound('start');
     } catch (error) {
       showOracle('Rejoin failed', `${error.message || 'The room could not be restored.'}<br><br>If the room expired, choose Exit Room and create a new room.`);
@@ -1613,7 +1673,7 @@
     if (!response.ok) throw new Error(payload.error || 'Could not sync room');
     if (payload.room) {
       renderRoomState(payload.room);
-      saveRoomSession(payload.room);
+      saveRoomSession(payload.room, payload.game, payload.session);
     }
     if (payload.game) applyLiveGame(payload.game, payload.room);
     if (payload.chat) applyChatPayload(payload.chat);
@@ -1673,7 +1733,7 @@
       if (!response.ok) throw new Error(payload.error || 'Room action failed');
       if (payload.room) {
         renderRoomState(payload.room);
-        saveRoomSession(payload.room);
+        saveRoomSession(payload.room, payload.game, payload.session);
       }
       if (payload.game) applyLiveGame(payload.game, payload.room);
       if (payload.chat) applyChatPayload(payload.chat);
@@ -1701,7 +1761,7 @@
       playerIndex: game.playerIndex,
       hostId: room?.hostId || state.liveRoom?.hostId
     };
-    saveRoomSession(room);
+    saveRoomSession(room, game);
     state.settings.players = game.players.length;
     state.humanIndex = game.playerIndex;
     state.currentPlayer = game.currentPlayer;
@@ -1815,7 +1875,7 @@
         if (message.type === 'room:update' || message.type === 'game:update') {
           if (message.room) {
             renderRoomState(message.room);
-            saveRoomSession(message.room);
+            saveRoomSession(message.room, message.game, message.session);
           }
           if (message.game) applyLiveGame(message.game, message.room);
           if (message.chat) applyChatPayload(message.chat);
@@ -1884,7 +1944,7 @@
       try {
         const payload = await createBackendRoom(playerName());
         state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: 0, hostId: payload.room.hostId };
-        saveRoomSession(payload.room);
+        saveRoomSession(payload.room, payload.game, payload.session);
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
         startRoomPolling();
@@ -1907,7 +1967,7 @@
       try {
         const payload = await joinBackendRoom(code, playerName());
         state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: Math.max(0, payload.room.playerCount - 1), hostId: payload.room.hostId };
-        saveRoomSession(payload.room);
+        saveRoomSession(payload.room, payload.game, payload.session);
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
         startRoomPolling();
@@ -2163,8 +2223,67 @@
       });
     });
     window.addEventListener('beforeunload', () => saveRoomSession());
-    window.addEventListener('focus', () => fetchLiveRoomState().catch(() => {}));
-    window.addEventListener('pageshow', () => fetchLiveRoomState().catch(() => {}));
+    window.addEventListener('focus', () => {
+      if (state.liveRoom?.code) fetchLiveRoomState().catch(() => {});
+      else renderRoomRecovery();
+    });
+    window.addEventListener('pageshow', () => {
+      if (state.liveRoom?.code) fetchLiveRoomState().catch(() => {});
+      else verifySavedRoomSession().catch(() => {});
+    });
+  }
+
+  function installReconnectTestMode() {
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (!isLocal) return;
+    window.big2goReconnectTestMode = {
+      getSavedSession: getRoomSession,
+      clearSavedSession: clearRoomSession,
+      showResumeCard: () => {
+        renderRoomRecovery();
+        return getRoomSession();
+      },
+      verifySavedSession: verifySavedRoomSession,
+      rejoinSavedRoom,
+      async createStartedRoomForPlayerB() {
+        const post = async (path, body) => {
+          const response = await fetch(path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(body || {})
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || `Request failed: ${path}`);
+          return payload;
+        };
+        const created = await post('/api/rooms', { name: 'Player A' });
+        const joined = await post('/api/rooms/join', { code: created.room.code, name: 'Player B' });
+        await post('/api/rooms/action', { type: 'room:start', code: created.room.code, playerId: created.playerId });
+        const statePayload = await fetch(`/api/rooms/state?code=${encodeURIComponent(created.room.code)}&playerId=${encodeURIComponent(joined.playerId)}`, { cache: 'no-store' }).then(response => response.json());
+        state.liveRoom = { code: created.room.code, playerId: joined.playerId, playerIndex: statePayload.game?.playerIndex ?? 1, hostId: created.playerId };
+        if (statePayload.game) applyLiveGame(statePayload.game, statePayload.room);
+        connectRoomSocket(created.room.code, joined.playerId);
+        startRoomPolling();
+        saveRoomSession(statePayload.room, statePayload.game, statePayload.session);
+        return { code: created.room.code, hostId: created.playerId, playerId: joined.playerId, session: getRoomSession() };
+      },
+      async simulateAccidentalReopen() {
+        saveRoomSession();
+        if (state.roomSocket) {
+          state.roomSocket.close();
+          state.roomSocket = null;
+        }
+        stopRoomPolling();
+        state.liveRoom = null;
+        disableVoiceChat();
+        state.liveRoom = null;
+        showHomeScreen();
+        await verifySavedRoomSession();
+        showHomeScreen();
+        renderRoomRecovery();
+        return getRoomSession();
+      }
+    };
   }
 
   function registerServiceWorker() {
@@ -2184,6 +2303,7 @@
 
   function init() {
     bindEvents();
+    installReconnectTestMode();
     registerServiceWorker();
     updateContinueButton();
     updatePlayerChoiceUI();
@@ -2196,6 +2316,7 @@
     renderLogs();
     showHomeScreen();
     renderRoomRecovery();
+    verifySavedRoomSession().catch(() => {});
     if (localStorage.getItem(SAVE_KEY)) els.continue.classList.remove('hidden');
   }
 
