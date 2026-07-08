@@ -29,8 +29,9 @@
   <link rel="stylesheet" href="big2go-polish-guard.css" />
   <link rel="stylesheet" href="big2go-hand-guard.css" />
   <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=30" />
-  <link rel="stylesheet" href="big2go-room.css?v=9" />
+  <link rel="stylesheet" href="big2go-room.css?v=10" />
   <link rel="stylesheet" href="big2go-voice.css?v=1" />
+  <link rel="stylesheet" href="big2go-rejoin.css?v=1" />
 </head>
 <body>
   <main class="app-shell">
@@ -84,6 +85,16 @@
           <option value="3">3 players — quicker showdown</option>
           <option value="2">2 players — head-to-head duel</option>
         </select>
+      </section>
+
+      <section class="room-recovery-card hidden" id="room-recovery-card" aria-label="Active game session">
+        <strong>You have an active game session</strong>
+        <p id="room-recovery-summary">Room: -----</p>
+        <div class="room-recovery-players" id="room-recovery-players"></div>
+        <div class="room-recovery-actions">
+          <button type="button" class="primary" id="room-rejoin-button">Rejoin Game</button>
+          <button type="button" class="secondary" id="room-exit-session-button">Exit Room</button>
+        </div>
       </section>
 
       <div class="quick-actions instant-actions" aria-label="Quick actions">
@@ -205,6 +216,6 @@
     </dialog>
   </main>
 
-  <script src="game.js?v=37" defer></script>
+  <script src="game.js?v=38" defer></script>
 </body>
 </html>

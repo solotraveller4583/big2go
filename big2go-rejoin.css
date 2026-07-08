@@ -1,0 +1,75 @@
+/* Big2Go active room recovery + disconnect status UI */
+.room-recovery-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  margin: 0 2px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,216,74,.32);
+  background: linear-gradient(135deg, rgba(255,216,74,.15), rgba(70,80,180,.14));
+  box-shadow: 0 14px 28px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.12);
+  color: #fff;
+}
+
+.room-recovery-card.hidden { display: none !important; }
+
+.room-recovery-card strong {
+  color: #ffe66d;
+  font-size: 14px;
+  line-height: 1.1;
+}
+
+.room-recovery-card p {
+  margin: 0;
+  color: rgba(255,255,255,.86);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.room-recovery-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.room-recovery-players span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.9);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.room-recovery-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.room-recovery-actions button {
+  min-height: 42px;
+  border-radius: 14px;
+  font-weight: 950;
+}
+
+#game-screen .opponent-row.disconnected {
+  border-color: rgba(255,91,91,.46) !important;
+  background: rgba(80, 16, 28, .42) !important;
+  opacity: .9;
+}
+
+#game-screen .opponent-row.disconnected .opponent-name::after {
+  content: '  🔴';
+}
+
+#game-screen .opponent-badge.offline {
+  background: #ff6b6b !important;
+  color: #22080d !important;
+}
+
+.room-player-list li[data-left="true"] {
+  border-color: rgba(255,91,91,.32);
+  color: #ffd0d0;
+}

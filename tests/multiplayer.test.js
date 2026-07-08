@@ -159,14 +159,15 @@ test('private room chat sends sanitized messages to every player state', () => {
   const result = server.applyRoomAction(room.code, joined.playerId, { type: 'room:chat', text: '  Nice move <script>  ' });
 
   assert.equal(result.ok, true);
-  assert.equal(result.chat.length, 1);
-  assert.equal(result.chat[0].playerId, joined.playerId);
-  assert.equal(result.chat[0].name, 'Maya');
-  assert.equal(result.chat[0].text, 'Nice move script');
+  const resultMessage = result.chat.find(message => message.playerId === joined.playerId);
+  assert.ok(resultMessage);
+  assert.equal(resultMessage.playerId, joined.playerId);
+  assert.equal(resultMessage.name, 'Maya');
+  assert.equal(resultMessage.text, 'Nice move script');
 
   const hostView = server.privateRoomState(room, hostId);
   const friendView = server.privateRoomState(room, joined.playerId);
-  assert.equal(hostView.chat[0].text, 'Nice move script');
+  assert.equal(hostView.chat.find(message => message.playerId === joined.playerId).text, 'Nice move script');
   assert.deepEqual(hostView.chat, friendView.chat);
 });
 
@@ -197,9 +198,10 @@ test('HTTP room chat action and state endpoints sync chat without WebSocket', as
     await post('/api/rooms/action', { type: 'room:chat', code: created.room.code, playerId: joined.playerId, text: 'Good game 🙌' });
 
     const hostState = await get(`/api/rooms/state?code=${created.room.code}&playerId=${created.playerId}`);
-    assert.equal(hostState.chat.length, 1);
-    assert.equal(hostState.chat[0].name, 'Jack');
-    assert.equal(hostState.chat[0].text, 'Good game 🙌');
+    const jackMessage = hostState.chat.find(message => message.playerId === joined.playerId);
+    assert.ok(jackMessage);
+    assert.equal(jackMessage.name, 'Jack');
+    assert.equal(jackMessage.text, 'Good game 🙌');
   } finally {
     await new Promise(resolve => app.close(resolve));
   }
@@ -229,4 +231,74 @@ test('private room voice state syncs mute and speaking indicators', () => {
   const mutedView = server.privateRoomState(room, hostId).voice.find(entry => entry.id === joined.playerId);
   assert.equal(mutedView.muted, true);
   assert.equal(mutedView.speaking, false);
+});
+
+test('disconnected player can rejoin same room with same hand and turn state', () => {
+  const { room, playerId: hostId } = server.createRoom('Lantern');
+  const joined = server.joinRoom(room.code, 'Drum');
+  server.startRoomGame(room.code, hostId);
+
+  const before = server.privateRoomState(room, joined.playerId);
+  const beforeHand = before.game.hand.map(card => card.id).join('|');
+  const beforeIndex = before.game.playerIndex;
+  const beforeTurn = before.game.currentPlayer;
+
+  const left = server.leaveRoom(room.code, joined.playerId);
+  assert.equal(left.ok, true);
+  assert.equal(server.privateRoomState(room, hostId).room.players.find(player => player.id === joined.playerId).connected, false);
+
+  const rejoined = server.rejoinRoom(room.code, joined.playerId);
+  assert.equal(rejoined.ok, true);
+  assert.equal(rejoined.game.playerIndex, beforeIndex);
+  assert.equal(rejoined.game.currentPlayer, beforeTurn);
+  assert.equal(rejoined.game.hand.map(card => card.id).join('|'), beforeHand);
+  assert.equal(rejoined.room.players.find(player => player.id === joined.playerId).connected, true);
+  assert.match(rejoined.room.notice, /rejoined/);
+});
+
+test('room owner disconnect does not destroy room and transfers after timeout', () => {
+  const { room, playerId: hostId } = server.createRoom('Host');
+  const joined = server.joinRoom(room.code, 'Friend');
+  server.startRoomGame(room.code, hostId);
+
+  const disconnected = server.leaveRoom(room.code, hostId);
+  assert.equal(disconnected.ok, true);
+  assert.equal(room.hostId, hostId, 'owner is protected during reconnect grace period');
+  room.players.find(player => player.id === hostId).disconnectedAt = Date.now() - 61_000;
+
+  const friendView = server.privateRoomState(room, joined.playerId);
+  assert.equal(friendView.room.hostId, joined.playerId);
+  assert.equal(friendView.game.status, 'playing');
+  assert.equal(friendView.game.hand.length, 13);
+  assert.match(friendView.room.notice, /room owner|timed out|now room owner/i);
+});
+
+test('HTTP rejoin endpoint restores active game session', async () => {
+  const app = server.createHttpServer();
+  await new Promise(resolve => app.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${app.address().port}`;
+  const post = async (path, body) => {
+    const response = await fetch(`${base}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body || {})
+    });
+    const payload = await response.json();
+    assert.equal(response.ok, true, payload.error || path);
+    return payload;
+  };
+
+  try {
+    const created = await post('/api/rooms', { name: 'Lantern' });
+    const joined = await post('/api/rooms/join', { code: created.room.code, name: 'Drum' });
+    await post('/api/rooms/action', { type: 'room:start', code: created.room.code, playerId: created.playerId });
+    const before = await fetch(`${base}/api/rooms/state?code=${created.room.code}&playerId=${joined.playerId}`).then(r => r.json());
+    await post('/api/rooms/action', { type: 'room:leave', code: created.room.code, playerId: joined.playerId });
+    const restored = await post('/api/rooms/rejoin', { code: created.room.code, playerId: joined.playerId });
+    assert.equal(restored.room.players.find(player => player.id === joined.playerId).connected, true);
+    assert.equal(restored.game.playerIndex, before.game.playerIndex);
+    assert.deepEqual(restored.game.hand.map(card => card.id), before.game.hand.map(card => card.id));
+  } finally {
+    await new Promise(resolve => app.close(resolve));
+  }
 });

@@ -2,6 +2,7 @@
   'use strict';
 
   const SAVE_KEY = 'big2go-save-v1';
+  const ROOM_SESSION_KEY = 'big2go-room-session-v1';
   const RULES_HTML = `
     <ul>
       <li><strong>Card order:</strong> 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A, 2. In Big Two, 2 is the highest rank.</li>
@@ -126,7 +127,12 @@
     voiceSpeaker: document.querySelector('#voice-speaker-button'),
     voiceMuteAll: document.querySelector('#voice-mute-all-button'),
     voiceStatus: document.querySelector('#voice-status'),
-    remoteAudio: document.querySelector('#remote-audio')
+    remoteAudio: document.querySelector('#remote-audio'),
+    roomRecovery: document.querySelector('#room-recovery-card'),
+    roomRecoverySummary: document.querySelector('#room-recovery-summary'),
+    roomRecoveryPlayers: document.querySelector('#room-recovery-players'),
+    roomRejoin: document.querySelector('#room-rejoin-button'),
+    roomExitSession: document.querySelector('#room-exit-session-button')
   };
 
   function makeCard(rankIndex, suitIndex) {
@@ -840,19 +846,19 @@
     state.players.forEach((player, index) => {
       if (index === state.humanIndex) return;
       const row = document.createElement('div');
-      row.className = `opponent-row${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}`;
+      row.className = `opponent-row${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
       const text = document.createElement('div');
       const name = document.createElement('div');
       name.className = 'opponent-name';
       name.textContent = player.name;
       const meta = document.createElement('div');
       meta.className = 'opponent-meta';
-      meta.textContent = player.finished ? 'Finished' : `${player.hand.length} cards left`;
+      meta.textContent = player.connected === false ? '🔴 Disconnected' : player.finished ? 'Finished' : `${player.hand.length} cards left`;
       text.appendChild(name);
       text.appendChild(meta);
       const badge = document.createElement('div');
-      badge.className = 'opponent-badge';
-      badge.textContent = player.finished ? '✓' : String(player.hand.length);
+      badge.className = `opponent-badge${player.connected === false ? ' offline' : ''}`;
+      badge.textContent = player.connected === false ? '!' : player.finished ? '✓' : String(player.hand.length);
       const voiceState = voiceStatusFor(player.id);
       const voice = document.createElement('button');
       voice.type = 'button';
@@ -1489,6 +1495,104 @@
     render();
   }
 
+  function saveRoomSession(room = null) {
+    if (!state.liveRoom?.code || !state.liveRoom?.playerId) return;
+    const players = Array.isArray(room?.players) ? room.players.map(player => ({
+      id: player.id,
+      name: player.name,
+      connected: player.connected !== false
+    })) : [];
+    try {
+      localStorage.setItem(ROOM_SESSION_KEY, JSON.stringify({
+        code: state.liveRoom.code,
+        playerId: state.liveRoom.playerId,
+        playerIndex: state.liveRoom.playerIndex ?? state.humanIndex,
+        hostId: state.liveRoom.hostId || room?.hostId || null,
+        players,
+        status: room?.status || 'playing',
+        updatedAt: Date.now()
+      }));
+    } catch (_) {}
+    renderRoomRecovery();
+  }
+
+  function getRoomSession() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(ROOM_SESSION_KEY) || 'null');
+      if (saved?.code && saved?.playerId) return saved;
+    } catch (_) {}
+    return null;
+  }
+
+  function clearRoomSession() {
+    try { localStorage.removeItem(ROOM_SESSION_KEY); } catch (_) {}
+    renderRoomRecovery();
+  }
+
+  function renderRoomRecovery() {
+    const saved = getRoomSession();
+    if (!els.roomRecovery) return;
+    els.roomRecovery.classList.toggle('hidden', !saved || Boolean(state.liveRoom?.code));
+    if (!saved || state.liveRoom?.code) return;
+    if (els.roomRecoverySummary) els.roomRecoverySummary.textContent = `Room: ${saved.code}`;
+    if (els.roomRecoveryPlayers) {
+      els.roomRecoveryPlayers.innerHTML = '';
+      (saved.players || []).slice(0, 4).forEach(player => {
+        const chip = document.createElement('span');
+        chip.textContent = `${player.connected === false ? '🔴' : '🟢'} ${player.id === saved.playerId ? 'You' : player.name}`;
+        els.roomRecoveryPlayers.appendChild(chip);
+      });
+    }
+  }
+
+  async function rejoinSavedRoom() {
+    const saved = getRoomSession();
+    if (!saved) return;
+    els.roomRejoin && (els.roomRejoin.disabled = true);
+    try {
+      const response = await fetch('/api/rooms/rejoin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ code: saved.code, playerId: saved.playerId })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Could not rejoin room');
+      state.liveRoom = { code: payload.room.code, playerId: saved.playerId, playerIndex: payload.game?.playerIndex ?? saved.playerIndex ?? 0, hostId: payload.room.hostId };
+      renderRoomState(payload.room);
+      if (payload.chat) applyChatPayload(payload.chat);
+      if (payload.voice) applyVoicePayload(payload.voice);
+      if (payload.game) {
+        applyLiveGame(payload.game, payload.room);
+      } else {
+        showPrivateRoom();
+        setTimeout(() => renderRoomState(payload.room), 0);
+      }
+      connectRoomSocket(payload.room.code, saved.playerId);
+      startRoomPolling();
+      saveRoomSession(payload.room);
+      playUiSound('start');
+    } catch (error) {
+      showOracle('Rejoin failed', `${error.message || 'The room could not be restored.'}<br><br>If the room expired, choose Exit Room and create a new room.`);
+    } finally {
+      els.roomRejoin && (els.roomRejoin.disabled = false);
+      renderRoomRecovery();
+    }
+  }
+
+  async function exitSavedRoom() {
+    const saved = getRoomSession();
+    if (!saved) return;
+    if (!window.confirm('Exit room? Your saved multiplayer session for this room will be cleared.')) return;
+    try {
+      await fetch('/api/rooms/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ type: 'room:leave', code: saved.code, playerId: saved.playerId })
+      });
+    } catch (_) {}
+    clearRoomSession();
+  }
+
   function roomSocketUrl(code, playerId) {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${protocol}//${window.location.host}/rooms?code=${encodeURIComponent(code)}&playerId=${encodeURIComponent(playerId)}`;
@@ -1507,7 +1611,10 @@
     const response = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || 'Could not sync room');
-    if (payload.room) renderRoomState(payload.room);
+    if (payload.room) {
+      renderRoomState(payload.room);
+      saveRoomSession(payload.room);
+    }
     if (payload.game) applyLiveGame(payload.game, payload.room);
     if (payload.chat) applyChatPayload(payload.chat);
     if (payload.voice) applyVoicePayload(payload.voice);
@@ -1564,7 +1671,10 @@
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Room action failed');
-      if (payload.room) renderRoomState(payload.room);
+      if (payload.room) {
+        renderRoomState(payload.room);
+        saveRoomSession(payload.room);
+      }
       if (payload.game) applyLiveGame(payload.game, payload.room);
       if (payload.chat) applyChatPayload(payload.chat);
       if (payload.voice) applyVoicePayload(payload.voice);
@@ -1591,6 +1701,7 @@
       playerIndex: game.playerIndex,
       hostId: room?.hostId || state.liveRoom?.hostId
     };
+    saveRoomSession(room);
     state.settings.players = game.players.length;
     state.humanIndex = game.playerIndex;
     state.currentPlayer = game.currentPlayer;
@@ -1655,7 +1766,8 @@
         const displayName = player.id === myPlayerId ? 'You' : player.name;
         const tags = [];
         if (player.id === room.hostId) tags.push('Host');
-        if (player.connected === false) tags.push('Left');
+        if (player.connected === false) tags.push(player.timedOut ? 'Timed out' : 'Disconnected');
+        else tags.push('Online');
         item.textContent = `${index + 1}. ${displayName}${tags.length ? ` · ${tags.join(' · ')}` : ''}`;
         if (player.connected === false) item.dataset.left = 'true';
         playersEl.appendChild(item);
@@ -1668,9 +1780,13 @@
     }
     if (room.notice && room.notice !== state.lastRoomNotice) {
       state.lastRoomNotice = room.notice;
-      if (/left the room/i.test(room.notice)) showOracle('Player left', room.notice);
+      if (/left|disconnected|timed out/i.test(room.notice)) showOracle('Player disconnected', room.notice);
+      if (/rejoined/i.test(room.notice)) showOracle('Player rejoined', room.notice);
     }
-    const status = room.notice && /left the room/i.test(room.notice)
+    const hasDisconnected = room.players?.some(player => player.connected === false);
+    const status = hasDisconnected
+      ? 'Waiting for player to reconnect… game state is saved.'
+      : room.notice && /left|disconnected|timed out/i.test(room.notice)
       ? room.notice
       : room.status === 'playing'
       ? 'Live game started — play from the table.'
@@ -1697,7 +1813,10 @@
       try {
         const message = JSON.parse(event.data);
         if (message.type === 'room:update' || message.type === 'game:update') {
-          if (message.room) renderRoomState(message.room);
+          if (message.room) {
+            renderRoomState(message.room);
+            saveRoomSession(message.room);
+          }
           if (message.game) applyLiveGame(message.game, message.room);
           if (message.chat) applyChatPayload(message.chat);
           if (message.voice) applyVoicePayload(message.voice);
@@ -1765,6 +1884,7 @@
       try {
         const payload = await createBackendRoom(playerName());
         state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: 0, hostId: payload.room.hostId };
+        saveRoomSession(payload.room);
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
         startRoomPolling();
@@ -1787,6 +1907,7 @@
       try {
         const payload = await joinBackendRoom(code, playerName());
         state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: Math.max(0, payload.room.playerCount - 1), hostId: payload.room.hostId };
+        saveRoomSession(payload.room);
         renderRoomState(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
         startRoomPolling();
@@ -1968,6 +2089,8 @@
     });
     els.rules.addEventListener('click', () => showHelp('How to Play', RULES_HTML));
     els.privateRoom?.addEventListener('click', showPrivateRoom);
+    els.roomRejoin?.addEventListener('click', rejoinSavedRoom);
+    els.roomExitSession?.addEventListener('click', exitSavedRoom);
     els.share.addEventListener('click', shareGame);
     els.chatForm?.addEventListener('submit', event => {
       event.preventDefault();
@@ -1998,11 +2121,17 @@
     document.querySelector('#bonus-button')?.addEventListener('click', () => showHelp('Daily Bonus', '<ul><li>Come back and play a fresh Big2Go table.</li><li>Daily rewards can be connected later.</li></ul>'));
     document.querySelector('#achievements-button')?.addEventListener('click', () => showHelp('Goals', '<ul><li>Win with singles, pairs, and 5-card combos.</li><li>Try to beat the AI with fewer passes.</li></ul>'));
     els.back.addEventListener('click', () => {
-      leaveCurrentRoom();
+      if (state.liveRoom?.code) {
+        const leave = window.confirm('Leave game?\n\nYour current game progress will be saved.\n\nPress Cancel to stay, or OK to leave the room.');
+        if (!leave) return;
+        leaveCurrentRoom();
+        clearRoomSession();
+      }
       cancelAiTimer();
       state.busy = false;
       showHomeScreen();
       updateContinueButton();
+      renderRoomRecovery();
     });
     els.sound.addEventListener('click', () => {
       state.sound = !state.sound;
@@ -2033,7 +2162,7 @@
         playUiSound('tap');
       });
     });
-    window.addEventListener('beforeunload', () => leaveCurrentRoom({ keepalive: true }));
+    window.addEventListener('beforeunload', () => saveRoomSession());
     window.addEventListener('focus', () => fetchLiveRoomState().catch(() => {}));
     window.addEventListener('pageshow', () => fetchLiveRoomState().catch(() => {}));
   }
@@ -2066,6 +2195,7 @@
     els.heatFill.style.width = '0%';
     renderLogs();
     showHomeScreen();
+    renderRoomRecovery();
     if (localStorage.getItem(SAVE_KEY)) els.continue.classList.remove('hidden');
   }
 

@@ -9,6 +9,8 @@ const { WebSocketServer } = require('ws');
 const PORT = Number(process.env.PORT || 8093);
 const PUBLIC_DIR = __dirname;
 const ROOM_TTL_MS = 1000 * 60 * 60 * 3;
+const RECONNECT_WARNING_MS = 1000 * 30;
+const RECONNECT_TIMEOUT_MS = 1000 * 60;
 const MAX_PLAYERS = 4;
 const rooms = new Map();
 
@@ -246,7 +248,42 @@ function publicVoice(room) {
   }));
 }
 
+function appendRoomNotice(room, text) {
+  room.notice = text;
+  if (room.game?.logs) room.game.logs.unshift(text);
+  room.chat = [...(room.chat || []), {
+    id: crypto.randomUUID(),
+    playerId: 'system',
+    name: 'Table',
+    text,
+    system: true,
+    at: Date.now()
+  }].slice(-30);
+}
+
+function transferHostIfNeeded(room, now = Date.now()) {
+  const host = room.players.find(player => player.id === room.hostId);
+  if (!host || host.connected !== false || !host.disconnectedAt || now - host.disconnectedAt < RECONNECT_TIMEOUT_MS) return false;
+  const nextHost = room.players.find(player => player.connected !== false);
+  if (!nextHost || nextHost.id === room.hostId) return false;
+  room.hostId = nextHost.id;
+  appendRoomNotice(room, `${host.name} timed out. ${nextHost.name} is now room owner.`);
+  return true;
+}
+
+function processRoomTimeouts(room, now = Date.now()) {
+  for (const player of room.players) {
+    if (player.connected === false && player.disconnectedAt && !player.timedOut && now - player.disconnectedAt >= RECONNECT_TIMEOUT_MS) {
+      player.timedOut = true;
+      appendRoomNotice(room, `${player.name} has timed out. Game is paused until they return.`);
+    }
+  }
+  transferHostIfNeeded(room, now);
+  return room;
+}
+
 function publicRoom(room) {
+  processRoomTimeouts(room);
   return {
     code: room.code,
     hostId: room.hostId,
@@ -254,7 +291,16 @@ function publicRoom(room) {
     playerCount: room.players.filter(player => player.connected !== false).length,
     maxPlayers: room.maxPlayers,
     notice: room.notice || '',
-    players: room.players.map(player => ({ id: player.id, name: player.name, ready: player.ready, connected: player.connected !== false }))
+    reconnectWarningMs: RECONNECT_WARNING_MS,
+    reconnectTimeoutMs: RECONNECT_TIMEOUT_MS,
+    players: room.players.map(player => ({
+      id: player.id,
+      name: player.name,
+      ready: player.ready,
+      connected: player.connected !== false,
+      disconnectedAt: player.disconnectedAt || null,
+      timedOut: Boolean(player.timedOut)
+    }))
   };
 }
 
@@ -292,6 +338,7 @@ function publicGameState(room, playerId) {
 }
 
 function privateRoomState(room, playerId) {
+  processRoomTimeouts(room);
   return { room: publicRoom(room), game: publicGameState(room, playerId), chat: publicChat(room), voice: publicVoice(room) };
 }
 
@@ -338,6 +385,10 @@ function applyRoomAction(code, playerId, action) {
   const { room } = lookup;
   try {
     if (action.type === 'room:start') startRoomGame(room.code, playerId);
+    else if (action.type === 'room:rejoin') {
+      const result = rejoinRoom(room.code, playerId);
+      if (!result.ok) return result;
+    }
     else if (action.type === 'room:leave') {
       const result = leaveRoom(room.code, playerId);
       if (!result.ok) return result;
@@ -387,7 +438,7 @@ function createRoom(name = 'Host') {
     code,
     hostId,
     maxPlayers: MAX_PLAYERS,
-    players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true, connected: true, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false }],
+    players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true, connected: true, disconnectedAt: null, timedOut: false, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false }],
     clients: new Set(),
     game: null,
     chat: [],
@@ -405,30 +456,57 @@ function joinRoom(code, name = 'Friend') {
   if (room.game) return { error: 'Game already started' };
   if (room.players.filter(player => player.connected !== false).length >= room.maxPlayers) return { error: 'Room is full' };
   const playerId = crypto.randomUUID();
-  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true, connected: true, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false });
-  room.notice = `${room.players[room.players.length - 1].name} joined the room.`;
+  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true, connected: true, disconnectedAt: null, timedOut: false, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false });
+  appendRoomNotice(room, `${room.players[room.players.length - 1].name} joined the room.`);
   room.updatedAt = Date.now();
   broadcast(room);
   return { room, playerId };
 }
 
-function leaveRoom(code, playerId) {
-  const room = rooms.get(String(code || '').trim().toUpperCase());
-  if (!room) return { ok: false, error: 'Room not found' };
+function markPlayerDisconnected(room, playerId, { manual = false } = {}) {
   const player = room.players.find(entry => entry.id === playerId);
   if (!player) return { ok: false, error: 'Player not in room' };
   if (player.connected === false) return { ok: true, room };
   player.connected = false;
+  player.disconnectedAt = Date.now();
+  player.timedOut = false;
   player.voiceEnabled = false;
   player.voiceMuted = true;
   player.voiceSpeaking = false;
-  room.notice = `${player.name} left the room.`;
-  if (room.game && room.game.status === 'playing') {
-    room.game.logs.unshift(room.notice);
-  }
+  const message = manual
+    ? `🔴 ${player.name} left the room. Waiting for player to reconnect...`
+    : `🔴 ${player.name} disconnected. Waiting for player to reconnect...`;
+  appendRoomNotice(room, message);
   room.updatedAt = Date.now();
   broadcast(room);
   return { ok: true, room };
+}
+
+function rejoinRoom(code, playerId) {
+  const room = rooms.get(String(code || '').trim().toUpperCase());
+  if (!room) return { ok: false, error: 'Room not found' };
+  const player = room.players.find(entry => entry.id === playerId);
+  if (!player) return { ok: false, error: 'Player not in room' };
+  const wasDisconnected = player.connected === false;
+  player.connected = true;
+  player.disconnectedAt = null;
+  player.timedOut = false;
+  player.voiceEnabled = false;
+  player.voiceMuted = true;
+  player.voiceSpeaking = false;
+  if (!room.hostId || !room.players.some(entry => entry.id === room.hostId && entry.connected !== false)) {
+    room.hostId = player.id;
+  }
+  if (wasDisconnected) appendRoomNotice(room, `🟢 ${player.name} rejoined the game.`);
+  room.updatedAt = Date.now();
+  broadcast(room);
+  return { ok: true, ...privateRoomState(room, playerId) };
+}
+
+function leaveRoom(code, playerId) {
+  const room = rooms.get(String(code || '').trim().toUpperCase());
+  if (!room) return { ok: false, error: 'Room not found' };
+  return markPlayerDisconnected(room, playerId, { manual: true });
 }
 
 function findStartingPlayer(players) {
@@ -494,6 +572,8 @@ function applyRoomPlay(code, playerId, cardIds) {
   if (!room || !room.game) return { ok: false, error: 'Game not started' };
   const player = getRoomGamePlayer(room, playerId);
   if (!player) return { ok: false, error: 'Player not in game' };
+  const roomPlayer = room.players.find(entry => entry.id === playerId);
+  if (roomPlayer?.connected === false) return { ok: false, error: 'Rejoin the room before playing' };
   if (room.game.currentPlayer !== player.index) return { ok: false, error: 'Not your turn' };
 
   const requested = Array.isArray(cardIds) ? cardIds.map(String) : [];
@@ -522,6 +602,8 @@ function applyRoomPass(code, playerId) {
   if (!room || !room.game) return { ok: false, error: 'Game not started' };
   const player = getRoomGamePlayer(room, playerId);
   if (!player) return { ok: false, error: 'Player not in game' };
+  const roomPlayer = room.players.find(entry => entry.id === playerId);
+  if (roomPlayer?.connected === false) return { ok: false, error: 'Rejoin the room before playing' };
   if (room.game.currentPlayer !== player.index) return { ok: false, error: 'Not your turn' };
   if (!room.game.trick.play) return { ok: false, error: 'You lead this trick, so play cards instead of passing' };
 
@@ -603,6 +685,22 @@ function createHttpServer() {
       return;
     }
 
+    if (req.method === 'POST' && req.url === '/api/rooms/rejoin') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; if (body.length > 2048) req.destroy(); });
+      req.on('end', () => {
+        try {
+          const parsed = body ? JSON.parse(body) : {};
+          const result = rejoinRoom(parsed.code, parsed.playerId);
+          if (!result.ok) return json(res, 404, { error: result.error || 'Could not rejoin room' });
+          return json(res, 200, result);
+        } catch (_) {
+          return json(res, 400, { error: 'Invalid rejoin request' });
+        }
+      });
+      return;
+    }
+
     if (req.method === 'GET' && req.url.startsWith('/api/rooms/state')) {
       const url = new URL(req.url, `http://${req.headers.host}`);
       const code = url.searchParams.get('code');
@@ -649,6 +747,7 @@ function createHttpServer() {
 
     socket.playerId = playerId;
     room.clients.add(socket);
+    rejoinRoom(code, playerId);
     room.updatedAt = Date.now();
     sendPrivate(socket, room, room.game ? 'game:update' : 'room:update');
     broadcast(room);
@@ -671,7 +770,7 @@ function createHttpServer() {
           }
           return;
         }
-        if (message.type === 'room:start' || message.type === 'room:leave' || message.type === 'room:chat' || message.type === 'voice:state' || message.type === 'game:play' || message.type === 'game:pass') {
+        if (message.type === 'room:start' || message.type === 'room:leave' || message.type === 'room:rejoin' || message.type === 'room:chat' || message.type === 'voice:state' || message.type === 'game:play' || message.type === 'game:pass') {
           const result = applyRoomAction(code, playerId, message);
           if (!result.ok) socket.send(JSON.stringify({ type: 'room:error', error: result.error }));
         }
@@ -683,10 +782,10 @@ function createHttpServer() {
     socket.on('close', () => {
       room.clients.delete(socket);
       const player = room.players.find(entry => entry.id === socket.playerId);
-      if (player) {
-        player.voiceEnabled = false;
-        player.voiceMuted = true;
-        player.voiceSpeaking = false;
+      const stillConnectedElsewhere = [...room.clients].some(client => client.playerId === socket.playerId && client.readyState === client.OPEN);
+      if (player && !stillConnectedElsewhere) {
+        markPlayerDisconnected(room, socket.playerId, { manual: false });
+        return;
       }
       room.updatedAt = Date.now();
       broadcast(room);
@@ -707,6 +806,8 @@ module.exports = {
   rooms,
   createRoom,
   joinRoom,
+  rejoinRoom,
+  markPlayerDisconnected,
   leaveRoom,
   publicRoom,
   privateRoomState,
