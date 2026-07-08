@@ -2,6 +2,9 @@
   'use strict';
 
   const SAVE_KEY = 'big2go-save-v1';
+  const COIN_KEY = 'big2go-virtual-coins-v1';
+  const STARTING_COINS = 100;
+  const ENTRY_FEE_COINS = 5;
   const ROOM_SESSION_KEY = 'big2go-room-session-v1';
   const RULES_HTML = `
     <ul>
@@ -48,6 +51,7 @@
     round: 1,
     sparks: 0,
     heat: 0,
+    coins: { balance: STARTING_COINS, prizePool: 0, entryPaid: false, paidOut: false, lastTurn: '' },
     sound: true,
     gameOver: false,
     busy: false,
@@ -108,6 +112,9 @@
     trickCount: document.querySelector('#trick-count'),
     roundCount: document.querySelector('#round-count'),
     sparkCount: document.querySelector('#spark-count'),
+    coinBalance: document.querySelector('#coin-balance'),
+    prizePoolValue: document.querySelector('#prize-pool-value'),
+    coinFxLayer: document.querySelector('#coin-fx-layer'),
     selectedCount: document.querySelector('#selected-count'),
     logList: document.querySelector('#log-list'),
     helpDialog: document.querySelector('#help-dialog'),
@@ -388,6 +395,7 @@
         name: i === 0 ? 'You' : AI_NAMES[i - 1] || `Bot ${i}`,
         isHuman: i === 0,
         finished: false,
+        coins: i === 0 ? state.coins.balance : STARTING_COINS,
         hand: []
       });
     }
@@ -436,6 +444,7 @@
         round: state.round,
         sparks: state.sparks,
         heat: state.heat,
+        coins: state.coins,
         sound: state.sound,
         players: state.players.map(player => ({
           name: player.name,
@@ -486,6 +495,7 @@
       state.round = Number(saved.round) || 1;
       state.sparks = Number(saved.sparks) || 0;
       state.heat = Number(saved.heat) || 0;
+      state.coins = { ...state.coins, ...(saved.coins || {}), balance: loadCoinBalance() };
       state.sound = saved.sound !== false;
       state.players = saved.players.map((player, index) => ({
         name: player.name || (index === 0 ? 'You' : AI_NAMES[index - 1] || `Bot ${index}`),
@@ -542,6 +552,109 @@
     state.sparks += amount;
     els.sparkCount.textContent = String(state.sparks);
     if (amount >= 2) renderConfetti(8 + amount * 4);
+  }
+
+  function loadCoinBalance() {
+    try {
+      const saved = Number(JSON.parse(localStorage.getItem(COIN_KEY) || 'null')?.balance);
+      return Number.isFinite(saved) ? Math.max(0, saved) : STARTING_COINS;
+    } catch (_) {
+      return STARTING_COINS;
+    }
+  }
+
+  function saveCoinBalance() {
+    try { localStorage.setItem(COIN_KEY, JSON.stringify({ balance: state.coins.balance, updatedAt: Date.now() })); } catch (_) {}
+  }
+
+  function renderCoinHud() {
+    if (els.coinBalance) els.coinBalance.textContent = String(Math.max(0, Math.round(state.coins.balance || 0)));
+    if (els.prizePoolValue) els.prizePoolValue.textContent = String(Math.max(0, Math.round(state.coins.prizePool || 0)));
+  }
+
+  function setCoinBalance(value) {
+    state.coins.balance = Math.max(0, Number(value) || 0);
+    const human = getHumanPlayer();
+    if (human) human.coins = state.coins.balance;
+    saveCoinBalance();
+    renderCoinHud();
+  }
+
+  function playerCoins(player, index) {
+    if (index === state.humanIndex) return state.coins.balance;
+    return Number.isFinite(player.coins) ? player.coins : STARTING_COINS;
+  }
+
+  function coinPoint(selector, fallbackX, fallbackY) {
+    const rect = document.querySelector(selector)?.getBoundingClientRect?.();
+    return rect && rect.width ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : { x: fallbackX, y: fallbackY };
+  }
+
+  function animateCoins(kind = 'entry', amount = ENTRY_FEE_COINS) {
+    if (!els.coinFxLayer) return;
+    const from = kind === 'win' ? coinPoint('#prize-pool', innerWidth / 2, innerHeight * .42) : coinPoint('#coin-wallet', innerWidth * .82, 52);
+    const to = kind === 'win' ? coinPoint('#coin-wallet', innerWidth * .82, 52) : coinPoint('#prize-pool', innerWidth / 2, innerHeight * .42);
+    const count = Math.min(14, Math.max(5, amount));
+    for (let i = 0; i < count; i++) {
+      const coin = document.createElement('span');
+      coin.className = `coin-bit${i % 5 === 0 ? ' spark' : ''}`;
+      coin.style.setProperty('--x', `${from.x + (Math.random() - .5) * 30}px`);
+      coin.style.setProperty('--y', `${from.y + (Math.random() - .5) * 24}px`);
+      coin.style.setProperty('--tx', `${to.x + (Math.random() - .5) * 60}px`);
+      coin.style.setProperty('--ty', `${to.y + (Math.random() - .5) * 42}px`);
+      coin.style.setProperty('--d', `${720 + Math.random() * 420}ms`);
+      coin.style.setProperty('--s', `${18 + Math.random() * 10}px`);
+      els.coinFxLayer.appendChild(coin);
+      setTimeout(() => coin.remove(), 1300);
+    }
+    playUiSound(kind === 'win' ? 'coinWin' : 'coin');
+  }
+
+  function showCoinPop(text) {
+    const pop = document.createElement('div');
+    pop.className = 'coin-pop';
+    pop.textContent = text;
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 1250);
+  }
+
+  function paySinglePlayerEntry(playerCount) {
+    if (state.coins.balance < ENTRY_FEE_COINS) {
+      showOracle('Need more virtual coins', `You need 🪙 ${ENTRY_FEE_COINS} entertainment coins to start. Daily free coins are a good next retention feature.`);
+      return false;
+    }
+    setCoinBalance(state.coins.balance - ENTRY_FEE_COINS);
+    state.coins.prizePool = playerCount * ENTRY_FEE_COINS;
+    state.coins.entryPaid = true;
+    state.coins.paidOut = false;
+    animateCoins('entry', ENTRY_FEE_COINS);
+    showCoinPop(`Entry fee: 🪙 ${ENTRY_FEE_COINS}`);
+    renderCoinHud();
+    return true;
+  }
+
+  function paySinglePlayerPrize(winner) {
+    if (state.liveRoom || state.coins.paidOut) return state.coins.prizePool || 0;
+    state.coins.paidOut = true;
+    const prize = state.coins.prizePool || 0;
+    if (winner?.isHuman) {
+      setCoinBalance(state.coins.balance + prize);
+      animateCoins('win', Math.max(ENTRY_FEE_COINS, prize));
+      showCoinPop(`+🪙 ${prize}`);
+    } else {
+      animateCoins('entry', ENTRY_FEE_COINS);
+      showCoinPop(`Good Game! -🪙 ${ENTRY_FEE_COINS}`);
+    }
+    return prize;
+  }
+
+  function showReaction(emoji) {
+    const floater = document.createElement('div');
+    floater.className = 'reaction-float';
+    floater.textContent = emoji;
+    document.body.appendChild(floater);
+    setTimeout(() => floater.remove(), 1150);
+    playUiSound('tap');
   }
 
   function getAudioContext() {
@@ -649,6 +762,21 @@
           { f: 440, d: .05, w: .05, type: 'triangle', g: .02 },
           { noise: true, d: .035, w: .02, g: .01, ff: 1400 }
         ],
+        coin: [
+          { f: 880, d: .045, w: 0, type: 'triangle', g: .026 },
+          { f: 1174.66, d: .06, w: .045, type: 'sine', g: .024 },
+          { noise: true, d: .035, w: .02, g: .01, ff: 3200 }
+        ],
+        coinWin: [
+          { f: 659.25, d: .08, w: 0, type: 'triangle', g: .03 },
+          { f: 880, d: .09, w: .08, type: 'triangle', g: .032 },
+          { f: 1318.51, d: .13, w: .18, type: 'sine', g: .03 },
+          { noise: true, d: .12, w: .02, g: .018, ff: 4200 }
+        ],
+        turn: [
+          { f: 523.25, d: .06, w: 0, type: 'sine', g: .022 },
+          { f: 784, d: .08, w: .07, type: 'triangle', g: .022 }
+        ],
         win: [
           { noise: true, d: .14, w: 0, g: .024, ff: 2600 },
           { f: 523.25, d: .12, w: .02, type: 'triangle', g: .034 },
@@ -666,7 +794,7 @@
     });
   }
 
-  function showVictoryCelebration(winner) {
+  function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0) {
     const existing = document.querySelector('#victory-overlay');
     if (existing) existing.remove();
     const overlay = document.createElement('div');
@@ -682,7 +810,7 @@
 
     const title = document.createElement('h2');
     title.className = 'victory-title';
-    title.textContent = winner.isHuman ? 'You win!' : `${winner.name} wins`;
+    title.textContent = winner.isHuman ? '🎉 YOU WIN!' : `${winner.name} wins`;
 
     const message = document.createElement('p');
     message.className = 'victory-message';
@@ -692,13 +820,13 @@
 
     const stats = document.createElement('div');
     stats.className = 'victory-stats';
-    stats.innerHTML = `<span>+24 RP</span><span>${state.sparks} sparks</span><span>${state.players.length} players</span>`;
+    stats.innerHTML = `<span>${winner.isHuman ? '+' : '-'}🪙 ${winner.isHuman ? coinPrize : ENTRY_FEE_COINS}</span><span>${state.sparks} sparks</span><span>${state.players.length} players</span>`;
 
     const rewards = document.createElement('div');
     rewards.className = 'victory-rewards';
     rewards.innerHTML = winner.isHuman
-      ? `<div class="reward-line">🏆 Bronze III progress +24 rank points</div><div class="reward-line">🎁 Win Chest progress +1 / 5</div><div class="reward-line">⭐ Daily goal updated: Clear one table</div>`
-      : `<div class="reward-line">🏆 Rematch to recover rank momentum</div><div class="reward-line">🎁 Chest progress is waiting for your next win</div>`;
+      ? `<div class="reward-line">🪙 +${coinPrize} virtual gold coins</div><div class="reward-line">✨ Arcade tokens only — no cash value</div><div class="reward-line">⭐ Daily free coins can be added next</div>`
+      : `<div class="reward-line">Good Game! -🪙 ${ENTRY_FEE_COINS}</div><div class="reward-line">These are entertainment coins only — rematch anytime</div>`;
 
     const actions = document.createElement('div');
     actions.className = 'victory-actions';
@@ -744,9 +872,10 @@
     cancelAiTimer();
     clearSelection();
     clearSave();
+    const coinPrize = state.liveRoom ? (state.coins.prizePool || 0) : paySinglePlayerPrize(winner);
     renderConfetti(winner.isHuman ? 56 : 42);
-    playUiSound('win');
-    showVictoryCelebration(winner);
+    playUiSound(winner.isHuman ? 'win' : 'pass');
+    showVictoryCelebration(winner, coinPrize);
     render();
   }
 
@@ -767,6 +896,7 @@
         name: i === 0 ? 'You' : AI_NAMES[i - 1] || `Bot ${i}`,
         isHuman: i === 0,
         finished: false,
+        coins: i === 0 ? state.coins.balance : STARTING_COINS,
         hand: []
       });
     }
@@ -780,10 +910,12 @@
     cancelAiTimer();
     document.querySelector('#victory-overlay')?.remove();
     createPlayers(count);
+    if (!paySinglePlayerEntry(count)) return;
     const hands = dealCards(count);
     state.players.forEach((player, index) => {
       player.hand = hands[index];
       player.finished = false;
+      player.coins = index === 0 ? state.coins.balance : STARTING_COINS - ENTRY_FEE_COINS;
     });
     state.humanIndex = 0;
     state.startingPlayer = findStartingPlayer();
@@ -839,6 +971,7 @@
     els.turnLabel.textContent = state.gameOver ? 'Game over' : `${current.isHuman ? 'Your' : current.name + '\'s'} turn`;
     els.tableSubtitle.textContent = state.gameOver ? 'Match finished.' : `${requirement} · Round ${state.round} · Sparks ${state.sparks}`;
     els.trickHelp.textContent = selectionFeedback();
+    renderCoinHud();
   }
 
   function renderOpponents() {
@@ -854,8 +987,12 @@
       const meta = document.createElement('div');
       meta.className = 'opponent-meta';
       meta.textContent = player.connected === false ? '🔴 Disconnected' : player.finished ? 'Finished' : `${player.hand.length} cards left`;
+      const coins = document.createElement('div');
+      coins.className = 'opponent-coins';
+      coins.textContent = `🪙 ${playerCoins(player, index)}`;
       text.appendChild(name);
       text.appendChild(meta);
+      text.appendChild(coins);
       const badge = document.createElement('div');
       badge.className = `opponent-badge${player.connected === false ? ' offline' : ''}`;
       badge.textContent = player.connected === false ? '!' : player.finished ? '✓' : String(player.hand.length);
@@ -1231,6 +1368,7 @@
     renderHand();
     renderChat();
     updateStatus();
+    renderCoinHud();
     els.sparkCount.textContent = String(state.sparks);
     els.roundCount.textContent = String(state.round);
     els.heatFill.style.width = `${state.heat}%`;
@@ -1784,11 +1922,21 @@
       isHuman: index === game.playerIndex,
       finished: Boolean(player.finished),
       connected: player.connected !== false,
+      coins: Number.isFinite(player.coins) ? player.coins : STARTING_COINS,
       hand: index === game.playerIndex
         ? (game.hand || []).map(card => cardFromId(card.id || card)).filter(Boolean)
         : Array.from({ length: Number(player.handCount) || 0 }, () => ({ id: 'hidden' }))
     }));
     state.logs = Array.isArray(game.logs) ? game.logs.slice(0, 8) : [];
+    state.coins.prizePool = game.prizePool || 0;
+    const ownRoomPlayer = room?.players?.find?.(player => player.id === game.playerId);
+    const ownGamePlayer = game.players?.find?.(player => player.id === game.playerId);
+    if (Number.isFinite(ownGamePlayer?.coins)) setCoinBalance(ownGamePlayer.coins);
+    else if (Number.isFinite(ownRoomPlayer?.coins)) setCoinBalance(ownRoomPlayer.coins);
+    if (!state.gameOver && !game.gameOver && game.currentPlayer === game.playerIndex && state.coins.lastTurn !== `${game.round}:${game.currentPlayer}`) {
+      state.coins.lastTurn = `${game.round}:${game.currentPlayer}`;
+      playUiSound('turn');
+    }
     state.selected = new Set([...state.selected].filter(id => getHumanPlayer()?.hand.some(card => card.id === id)));
     state.gameOver = Boolean(game.gameOver);
     state.busy = false;
@@ -1798,6 +1946,7 @@
     render();
     if (game.gameOver && !document.querySelector('#victory-overlay')) {
       const winner = state.players[game.winnerIndex];
+      if (winner?.isHuman) animateCoins('win', Math.max(ENTRY_FEE_COINS, game.prizePool || 0));
       if (winner) announceVictory(winner);
     }
   }
@@ -1828,7 +1977,7 @@
         if (player.id === room.hostId) tags.push('Host');
         if (player.connected === false) tags.push(player.timedOut ? 'Timed out' : 'Disconnected');
         else tags.push('Online');
-        item.textContent = `${index + 1}. ${displayName}${tags.length ? ` · ${tags.join(' · ')}` : ''}`;
+        item.textContent = `${index + 1}. ${displayName} · 🪙 ${Number.isFinite(player.coins) ? player.coins : STARTING_COINS}${tags.length ? ` · ${tags.join(' · ')}` : ''}`;
         if (player.connected === false) item.dataset.left = 'true';
         playersEl.appendChild(item);
       });
@@ -2152,6 +2301,9 @@
     els.roomRejoin?.addEventListener('click', rejoinSavedRoom);
     els.roomExitSession?.addEventListener('click', exitSavedRoom);
     els.share.addEventListener('click', shareGame);
+    document.querySelectorAll('[data-reaction]').forEach(button => {
+      button.addEventListener('click', () => showReaction(button.dataset.reaction || '👏'));
+    });
     els.chatForm?.addEventListener('submit', event => {
       event.preventDefault();
       sendRoomChat(els.chatInput?.value || '');
@@ -2302,6 +2454,8 @@
   }
 
   function init() {
+    state.coins.balance = loadCoinBalance();
+    renderCoinHud();
     bindEvents();
     installReconnectTestMode();
     registerServiceWorker();

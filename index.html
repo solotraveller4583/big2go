@@ -32,6 +32,7 @@
   <link rel="stylesheet" href="big2go-room.css?v=10" />
   <link rel="stylesheet" href="big2go-voice.css?v=1" />
   <link rel="stylesheet" href="big2go-rejoin.css?v=3" />
+  <link rel="stylesheet" href="big2go-coins.css?v=1" />
 </head>
 <body>
   <main class="app-shell">
@@ -114,6 +115,7 @@
           <h2 id="table-title">Big2Go Arena</h2>
           <p class="header-subtitle" id="table-subtitle">Beat the trick or let the table pass to the next player.</p>
         </div>
+        <div class="coin-wallet" id="coin-wallet" aria-label="Your virtual gold coins"><span>🪙</span><strong id="coin-balance">100</strong><small>Your Coins</small></div>
         <button class="icon-button" id="sound-button" aria-label="Toggle sound">🔊</button>
       </header>
 
@@ -156,6 +158,7 @@
       <div id="remote-audio" class="remote-audio" aria-hidden="true"></div>
 
       <section class="table-arena" aria-label="Current trick">
+        <div class="prize-pool" id="prize-pool" aria-label="Virtual prize pool"><small>Prize Pool</small><strong>🪙 <span id="prize-pool-value">0</span></strong></div>
         <div class="arena-header">
           <div>
             <small>Last Play</small>
@@ -177,6 +180,13 @@
           <span id="heat-value">0%</span>
         </div>
         <div class="heat-bar" aria-hidden="true"><div id="heat-fill" class="heat-fill"></div></div>
+      </section>
+
+      <section class="reaction-row" aria-label="Player reactions">
+        <button type="button" data-reaction="😂">😂 Laugh</button>
+        <button type="button" data-reaction="👏">👏 Nice move</button>
+        <button type="button" data-reaction="🔥">🔥 Good play</button>
+        <button type="button" data-reaction="😮">😮 Wow</button>
       </section>
 
       <section class="hand-card" aria-label="Your hand">
@@ -216,7 +226,8 @@
       </form>
     </dialog>
   </main>
+  <div id="coin-fx-layer" class="coin-fx-layer" aria-hidden="true"></div>
 
-  <script src="game.js?v=40" defer></script>
+  <script src="game.js?v=41" defer></script>
 </body>
 </html>

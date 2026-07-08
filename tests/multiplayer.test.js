@@ -344,3 +344,39 @@ test('backend active session lookup lets Player B resume without entering room c
     await new Promise(resolve => app.close(resolve));
   }
 });
+
+test('virtual gold coins start at 100, pay entry fee, and create a room prize pool', () => {
+  const { room, playerId: hostId } = server.createRoom('Jack');
+  const joined = server.joinRoom(room.code, 'Tarn');
+
+  assert.equal(room.players.find(player => player.id === hostId).coins, 100);
+  assert.equal(room.players.find(player => player.id === joined.playerId).coins, 100);
+
+  const game = server.startRoomGame(room.code, hostId);
+  const hostState = server.privateRoomState(room, hostId);
+  const friendState = server.privateRoomState(room, joined.playerId);
+
+  assert.equal(game.entryFee, 5);
+  assert.equal(game.prizePool, 10);
+  assert.equal(hostState.room.prizePool, 10);
+  assert.equal(hostState.game.players[0].coins, 95);
+  assert.equal(friendState.game.players[1].coins, 95);
+});
+
+test('virtual gold coin winner receives the full entertainment prize pool', () => {
+  const { room, playerId: hostId } = server.createRoom('Jack');
+  server.joinRoom(room.code, 'Tarn');
+  server.startRoomGame(room.code, hostId);
+
+  const winner = room.game.players[room.game.currentPlayer];
+  room.game.firstTrick = false;
+  winner.hand = [winner.hand[0]];
+  const result = server.applyRoomPlay(room.code, winner.id, [winner.hand[0].id]);
+
+  assert.equal(result.ok, true);
+  assert.equal(room.game.status, 'finished');
+  assert.equal(room.game.prizePool, 10);
+  assert.equal(room.game.players[winner.index].coins, 105);
+  assert.equal(room.players.find(player => player.id === winner.id).coins, 105);
+  assert.match(room.game.logs[0], /wins 10 virtual gold coins/);
+});

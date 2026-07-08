@@ -12,6 +12,8 @@ const ROOM_TTL_MS = 1000 * 60 * 60 * 3;
 const RECONNECT_WARNING_MS = 1000 * 30;
 const RECONNECT_TIMEOUT_MS = 1000 * 60;
 const MAX_PLAYERS = 4;
+const STARTING_COINS = 100;
+const ENTRY_FEE_COINS = 5;
 const rooms = new Map();
 const activeSessions = new Map();
 
@@ -292,6 +294,8 @@ function publicRoom(room) {
     playerCount: room.players.filter(player => player.connected !== false).length,
     maxPlayers: room.maxPlayers,
     notice: room.notice || '',
+    entryFee: ENTRY_FEE_COINS,
+    prizePool: room.game?.prizePool || 0,
     reconnectWarningMs: RECONNECT_WARNING_MS,
     reconnectTimeoutMs: RECONNECT_TIMEOUT_MS,
     players: room.players.map(player => ({
@@ -300,7 +304,8 @@ function publicRoom(room) {
       ready: player.ready,
       connected: player.connected !== false,
       disconnectedAt: player.disconnectedAt || null,
-      timedOut: Boolean(player.timedOut)
+      timedOut: Boolean(player.timedOut),
+      coins: Number.isFinite(player.coins) ? player.coins : STARTING_COINS
     }))
   };
 }
@@ -329,10 +334,13 @@ function publicGameState(room, playerId) {
       index: player.index,
       finished: player.finished,
       handCount: player.hand.length,
-      connected: room.players.find(roomPlayer => roomPlayer.id === player.id)?.connected !== false
+      connected: room.players.find(roomPlayer => roomPlayer.id === player.id)?.connected !== false,
+      coins: Number.isFinite(player.coins) ? player.coins : (room.players.find(roomPlayer => roomPlayer.id === player.id)?.coins ?? STARTING_COINS)
     })),
     hand: own.hand.map(card => ({ ...card })),
     logs: room.game.logs.slice(0, 8),
+    entryFee: room.game.entryFee || ENTRY_FEE_COINS,
+    prizePool: room.game.prizePool || 0,
     winnerIndex: room.game.winnerIndex,
     gameOver: room.game.status === 'finished'
   };
@@ -361,6 +369,9 @@ function buildActiveSession(room, playerId) {
     currentTurn: game ? game.players[game.currentPlayer]?.name || null : null,
     hand: game?.hand || [],
     handCount: game?.hand?.length ?? 0,
+    coins: Number.isFinite(roomPlayer.coins) ? roomPlayer.coins : STARTING_COINS,
+    prizePool: room.game?.prizePool || 0,
+    entryFee: ENTRY_FEE_COINS,
     players: publicRoom(room).players,
     game,
     room: publicRoom(room),
@@ -500,7 +511,7 @@ function createRoom(name = 'Host') {
     code,
     hostId,
     maxPlayers: MAX_PLAYERS,
-    players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true, connected: true, disconnectedAt: null, timedOut: false, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false }],
+    players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true, connected: true, disconnectedAt: null, timedOut: false, coins: STARTING_COINS, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false }],
     clients: new Set(),
     game: null,
     chat: [],
@@ -519,7 +530,7 @@ function joinRoom(code, name = 'Friend') {
   if (room.game) return { error: 'Game already started' };
   if (room.players.filter(player => player.connected !== false).length >= room.maxPlayers) return { error: 'Room is full' };
   const playerId = crypto.randomUUID();
-  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true, connected: true, disconnectedAt: null, timedOut: false, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false });
+  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true, connected: true, disconnectedAt: null, timedOut: false, coins: STARTING_COINS, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false });
   appendRoomNotice(room, `${room.players[room.players.length - 1].name} joined the room.`);
   room.updatedAt = Date.now();
   rememberRoomSessions(room);
@@ -588,6 +599,12 @@ function startRoomGame(code, playerId) {
   if (room.hostId !== playerId) throw new Error('Only the host can start the game');
   const activePlayers = room.players.filter(player => player.connected !== false);
   if (activePlayers.length < 2) throw new Error('Need at least 2 players');
+  for (const player of activePlayers) {
+    if (!Number.isFinite(player.coins)) player.coins = STARTING_COINS;
+    if (player.coins < ENTRY_FEE_COINS) throw new Error(`${player.name} needs ${ENTRY_FEE_COINS} virtual coins to start`);
+  }
+  for (const player of activePlayers) player.coins -= ENTRY_FEE_COINS;
+  const prizePool = activePlayers.length * ENTRY_FEE_COINS;
 
   const hands = dealPrivateRoomCards(activePlayers.length);
   const gamePlayers = activePlayers.map((player, index) => ({
@@ -595,6 +612,7 @@ function startRoomGame(code, playerId) {
     name: player.name,
     index,
     finished: false,
+    coins: player.coins,
     hand: hands[index]
   }));
   const startingPlayer = findStartingPlayer(gamePlayers);
@@ -607,7 +625,10 @@ function startRoomGame(code, playerId) {
     trick: { play: null, leader: startingPlayer, passes: 0 },
     firstTrick: true,
     round: 1,
-    logs: [`${gamePlayers[startingPlayer].name} holds the 3♦ and starts the live game.`],
+    logs: [`🪙 Each player added ${ENTRY_FEE_COINS} virtual coins. Prize Pool: ${prizePool}.`, `${gamePlayers[startingPlayer].name} holds the 3♦ and starts the live game.`],
+    entryFee: ENTRY_FEE_COINS,
+    prizePool,
+    paidOut: false,
     winnerIndex: null
   };
   room.updatedAt = Date.now();
@@ -630,7 +651,14 @@ function finishIfNeeded(room, player) {
   player.finished = true;
   room.game.status = 'finished';
   room.game.winnerIndex = player.index;
-  room.game.logs.unshift(`${player.name} wins the live room!`);
+  const prize = room.game.prizePool || 0;
+  if (!room.game.paidOut) {
+    player.coins = (Number.isFinite(player.coins) ? player.coins : STARTING_COINS) + prize;
+    const roomPlayer = room.players.find(entry => entry.id === player.id);
+    if (roomPlayer) roomPlayer.coins = player.coins;
+    room.game.paidOut = true;
+  }
+  room.game.logs.unshift(`🎉 ${player.name} wins ${prize} virtual gold coins!`);
   return true;
 }
 
@@ -884,6 +912,8 @@ module.exports = {
   rooms,
   activeSessions,
   activeSessionForPlayer,
+  STARTING_COINS,
+  ENTRY_FEE_COINS,
   createRoom,
   joinRoom,
   rejoinRoom,
