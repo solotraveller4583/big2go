@@ -1,0 +1,303 @@
+/* Big2Go mobile table full redesign — final gameplay layout layer.
+   Fixed vertical hierarchy: header → players → chat/current trick → reactions → hand → actions. */
+
+#game-screen.b2g-match:not(.hidden) {
+  --b2g-gap: clamp(5px, .85dvh, 8px);
+  --panel: rgba(16, 12, 48, .72);
+  --panel-2: rgba(24, 16, 70, .82);
+  --line: rgba(255,255,255,.14);
+  --gold: #ffe66d;
+  --purple-glow: rgba(118, 84, 255, .42);
+  width: min(100vw, 430px) !important;
+  height: calc(100dvh - 20px) !important;
+  max-height: calc(100dvh - 20px) !important;
+  margin: 0 auto !important;
+  padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom)) !important;
+  display: grid !important;
+  gap: var(--b2g-gap) !important;
+  overflow: hidden !important;
+  background:
+    radial-gradient(circle at 50% 76%, rgba(76, 55, 191, .42), transparent 20%),
+    radial-gradient(circle at 50% 34%, #18224a 0%, #090823 58%, #050414 100%) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Single player: no chat row. */
+#game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) {
+  grid-template-rows: 52px 68px minmax(238px, 1fr) 30px 126px 96px !important;
+}
+
+/* Multiplayer room: player cards + collapsed chat + trick. */
+#game-screen.b2g-match:not(.hidden):has(.room-chat-panel:not(.hidden)) {
+  grid-template-rows: 52px 92px 42px minmax(204px, 1fr) 30px 126px 96px !important;
+}
+
+#game-screen.b2g-match:not(.hidden) > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Header */
+#game-screen .match-topbar {
+  min-height: 0 !important;
+  height: 52px !important;
+  padding: 0 !important;
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) 92px !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border-bottom: 1px solid rgba(255,255,255,.1) !important;
+}
+#game-screen .match-topbar #sound-button { display: none !important; }
+#game-screen .icon-button {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  border-radius: 16px !important;
+  background: rgba(255,255,255,.1) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  color: #fff !important;
+  font-size: 28px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+#game-screen .match-title { min-width: 0 !important; overflow: hidden !important; }
+#game-screen .match-title .eyebrow {
+  margin: 0 !important;
+  color: var(--gold) !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-weight: 1000 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+}
+#game-screen .match-title h2 {
+  margin: 3px 0 0 !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+  color: #fff !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+#game-screen .header-subtitle { display: none !important; }
+#game-screen .coin-wallet {
+  width: 92px !important;
+  min-width: 92px !important;
+  height: 48px !important;
+  padding: 6px 8px !important;
+  grid-template-columns: 20px 1fr !important;
+  border-radius: 16px !important;
+  justify-self: end !important;
+}
+#game-screen .coin-wallet strong { font-size: 18px !important; }
+#game-screen .coin-wallet small { font-size: 8px !important; }
+
+#game-screen .match-hud,
+#game-screen .momentum-card,
+#game-screen .match-log,
+#game-screen .voice-panel,
+#game-screen .remote-audio { display: none !important; }
+
+/* Player information row */
+#game-screen .opponent-rail {
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#game-screen .opponent-list {
+  height: 100% !important;
+  display: grid !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  overflow: hidden !important;
+}
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .opponent-list { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+#game-screen.b2g-match:has(.room-chat-panel:not(.hidden)) .opponent-list { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+#game-screen .opponent-row {
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 8px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 28px !important;
+  align-items: center !important;
+  gap: 5px !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255,255,255,.13) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.035)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+#game-screen .opponent-row.current { border-color: rgba(255,230,109,.72) !important; box-shadow: 0 0 0 1px rgba(255,230,109,.18), 0 0 18px rgba(255,216,74,.16) !important; }
+#game-screen .opponent-row.self { border-color: rgba(176,92,255,.78) !important; background: linear-gradient(180deg, rgba(122,70,255,.28), rgba(255,255,255,.05)) !important; }
+#game-screen .opponent-name { margin: 0 !important; color: #fff !important; font-size: 12px !important; font-weight: 1000 !important; line-height: 1.05 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+#game-screen .opponent-meta { margin-top: 3px !important; color: rgba(255,255,255,.78) !important; font-size: 11px !important; line-height: 1.05 !important; }
+#game-screen .opponent-coins { margin-top: 3px !important; color: var(--gold) !important; font-size: 12px !important; line-height: 1 !important; font-weight: 1000 !important; }
+#game-screen .opponent-controls { display: grid !important; gap: 4px !important; justify-items: center !important; align-content: center !important; }
+#game-screen .opponent-badge,
+#game-screen .voice-chip { width: 28px !important; min-width: 28px !important; height: 28px !important; border-radius: 999px !important; font-size: 12px !important; }
+#game-screen .voice-chip { opacity: .78 !important; }
+
+/* Compact expandable multiplayer chat bar */
+#game-screen .room-chat-panel.hidden { display: none !important; }
+#game-screen .room-chat-panel {
+  height: 42px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  display: grid !important;
+  grid-template-rows: 42px 0 0 0 0 !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 16px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  z-index: 4 !important;
+}
+#game-screen .room-chat-panel.expanded {
+  position: absolute !important;
+  left: 10px !important;
+  right: 10px !important;
+  top: 154px !important;
+  width: auto !important;
+  height: min(238px, calc(100dvh - 328px)) !important;
+  padding: 8px !important;
+  display: grid !important;
+  grid-template-rows: 42px 20px 26px minmax(56px, 1fr) 34px !important;
+  gap: 6px !important;
+  background: linear-gradient(180deg, rgba(48,23,114,.98), rgba(31,18,79,.98)) !important;
+  border: 1px solid rgba(255,255,255,.16) !important;
+  box-shadow: 0 18px 36px rgba(0,0,0,.42) !important;
+  z-index: 50 !important;
+}
+#game-screen .room-chat-toggle { height: 42px !important; min-height: 42px !important; padding: 0 12px !important; border-radius: 16px !important; border: 1px solid rgba(255,255,255,.14) !important; background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.045)) !important; color: #fff !important; display: grid !important; grid-template-columns: auto minmax(0, 1fr) 24px !important; align-items: center !important; gap: 8px !important; text-align: left !important; }
+#game-screen .room-chat-toggle span { font-size: 13px !important; font-weight: 1000 !important; }
+#game-screen .room-chat-toggle small { min-width: 0 !important; color: rgba(255,255,255,.74) !important; font-size: 11px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+#game-screen .room-chat-toggle strong { height: 24px !important; min-width: 24px !important; padding: 0 6px !important; display: inline-grid !important; place-items: center !important; border-radius: 999px !important; background: rgba(126,82,255,.82) !important; color: #fff !important; font-size: 12px !important; }
+#game-screen .room-chat-head,
+#game-screen .quick-chat-row,
+#game-screen .room-chat-messages,
+#game-screen .room-chat-form { min-height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
+#game-screen .room-chat-panel.expanded .room-chat-head,
+#game-screen .room-chat-panel.expanded .quick-chat-row,
+#game-screen .room-chat-panel.expanded .room-chat-messages,
+#game-screen .room-chat-panel.expanded .room-chat-form { opacity: 1 !important; pointer-events: auto !important; }
+#game-screen .room-chat-head { display: flex !important; align-items: center !important; color: #fff !important; text-transform: uppercase !important; letter-spacing: .12em !important; font-size: 11px !important; }
+#game-screen .quick-chat-row { display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)) !important; gap: 5px !important; height: 26px !important; }
+#game-screen .quick-chat-row button { height: 26px !important; min-height: 26px !important; padding: 0 5px !important; font-size: 10px !important; border-radius: 999px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+#game-screen .room-chat-messages { overflow: auto !important; display: grid !important; gap: 5px !important; align-content: end !important; }
+#game-screen .chat-bubble { padding: 6px 8px !important; border-radius: 12px !important; font-size: 12px !important; }
+#game-screen .room-chat-form { display: grid !important; grid-template-columns: 1fr 58px !important; gap: 6px !important; }
+#game-screen .room-chat-form input,
+#game-screen .room-chat-form button { height: 34px !important; min-height: 34px !important; border-radius: 13px !important; font-size: 12px !important; }
+
+/* Current trick focused gameplay panel */
+#game-screen .table-arena {
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 10px 12px 12px !important;
+  display: grid !important;
+  grid-template-rows: 26px minmax(0, 1fr) 34px !important;
+  gap: 7px !important;
+  overflow: hidden !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(255,255,255,.15) !important;
+  background: radial-gradient(circle at 50% 55%, rgba(255,216,74,.18), transparent 23%), radial-gradient(ellipse at 50% 54%, rgba(104,78,255,.5), rgba(19,13,63,.84) 62%, rgba(8,7,31,.88) 100%) !important;
+  box-shadow: inset 0 0 46px rgba(130,102,255,.16), 0 12px 24px rgba(0,0,0,.24) !important;
+}
+#game-screen .arena-header { display: grid !important; grid-template-columns: 1fr !important; justify-items: center !important; align-items: center !important; min-height: 0 !important; }
+#game-screen .arena-header small,
+#game-screen #selected-count { display: none !important; }
+#game-screen .arena-header h2 { margin: 0 !important; color: #fff !important; font-size: 16px !important; line-height: 1 !important; letter-spacing: .03em !important; text-transform: uppercase !important; text-align: center !important; }
+#game-screen .prize-pool { top: 36px !important; right: 12px !important; z-index: 6 !important; padding: 6px 9px !important; min-width: 70px !important; border-radius: 15px !important; background: rgba(44, 25, 7, .7) !important; border-color: rgba(255,222,91,.62) !important; }
+#game-screen .prize-pool small { font-size: 8px !important; }
+#game-screen .prize-pool strong { font-size: 16px !important; }
+#game-screen #trick-play { min-height: 0 !important; height: 100% !important; padding: 8px 10px !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: clamp(3px, 1vw, 7px) !important; overflow: hidden !important; border-radius: 19px !important; background: radial-gradient(circle at 50% 52%, rgba(255,223,105,.24), rgba(83,65,230,.22) 42%, rgba(8,7,31,.18) 76%) !important; color: rgba(255,255,255,.9) !important; font-size: clamp(14px, 3.7vw, 17px) !important; font-weight: 900 !important; line-height: 1.18 !important; text-align: center !important; }
+#game-screen #trick-play.empty { padding: 18px 24px !important; }
+#game-screen .trick-help { position: static !important; transform: none !important; width: 100% !important; max-width: 100% !important; min-height: 34px !important; height: 34px !important; margin: 0 !important; padding: 0 14px !important; display: grid !important; place-items: center !important; border-radius: 999px !important; border: 1px solid rgba(255,230,109,.55) !important; background: rgba(9,7,34,.76) !important; color: var(--gold) !important; font-size: 12px !important; font-weight: 900 !important; line-height: 1.08 !important; text-align: center !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+#game-screen .trick-meta { display: none !important; }
+#game-screen #trick-play .card-tile { width: clamp(56px, 14vw, 70px) !important; height: clamp(78px, 20vw, 98px) !important; min-width: clamp(56px, 14vw, 70px) !important; flex: 0 0 clamp(56px, 14vw, 70px) !important; margin: 0 !important; border-radius: 15px !important; box-shadow: 0 0 0 3px rgba(255,255,255,.84), 0 0 32px rgba(255,216,74,.42), 0 18px 26px rgba(0,0,0,.42) !important; }
+#game-screen #trick-play:has(.card-tile:only-child) .card-tile,
+#game-screen.b2g-match:has(.room-chat-panel.hidden) #trick-play:has(.card-tile:only-child) .card-tile,
+#game-screen.b2g-match:has(.room-chat-panel:not(.hidden)) #trick-play:has(.card-tile:only-child) .card-tile { width: clamp(78px, 21vw, 98px) !important; height: clamp(106px, 28vw, 132px) !important; min-width: clamp(78px, 21vw, 98px) !important; flex-basis: clamp(78px, 21vw, 98px) !important; transform: none !important; }
+
+/* Reactions */
+#game-screen .reaction-row { height: 30px !important; max-height: 30px !important; min-height: 0 !important; margin: 0 !important; display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 8px !important; overflow: hidden !important; z-index: 2 !important; }
+#game-screen .reaction-row button { height: 30px !important; min-height: 30px !important; padding: 0 6px !important; border-radius: 999px !important; font-size: 10px !important; font-weight: 900 !important; background: rgba(255,255,255,.1) !important; border: 1px solid rgba(255,255,255,.16) !important; color: #fff !important; }
+
+/* Hand panel */
+#game-screen .hand-card { min-height: 0 !important; height: 100% !important; padding: 8px 10px 10px !important; display: grid !important; grid-template-rows: 22px minmax(0, 1fr) !important; gap: 7px !important; overflow: hidden !important; border-radius: 20px !important; border: 1px solid rgba(255,255,255,.1) !important; background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.035)) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.05) !important; }
+#game-screen .hand-head { height: 22px !important; min-height: 0 !important; padding: 0 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; background: transparent !important; border: 0 !important; }
+#game-screen .hand-head h2 { margin: 0 !important; font-size: 13px !important; line-height: 1 !important; font-weight: 1000 !important; letter-spacing: .04em !important; text-transform: uppercase !important; }
+#game-screen .hand-head h2::after { content: ' (' attr(data-count) ')' !important; }
+#game-screen .hand-head p { display: none !important; }
+#game-screen #hand { height: 100% !important; min-height: 0 !important; padding: 9px 8px 8px !important; display: grid !important; grid-auto-flow: column !important; grid-auto-columns: clamp(22px, calc((100vw - 92px) / 12), 30px) !important; justify-content: center !important; align-items: end !important; overflow: hidden !important; border-radius: 18px !important; background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.055)) !important; }
+#game-screen #hand .card-tile { width: clamp(48px, 12.5vw, 58px) !important; height: clamp(68px, 17.8vw, 84px) !important; min-width: clamp(48px, 12.5vw, 58px) !important; margin: 0 !important; border-radius: 12px !important; transform: none !important; }
+#game-screen #hand .card-tile.selected { transform: translateY(-8px) !important; }
+#game-screen .card-rank { font-size: clamp(20px, 5.5vw, 25px) !important; }
+#game-screen .card-suit-small { font-size: clamp(14px, 4vw, 19px) !important; }
+#game-screen #hand .card-suit { font-size: clamp(21px, 5.6vw, 29px) !important; }
+
+/* Fixed bottom controls. */
+#game-screen .action-dock,
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .action-dock,
+#game-screen.b2g-match:has(.room-chat-panel:not(.hidden)) .action-dock { height: 88px !important; min-height: 88px !important; padding: 0 !important; display: grid !important; grid-template-columns: repeat(3, 1fr) !important; grid-template-rows: 36px 44px !important; gap: 8px !important; background: transparent !important; border: 0 !important; box-shadow: none !important; overflow: hidden !important; z-index: 5 !important; }
+#game-screen .action-dock .secondary,
+#game-screen .action-dock .primary { min-height: 0 !important; height: 100% !important; border-radius: 15px !important; font-weight: 1000 !important; font-size: 13px !important; border: 1px solid rgba(255,255,255,.15) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 5px 12px rgba(0,0,0,.24) !important; }
+#game-screen .pass-action { grid-column: 1 !important; grid-row: 1 !important; }
+#game-screen #sort-button { grid-column: 2 !important; grid-row: 1 !important; }
+#game-screen #hint-button { grid-column: 3 !important; grid-row: 1 !important; }
+#game-screen .play-action,
+#game-screen.b2g-match:has(.room-chat-panel.hidden) .action-dock .play-action,
+#game-screen.b2g-match:has(.room-chat-panel:not(.hidden)) .action-dock .play-action { grid-column: 1 / -1 !important; grid-row: 2 !important; height: 44px !important; min-height: 44px !important; border-radius: 17px !important; font-size: 17px !important; color: #1b1038 !important; background: linear-gradient(180deg, #fff18e, #f2b83c 58%, #bf7627) !important; border-color: rgba(255,255,255,.44) !important; box-shadow: 0 0 0 1px rgba(255,255,255,.32), 0 0 26px rgba(255,216,74,.36), 0 10px 18px rgba(0,0,0,.32) !important; }
+#game-screen .restart-action { display: none !important; }
+
+@media (max-width: 390px), (max-height: 720px) {
+  #game-screen.b2g-match:not(.hidden) { padding-left: 8px !important; padding-right: 8px !important; --b2g-gap: 5px; }
+  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) { grid-template-rows: 50px 58px minmax(196px, 1fr) 28px 112px 88px !important; }
+  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel:not(.hidden)) { grid-template-rows: 50px 78px 38px minmax(166px, 1fr) 28px 112px 88px !important; }
+  #game-screen .match-topbar { height: 50px !important; grid-template-columns: 44px minmax(0, 1fr) 84px !important; gap: 7px !important; }
+  #game-screen .icon-button { width: 44px !important; height: 44px !important; min-width: 44px !important; }
+  #game-screen .match-title h2 { font-size: 18px !important; }
+  #game-screen .coin-wallet { width: 84px !important; min-width: 84px !important; height: 44px !important; }
+  #game-screen .opponent-row { padding: 6px !important; grid-template-columns: minmax(0, 1fr) 24px !important; }
+  #game-screen .opponent-name { font-size: 11px !important; }
+  #game-screen .opponent-meta, #game-screen .opponent-coins { font-size: 10px !important; }
+  #game-screen .opponent-badge, #game-screen .voice-chip { width: 24px !important; min-width: 24px !important; height: 24px !important; font-size: 10px !important; }
+  #game-screen .room-chat-panel { height: 38px !important; grid-template-rows: 38px 0 0 0 0 !important; }
+  #game-screen .room-chat-toggle { height: 38px !important; min-height: 38px !important; }
+  #game-screen .room-chat-panel.expanded { top: 136px !important; height: min(220px, calc(100dvh - 302px)) !important; }
+  #game-screen .table-arena { padding: 8px 10px 10px !important; grid-template-rows: 24px minmax(0, 1fr) 30px !important; gap: 5px !important; border-radius: 20px !important; }
+  #game-screen .arena-header h2 { font-size: 14px !important; }
+  #game-screen .prize-pool { top: 30px !important; right: 9px !important; min-width: 62px !important; padding: 5px 7px !important; }
+  #game-screen #trick-play { padding: 6px 8px !important; }
+  #game-screen #trick-play:has(.card-tile:only-child) .card-tile,
+  #game-screen.b2g-match:has(.room-chat-panel.hidden) #trick-play:has(.card-tile:only-child) .card-tile,
+  #game-screen.b2g-match:has(.room-chat-panel:not(.hidden)) #trick-play:has(.card-tile:only-child) .card-tile { width: clamp(70px, 20vw, 88px) !important; height: clamp(96px, 27vw, 118px) !important; min-width: clamp(70px, 20vw, 88px) !important; flex-basis: clamp(70px, 20vw, 88px) !important; }
+  #game-screen .trick-help { height: 30px !important; min-height: 30px !important; font-size: 11px !important; }
+  #game-screen .reaction-row { height: 28px !important; max-height: 28px !important; gap: 6px !important; }
+  #game-screen .reaction-row button { height: 28px !important; min-height: 28px !important; font-size: 9px !important; }
+  #game-screen .hand-card { padding: 7px 8px 8px !important; grid-template-rows: 19px minmax(0, 1fr) !important; gap: 5px !important; }
+  #game-screen .hand-head { height: 19px !important; }
+  #game-screen .hand-head h2 { font-size: 12px !important; }
+  #game-screen #hand { padding: 7px 7px 7px !important; grid-auto-columns: clamp(20px, calc((100vw - 88px) / 12), 26px) !important; }
+  #game-screen #hand .card-tile { width: clamp(44px, 12vw, 52px) !important; min-width: clamp(44px, 12vw, 52px) !important; height: clamp(64px, 17vw, 76px) !important; }
+  #game-screen .action-dock,
+  #game-screen.b2g-match:has(.room-chat-panel.hidden) .action-dock,
+  #game-screen.b2g-match:has(.room-chat-panel:not(.hidden)) .action-dock { height: 88px !important; min-height: 88px !important; grid-template-rows: 36px 44px !important; gap: 8px !important; }
+  #game-screen .play-action,
+  #game-screen.b2g-match:has(.room-chat-panel.hidden) .action-dock .play-action,
+  #game-screen.b2g-match:has(.room-chat-panel:not(.hidden)) .action-dock .play-action { height: 44px !important; min-height: 44px !important; font-size: 16px !important; }
+}
+
+@media (min-width: 700px) {
+  #game-screen.b2g-match:not(.hidden) { border-left: 1px solid rgba(255,255,255,.11) !important; border-right: 1px solid rgba(255,255,255,.11) !important; }
+}

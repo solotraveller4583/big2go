@@ -62,6 +62,7 @@
     roomPollTimer: null,
     lastRoomNotice: '',
     chat: [],
+    chatExpanded: false,
     lastChatSentAt: 0,
     liveRoom: null,
     voice: {
@@ -124,6 +125,8 @@
     heatValue: document.querySelector('#heat-value'),
     heatFill: document.querySelector('#heat-fill'),
     chatPanel: document.querySelector('#room-chat-panel'),
+    chatToggle: document.querySelector('#room-chat-toggle'),
+    chatPreview: document.querySelector('#room-chat-preview'),
     chatMessages: document.querySelector('#room-chat-messages'),
     chatCount: document.querySelector('#room-chat-count'),
     chatForm: document.querySelector('#room-chat-form'),
@@ -977,13 +980,14 @@
   function renderOpponents() {
     els.opponents.innerHTML = '';
     state.players.forEach((player, index) => {
-      if (index === state.humanIndex) return;
+      const isSelf = index === state.humanIndex;
+      if (isSelf && !state.liveRoom?.code) return;
       const row = document.createElement('div');
-      row.className = `opponent-row${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
+      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
       const text = document.createElement('div');
       const name = document.createElement('div');
       name.className = 'opponent-name';
-      name.textContent = player.name;
+      name.textContent = isSelf ? 'You' : player.name;
       const meta = document.createElement('div');
       meta.className = 'opponent-meta';
       meta.textContent = player.connected === false ? '🔴 Disconnected' : player.finished ? 'Finished' : `${player.hand.length} cards left`;
@@ -1053,7 +1057,17 @@
     if (!els.chatPanel || !els.chatMessages) return;
     const isLive = Boolean(state.liveRoom?.code);
     els.chatPanel.classList.toggle('hidden', !isLive);
-    if (!isLive) return;
+    if (!isLive) {
+      state.chatExpanded = false;
+      els.chatPanel?.classList.remove('expanded');
+      return;
+    }
+    els.chatPanel.classList.toggle('expanded', state.chatExpanded);
+    els.chatToggle?.setAttribute('aria-expanded', state.chatExpanded ? 'true' : 'false');
+    if (els.chatPreview) {
+      const latest = state.chat[state.chat.length - 1];
+      els.chatPreview.textContent = latest ? `${latest.name || 'Player'}: ${latest.text || ''}` : 'Tap to open';
+    }
     els.chatMessages.innerHTML = '';
     const messages = state.chat.slice(-12);
     if (!messages.length) {
@@ -1360,6 +1374,7 @@
       els.hand.appendChild(tile);
     });
     els.selectedCount.textContent = `${state.selected.size} selected`;
+    document.querySelector('.hand-head h2')?.setAttribute('data-count', String(human.hand.length));
   }
 
   function render() {
@@ -2003,6 +2018,15 @@
         ? isHost ? 'Ready — you can start now.' : 'Ready — waiting for host to start.'
         : isHost ? 'Share the code. Start unlocks when 1 friend joins.' : 'Enter a room code from your friend.';
     setRoomStatus(status, room.playerCount >= 2 ? 'ready' : 'waiting');
+    if (room.status === 'playing' && state.liveRoom?.code && state.liveRoom?.playerId && els.game?.classList.contains('hidden')) {
+      fetchLiveRoomState()
+        .then(payload => {
+          if (payload?.game) applyLiveGame(payload.game, payload.room || room);
+          if (payload?.chat) applyChatPayload(payload.chat);
+          if (payload?.voice) applyVoicePayload(payload.voice);
+        })
+        .catch(() => {});
+    }
   }
 
   function connectRoomSocket(code, playerId) {
@@ -2301,6 +2325,10 @@
     els.roomRejoin?.addEventListener('click', rejoinSavedRoom);
     els.roomExitSession?.addEventListener('click', exitSavedRoom);
     els.share.addEventListener('click', shareGame);
+    els.chatToggle?.addEventListener('click', () => {
+      state.chatExpanded = !state.chatExpanded;
+      renderChat();
+    });
     document.querySelectorAll('[data-reaction]').forEach(button => {
       button.addEventListener('click', () => showReaction(button.dataset.reaction || '👏'));
     });

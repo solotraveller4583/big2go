@@ -28,11 +28,12 @@
   <link rel="stylesheet" href="big2go-cascade-guard.css" />
   <link rel="stylesheet" href="big2go-polish-guard.css" />
   <link rel="stylesheet" href="big2go-hand-guard.css" />
-  <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=30" />
+  <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=34" />
   <link rel="stylesheet" href="big2go-room.css?v=10" />
   <link rel="stylesheet" href="big2go-voice.css?v=1" />
   <link rel="stylesheet" href="big2go-rejoin.css?v=3" />
-  <link rel="stylesheet" href="big2go-coins.css?v=1" />
+  <link rel="stylesheet" href="big2go-coins.css?v=2" />
+  <link rel="stylesheet" href="big2go-mobile-redesign.css?v=2" />
 </head>
 <body>
   <main class="app-shell">
@@ -131,9 +132,13 @@
       </section>
 
       <section class="room-chat-panel hidden" id="room-chat-panel" aria-label="Room chat">
+        <button class="room-chat-toggle" id="room-chat-toggle" type="button" aria-expanded="false">
+          <span>💬 Table Chat</span>
+          <small id="room-chat-preview">Tap to open</small>
+          <strong id="room-chat-count">0</strong>
+        </button>
         <div class="room-chat-head">
           <strong>Table Chat</strong>
-          <span id="room-chat-count">0</span>
         </div>
         <div class="quick-chat-row" aria-label="Quick chat">
           <button type="button" data-chat-quick="Nice move">Nice move</button>
@@ -228,6 +233,6 @@
   </main>
   <div id="coin-fx-layer" class="coin-fx-layer" aria-hidden="true"></div>
 
-  <script src="game.js?v=41" defer></script>
+  <script src="game.js?v=43" defer></script>
 </body>
 </html>

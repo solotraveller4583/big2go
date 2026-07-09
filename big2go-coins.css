@@ -120,24 +120,24 @@
     padding-bottom: 7px !important;
   }
   #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) .action-dock {
-    min-height: 66px !important;
-    height: 66px !important;
-    padding: 4px 6px !important;
-    grid-template-rows: 26px 32px !important;
-    gap: 4px !important;
+    min-height: 88px !important;
+    height: 88px !important;
+    padding: 0 !important;
+    grid-template-rows: 36px 44px !important;
+    gap: 8px !important;
     overflow: hidden !important;
   }
   #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) .action-dock button {
     min-height: 0 !important;
-    height: 26px !important;
-    font-size: 12px !important;
-    border-radius: 10px !important;
+    height: 36px !important;
+    font-size: 13px !important;
+    border-radius: 14px !important;
   }
   #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) .play-action {
     min-height: 0 !important;
-    height: 32px !important;
-    font-size: 15px !important;
-    border-radius: 12px !important;
+    height: 44px !important;
+    font-size: 16px !important;
+    border-radius: 16px !important;
   }
   .reaction-row button { min-height: 26px !important; height: 26px !important; font-size: 9px; }
   .coin-wallet { min-width: 78px; padding: 6px 8px; }
