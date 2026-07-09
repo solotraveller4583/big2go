@@ -231,6 +231,14 @@ test('private room voice state syncs mute and speaking indicators', () => {
   const mutedView = server.privateRoomState(room, hostId).voice.find(entry => entry.id === joined.playerId);
   assert.equal(mutedView.muted, true);
   assert.equal(mutedView.speaking, false);
+  assert.equal(mutedView.listening, true);
+
+  const left = server.leaveRoom(room.code, joined.playerId);
+  assert.equal(left.ok, true);
+  const leftVoice = server.privateRoomState(room, hostId).voice.find(entry => entry.id === joined.playerId);
+  assert.equal(leftVoice.enabled, false);
+  assert.equal(leftVoice.muted, true);
+  assert.equal(leftVoice.speaking, false);
 });
 
 test('disconnected player can rejoin same room with same hand and turn state', () => {

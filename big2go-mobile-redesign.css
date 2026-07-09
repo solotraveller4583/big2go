@@ -100,7 +100,6 @@
 #game-screen .match-hud,
 #game-screen .momentum-card,
 #game-screen .match-log,
-#game-screen .voice-panel,
 #game-screen .remote-audio { display: none !important; }
 
 /* Player information row */

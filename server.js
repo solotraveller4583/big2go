@@ -247,6 +247,7 @@ function publicVoice(room) {
     muted: player.voiceMuted !== false,
     speaking: Boolean(player.voiceSpeaking),
     enabled: Boolean(player.voiceEnabled),
+    listening: Boolean(player.voiceEnabled) && player.voiceMuted !== false,
     connected: player.connected !== false
   }));
 }

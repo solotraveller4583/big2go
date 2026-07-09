@@ -70,13 +70,18 @@
       micMuted: true,
       speakerMuted: false,
       mutedPlayers: new Set(),
+      volumes: new Map(),
       statuses: [],
       stream: null,
       peers: new Map(),
       analyser: null,
       speaking: false,
       speakingTimer: null,
-      lastStateSentAt: 0
+      lastStateSentAt: 0,
+      permissionAsked: false,
+      pushToTalk: false,
+      holdingToTalk: false,
+      mixerOpen: false
     }
   };
 
@@ -136,6 +141,9 @@
     voiceMic: document.querySelector('#voice-mic-button'),
     voiceSpeaker: document.querySelector('#voice-speaker-button'),
     voiceMuteAll: document.querySelector('#voice-mute-all-button'),
+    voicePtt: document.querySelector('#voice-ptt-button'),
+    voiceMixer: document.querySelector('#voice-mixer'),
+    voiceSpeakingBanner: document.querySelector('#voice-speaking-banner'),
     voiceStatus: document.querySelector('#voice-status'),
     remoteAudio: document.querySelector('#remote-audio'),
     roomRecovery: document.querySelector('#room-recovery-card'),
@@ -983,14 +991,24 @@
       const isSelf = index === state.humanIndex;
       if (isSelf && !state.liveRoom?.code) return;
       const row = document.createElement('div');
-      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
+      const voiceState = voiceStatusFor(player.id);
+      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}${voiceState.speaking ? ' voice-speaking' : ''}`;
       const text = document.createElement('div');
       const name = document.createElement('div');
       name.className = 'opponent-name';
       name.textContent = isSelf ? 'You' : player.name;
       const meta = document.createElement('div');
       meta.className = 'opponent-meta';
-      meta.textContent = player.connected === false ? '🔴 Disconnected' : player.finished ? 'Finished' : `${player.hand.length} cards left`;
+      const voiceCopy = player.connected === false
+        ? '🔴 Disconnected'
+        : voiceState.speaking
+          ? '🟢 🎤 Talking'
+          : voiceState.listening
+            ? '🟢 Listening'
+            : voiceState.muted
+              ? '⚪ 🔇 Muted'
+              : '⚪ Voice off';
+      meta.textContent = player.finished ? 'Finished' : `${voiceCopy} · ${player.hand.length} cards`;
       const coins = document.createElement('div');
       coins.className = 'opponent-coins';
       coins.textContent = `🪙 ${playerCoins(player, index)}`;
@@ -1000,7 +1018,6 @@
       const badge = document.createElement('div');
       badge.className = `opponent-badge${player.connected === false ? ' offline' : ''}`;
       badge.textContent = player.connected === false ? '!' : player.finished ? '✓' : String(player.hand.length);
-      const voiceState = voiceStatusFor(player.id);
       const voice = document.createElement('button');
       voice.type = 'button';
       voice.className = `voice-chip${voiceState.speaking ? ' speaking' : ''}${voiceState.muted ? ' muted' : ''}`;
@@ -1098,14 +1115,75 @@
     return {
       enabled: Boolean(status.enabled),
       muted: mutedByMe || status.muted !== false || !status.enabled,
-      speaking: Boolean(status.speaking) && !mutedByMe && status.muted === false
+      speaking: Boolean(status.speaking) && !mutedByMe && status.muted === false,
+      listening: Boolean(status.enabled) && status.muted !== false,
+      volume: state.voice.volumes.get(playerId) ?? 1
     };
+  }
+
+  function speakingPlayers() {
+    return state.voice.statuses.filter(entry => entry.id !== state.liveRoom?.playerId && entry.speaking && entry.muted === false && !state.voice.mutedPlayers.has(entry.id));
+  }
+
+  function setVoiceVolume(playerId, value) {
+    const volume = Math.max(0, Math.min(1, Number(value) || 0));
+    state.voice.volumes.set(playerId, volume);
+    const entry = state.voice.peers.get(playerId);
+    if (entry?.audio) entry.audio.volume = volume;
+    renderVoiceMixer();
   }
 
   function updateRemoteAudioMute() {
     state.voice.peers.forEach((entry, playerId) => {
-      if (entry.audio) entry.audio.muted = state.voice.speakerMuted || state.voice.mutedPlayers.has(playerId);
+      if (entry.audio) {
+        entry.audio.muted = state.voice.speakerMuted || state.voice.mutedPlayers.has(playerId);
+        entry.audio.volume = state.voice.volumes.get(playerId) ?? 1;
+      }
     });
+  }
+
+  function renderVoiceMixer() {
+    if (!els.voiceMixer) return;
+    els.voiceMixer.classList.toggle('open', state.voice.mixerOpen);
+    els.voiceMixer.innerHTML = '';
+    if (!state.voice.mixerOpen) return;
+    const peers = state.players.filter(player => player.id && player.id !== state.liveRoom?.playerId);
+    if (!peers.length) {
+      const empty = document.createElement('p');
+      empty.textContent = 'Friends will appear here when they join voice.';
+      els.voiceMixer.appendChild(empty);
+      return;
+    }
+    peers.forEach(player => {
+      const status = voiceStatusFor(player.id);
+      const row = document.createElement('label');
+      row.className = `voice-mixer-row${status.muted ? ' muted' : ''}${status.speaking ? ' speaking' : ''}`;
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.textContent = status.muted ? '🔇' : '🔊';
+      toggle.setAttribute('aria-label', `${status.muted ? 'Unmute' : 'Mute'} ${player.name}`);
+      toggle.addEventListener('click', event => {
+        event.preventDefault();
+        toggleMutePlayer(player.id);
+      });
+      const name = document.createElement('span');
+      name.textContent = `${player.name} ${Math.round((state.voice.volumes.get(player.id) ?? 1) * 100)}%`;
+      const range = document.createElement('input');
+      range.type = 'range';
+      range.min = '0';
+      range.max = '100';
+      range.value = String(Math.round((state.voice.volumes.get(player.id) ?? 1) * 100));
+      range.addEventListener('input', () => setVoiceVolume(player.id, Number(range.value) / 100));
+      row.append(toggle, name, range);
+      els.voiceMixer.appendChild(row);
+    });
+  }
+
+  function updateSpeakingBanner() {
+    if (!els.voiceSpeakingBanner) return;
+    const active = speakingPlayers();
+    els.voiceSpeakingBanner.classList.toggle('show', active.length > 0);
+    els.voiceSpeakingBanner.textContent = active.length ? `🔥 ${active.map(player => player.name).join(', ')} ${active.length === 1 ? 'is' : 'are'} speaking...` : '';
   }
 
   function updateVoicePanel() {
@@ -1119,10 +1197,24 @@
     els.voiceSpeaker?.classList.toggle('muted', state.voice.speakerMuted);
     els.voiceSpeaker?.setAttribute('aria-pressed', state.voice.speakerMuted ? 'false' : 'true');
     if (els.voiceSpeaker) els.voiceSpeaker.textContent = state.voice.speakerMuted ? '🔇' : '🔊';
+    els.voicePtt?.classList.toggle('active', state.voice.pushToTalk);
+    els.voicePtt?.setAttribute('aria-pressed', state.voice.pushToTalk ? 'true' : 'false');
+    if (els.voicePtt) els.voicePtt.textContent = state.voice.pushToTalk ? 'HOLD' : 'PTT';
+    if (els.voiceMuteAll) els.voiceMuteAll.textContent = state.voice.mixerOpen ? '🎚️' : '🔇';
     if (els.voiceStatus) {
-      els.voiceStatus.textContent = !state.voice.enabled ? 'Voice off' : state.voice.micMuted ? 'Mic muted' : state.voice.speaking ? 'Talking' : 'Voice on';
+      els.voiceStatus.textContent = !state.voice.enabled
+        ? 'Tap 🎤 for voice'
+        : state.voice.pushToTalk && state.voice.micMuted
+          ? 'Hold to talk'
+          : state.voice.micMuted
+            ? 'Muted'
+            : state.voice.speaking
+              ? '🎤 Talking'
+              : 'Listening';
     }
     updateRemoteAudioMute();
+    updateSpeakingBanner();
+    renderVoiceMixer();
   }
 
   function sendVoiceState({ force = false } = {}) {
@@ -1139,6 +1231,7 @@
     state.voice.statuses = Array.isArray(voice) ? voice : [];
     updateVoicePanel();
     renderOpponents();
+    renderVoiceMixer();
   }
 
   function voicePeerIds() {
@@ -1166,6 +1259,7 @@
       audioEl.autoplay = true;
       audioEl.playsInline = true;
       audioEl.srcObject = stream;
+      audioEl.volume = state.voice.volumes.get(playerId) ?? 1;
       audioEl.muted = state.voice.speakerMuted || state.voice.mutedPlayers.has(playerId);
       entry.audio = audioEl;
       els.remoteAudio?.appendChild(audioEl);
@@ -1240,19 +1334,45 @@
   async function ensureVoiceStream() {
     if (state.voice.stream) return state.voice.stream;
     if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone is not available in this browser.');
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        channelCount: 1,
+        sampleRate: 48000
+      }
+    });
     state.voice.stream = stream;
     startSpeakingMeter(stream);
     return stream;
   }
 
-  async function enableVoiceChat() {
+  function promptVoicePermission() {
+    if (!state.liveRoom?.code || state.voice.permissionAsked || state.voice.enabled) return;
+    state.voice.permissionAsked = true;
+    showHelp('Big2Go needs microphone permission', '<ul><li>Allow voice chat with friends?</li><li>You can keep playing if you choose Not Now.</li><li>Voice uses echo cancellation and noise suppression for mobile play.</li></ul><div class="voice-permission-actions"><button type="button" id="voice-allow-button" class="primary">Allow</button><button type="button" id="voice-not-now-button" class="secondary">Not Now</button></div>');
+    setTimeout(() => {
+      document.querySelector('#voice-allow-button')?.addEventListener('click', () => {
+        document.querySelector('#help-dialog')?.close?.();
+        enableVoiceChat();
+      });
+      document.querySelector('#voice-not-now-button')?.addEventListener('click', () => {
+        document.querySelector('#help-dialog')?.close?.();
+        state.voice.micMuted = true;
+        updateVoicePanel();
+        sendVoiceState({ force: true });
+      });
+    }, 0);
+  }
+
+  async function enableVoiceChat({ muted = false } = {}) {
     if (!state.liveRoom?.code) return;
     try {
       await ensureVoiceStream();
       state.voice.enabled = true;
-      state.voice.micMuted = false;
-      state.voice.stream.getAudioTracks().forEach(track => { track.enabled = true; });
+      state.voice.micMuted = Boolean(muted || state.voice.pushToTalk);
+      state.voice.stream.getAudioTracks().forEach(track => { track.enabled = !state.voice.micMuted; });
       updateVoicePanel();
       sendVoiceState({ force: true });
       await Promise.all(voicePeerIds().map(id => callVoicePeer(id).catch(() => {})));
@@ -1274,6 +1394,7 @@
     state.voice.analyser = null;
     state.voice.stream?.getTracks().forEach(track => track.stop());
     state.voice.stream = null;
+    state.voice.mixerOpen = false;
     [...state.voice.peers.keys()].forEach(closeVoicePeer);
     updateVoicePanel();
     sendVoiceState({ force: true });
@@ -1284,11 +1405,38 @@
       await enableVoiceChat();
       return;
     }
-    state.voice.micMuted = !state.voice.micMuted;
+    if (state.voice.pushToTalk && !state.voice.holdingToTalk) {
+      state.voice.micMuted = true;
+    } else {
+      state.voice.micMuted = !state.voice.micMuted;
+    }
     state.voice.stream?.getAudioTracks().forEach(track => { track.enabled = !state.voice.micMuted; });
     if (state.voice.micMuted) state.voice.speaking = false;
     updateVoicePanel();
     sendVoiceState({ force: true });
+  }
+
+  async function setPushToTalkHolding(active) {
+    if (!state.voice.pushToTalk) return;
+    state.voice.holdingToTalk = Boolean(active);
+    if (!state.voice.enabled) await enableVoiceChat({ muted: !active });
+    state.voice.micMuted = !active;
+    state.voice.stream?.getAudioTracks().forEach(track => { track.enabled = active; });
+    if (!active) state.voice.speaking = false;
+    updateVoicePanel();
+    sendVoiceState({ force: true });
+  }
+
+  function togglePushToTalk() {
+    state.voice.pushToTalk = !state.voice.pushToTalk;
+    state.voice.holdingToTalk = false;
+    if (state.voice.enabled && state.voice.pushToTalk) {
+      state.voice.micMuted = true;
+      state.voice.stream?.getAudioTracks().forEach(track => { track.enabled = false; });
+      state.voice.speaking = false;
+      sendVoiceState({ force: true });
+    }
+    updateVoicePanel();
   }
 
   function toggleSpeaker() {
@@ -1304,8 +1452,14 @@
     renderOpponents();
   }
 
+  function toggleVoiceMixer() {
+    state.voice.mixerOpen = !state.voice.mixerOpen;
+    updateVoicePanel();
+  }
+
   function muteAllVoicePlayers() {
     voicePeerIds().forEach(id => state.voice.mutedPlayers.add(id));
+    state.voice.mixerOpen = true;
     updateVoicePanel();
     renderOpponents();
   }
@@ -1957,6 +2111,7 @@
     state.busy = false;
     els.playerCount.value = String(game.players.length);
     showGameScreen();
+    if (state.liveRoom?.code) setTimeout(promptVoicePermission, 350);
     if (!game.gameOver) document.querySelector('#victory-overlay')?.remove();
     render();
     if (game.gameOver && !document.querySelector('#victory-overlay')) {
@@ -2337,8 +2492,18 @@
       sendRoomChat(els.chatInput?.value || '');
     });
     els.voiceMic?.addEventListener('click', toggleMic);
+    els.voiceMic?.addEventListener('pointerdown', event => {
+      if (!state.voice.pushToTalk) return;
+      event.preventDefault();
+      setPushToTalkHolding(true);
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(type => {
+      els.voiceMic?.addEventListener(type, () => setPushToTalkHolding(false));
+    });
     els.voiceSpeaker?.addEventListener('click', toggleSpeaker);
     els.voiceMuteAll?.addEventListener('click', muteAllVoicePlayers);
+    els.voiceMuteAll?.addEventListener('dblclick', toggleVoiceMixer);
+    els.voicePtt?.addEventListener('click', togglePushToTalk);
     document.querySelectorAll('[data-chat-quick]').forEach(button => {
       button.addEventListener('click', () => sendRoomChat(button.dataset.chatQuick || button.textContent || ''));
     });
