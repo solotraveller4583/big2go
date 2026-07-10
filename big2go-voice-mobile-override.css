@@ -1,21 +1,18 @@
 /* Final mobile-room voice placement overrides. Loaded after redesign CSS. */
 #game-screen.b2g-match:not(.hidden) .voice-panel {
   position: absolute !important;
-  top: max(64px, calc(env(safe-area-inset-top, 0px) + 64px)) !important;
-  right: 10px !important;
+  top: max(58px, calc(env(safe-area-inset-top, 0px) + 58px)) !important;
+  right: 8px !important;
   width: auto !important;
-  max-width: min(84vw, 330px) !important;
+  max-width: 86px !important;
   z-index: 70 !important;
   display: flex !important;
 }
 #game-screen.b2g-match:not(.hidden) .voice-panel.hidden { display: none !important; }
-#game-screen.b2g-match:not(.hidden) .voice-speaking-banner {
-  position: absolute !important;
-  z-index: 69 !important;
-}
+#game-screen.b2g-match:not(.hidden) .voice-speaking-banner { display: none !important; }
 @media (max-width: 380px) {
   #game-screen.b2g-match:not(.hidden) .voice-panel {
-    top: max(58px, calc(env(safe-area-inset-top, 0px) + 58px)) !important;
-    right: 8px !important;
+    top: max(54px, calc(env(safe-area-inset-top, 0px) + 54px)) !important;
+    right: 6px !important;
   }
 }

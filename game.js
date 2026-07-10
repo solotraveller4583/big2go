@@ -36,7 +36,7 @@
     'four-kind': ['Four of a kind! Massive flex.', 'That was a thunder clap.', 'The lane is on fire.'],
     'straight-flush': ['Straight flush! Fireworks now!', 'That is a headline move.', 'Absolute festival chaos.']
   };
-  const OPENING_LINE = '3♦ holder starts — play any valid opening hand.';
+  const OPENING_LINE = '♦ 3 Holder Starts';
 
   const state = {
     settings: { players: 4 },
@@ -962,8 +962,8 @@
   function selectionFeedback() {
     const cards = selectedCards();
     if (!cards.length) {
-      if (state.trick.play) return `Select cards to beat ${describePlay(state.trick.play)}, or pass.`;
-      return state.firstTrick ? 'You hold 3♦. Lead any valid opening hand.' : 'You lead. Play any valid combo.';
+      if (state.trick.play) return `Beat ${describePlay(state.trick.play)} or pass`;
+      return state.firstTrick ? 'Your Turn · Play 3♦ opening' : 'Your Turn · Play any combo';
     }
     const result = validateHumanPlay(cards);
     if (result.ok) return `${describePlay(result.play)} · can play`;
@@ -991,24 +991,14 @@
       const isSelf = index === state.humanIndex;
       if (isSelf && !state.liveRoom?.code) return;
       const row = document.createElement('div');
-      const voiceState = voiceStatusFor(player.id);
-      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}${voiceState.speaking ? ' voice-speaking' : ''}`;
+      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
       const text = document.createElement('div');
       const name = document.createElement('div');
       name.className = 'opponent-name';
-      name.textContent = isSelf ? 'You' : player.name;
+      name.textContent = `${isSelf ? 'You' : player.name} ${player.connected === false ? '🔴' : '🟢'}`;
       const meta = document.createElement('div');
       meta.className = 'opponent-meta';
-      const voiceCopy = player.connected === false
-        ? '🔴 Disconnected'
-        : voiceState.speaking
-          ? '🟢 🎤 Talking'
-          : voiceState.listening
-            ? '🟢 Listening'
-            : voiceState.muted
-              ? '⚪ 🔇 Muted'
-              : '⚪ Voice off';
-      meta.textContent = player.finished ? 'Finished' : `${voiceCopy} · ${player.hand.length} cards`;
+      meta.textContent = player.finished ? 'Finished' : `${player.hand.length} cards`;
       const coins = document.createElement('div');
       coins.className = 'opponent-coins';
       coins.textContent = `🪙 ${playerCoins(player, index)}`;
@@ -1018,19 +1008,9 @@
       const badge = document.createElement('div');
       badge.className = `opponent-badge${player.connected === false ? ' offline' : ''}`;
       badge.textContent = player.connected === false ? '!' : player.finished ? '✓' : String(player.hand.length);
-      const voice = document.createElement('button');
-      voice.type = 'button';
-      voice.className = `voice-chip${voiceState.speaking ? ' speaking' : ''}${voiceState.muted ? ' muted' : ''}`;
-      voice.textContent = voiceState.muted ? '🔇' : '🎤';
-      voice.title = voiceState.muted ? 'Muted' : voiceState.speaking ? 'Talking' : 'Voice on';
-      voice.setAttribute('aria-label', `Mute ${player.name}`);
-      voice.addEventListener('click', event => {
-        event.stopPropagation();
-        toggleMutePlayer(player.id);
-      });
       const controls = document.createElement('div');
       controls.className = 'opponent-controls';
-      controls.append(badge, voice);
+      controls.append(badge);
       row.appendChild(text);
       row.appendChild(controls);
       els.opponents.appendChild(row);
@@ -1191,30 +1171,15 @@
     els.voicePanel?.classList.toggle('hidden', !isLive);
     if (!isLive) return;
     els.voiceMic?.classList.toggle('muted', state.voice.micMuted || !state.voice.enabled);
-    els.voiceMic?.classList.toggle('speaking', state.voice.speaking && !state.voice.micMuted);
+    els.voiceMic?.classList.remove('speaking');
     els.voiceMic?.setAttribute('aria-pressed', state.voice.enabled && !state.voice.micMuted ? 'true' : 'false');
-    if (els.voiceMic) els.voiceMic.setAttribute('aria-label', state.voice.micMuted ? 'Turn microphone on' : 'Mute microphone');
+    if (els.voiceMic) els.voiceMic.setAttribute('aria-label', state.voice.micMuted ? 'Turn voice on' : 'Turn voice off');
     els.voiceSpeaker?.classList.toggle('muted', state.voice.speakerMuted);
     els.voiceSpeaker?.setAttribute('aria-pressed', state.voice.speakerMuted ? 'false' : 'true');
     if (els.voiceSpeaker) els.voiceSpeaker.textContent = state.voice.speakerMuted ? '🔇' : '🔊';
-    els.voicePtt?.classList.toggle('active', state.voice.pushToTalk);
-    els.voicePtt?.setAttribute('aria-pressed', state.voice.pushToTalk ? 'true' : 'false');
-    if (els.voicePtt) els.voicePtt.textContent = state.voice.pushToTalk ? 'HOLD' : 'PTT';
-    if (els.voiceMuteAll) els.voiceMuteAll.textContent = state.voice.mixerOpen ? '🎚️' : '🔇';
-    if (els.voiceStatus) {
-      els.voiceStatus.textContent = !state.voice.enabled
-        ? 'Tap 🎤 for voice'
-        : state.voice.pushToTalk && state.voice.micMuted
-          ? 'Hold to talk'
-          : state.voice.micMuted
-            ? 'Muted'
-            : state.voice.speaking
-              ? '🎤 Talking'
-              : 'Listening';
-    }
+    state.voice.pushToTalk = false;
+    state.voice.mixerOpen = false;
     updateRemoteAudioMute();
-    updateSpeakingBanner();
-    renderVoiceMixer();
   }
 
   function sendVoiceState({ force = false } = {}) {
