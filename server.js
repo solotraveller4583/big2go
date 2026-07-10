@@ -229,6 +229,19 @@ function sanitizeName(name, fallback) {
   return cleaned || fallback;
 }
 
+function sanitizeAvatar(input = {}) {
+  const gender = input.gender === 'female' ? 'female' : 'male';
+  const style = ['😀', '😎', '🥰', '😇'].includes(input.style) ? input.style : '😀';
+  const hair = String(input.hair || (gender === 'female' ? 'bob' : 'short')).replace(/[^a-z0-9-]/gi, '').slice(0, 18) || 'short';
+  const outfit = String(input.outfit || 'casual').replace(/[^a-z0-9-]/gi, '').slice(0, 18) || 'casual';
+  const color = /^#[0-9a-f]{6}$/i.test(String(input.color || '')) ? input.color : (gender === 'female' ? '#ff8fd6' : '#45d6ff');
+  return { gender, style, hair, outfit, color, emoji: gender === 'female' ? '👧' : '👦' };
+}
+
+function playerAvatar(player) {
+  return sanitizeAvatar(player?.avatar || { gender: player?.avatarGender });
+}
+
 function serializePlay(play) {
   if (!play) return null;
   return {
@@ -339,7 +352,8 @@ function publicRoom(room) {
       connected: player.connected !== false,
       disconnectedAt: player.disconnectedAt || null,
       timedOut: Boolean(player.timedOut),
-      coins: Number.isFinite(player.coins) ? player.coins : STARTING_COINS
+      coins: Number.isFinite(player.coins) ? player.coins : STARTING_COINS,
+      avatar: playerAvatar(player)
     }))
   };
 }
@@ -369,7 +383,8 @@ function publicGameState(room, playerId) {
       finished: player.finished,
       handCount: player.hand.length,
       connected: room.players.find(roomPlayer => roomPlayer.id === player.id)?.connected !== false,
-      coins: Number.isFinite(player.coins) ? player.coins : (room.players.find(roomPlayer => roomPlayer.id === player.id)?.coins ?? STARTING_COINS)
+      coins: Number.isFinite(player.coins) ? player.coins : (room.players.find(roomPlayer => roomPlayer.id === player.id)?.coins ?? STARTING_COINS),
+      avatar: playerAvatar(player)
     })),
     hand: own.hand.map(card => ({ ...card })),
     logs: room.game.logs.slice(0, 8),
@@ -554,7 +569,7 @@ function createRoom(name = 'Host', options = {}) {
     hostId,
     maxPlayers: MAX_PLAYERS,
     rules: normalizeRuleConfig(options),
-    players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true, connected: true, disconnectedAt: null, timedOut: false, coins: STARTING_COINS, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false }],
+    players: [{ id: hostId, name: sanitizeName(name, 'Host'), avatar: sanitizeAvatar(options.avatar), ready: true, connected: true, disconnectedAt: null, timedOut: false, coins: STARTING_COINS, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false }],
     clients: new Set(),
     game: null,
     chat: [],
@@ -567,13 +582,13 @@ function createRoom(name = 'Host', options = {}) {
   return { room, playerId: hostId };
 }
 
-function joinRoom(code, name = 'Friend') {
+function joinRoom(code, name = 'Friend', options = {}) {
   const room = rooms.get(String(code || '').trim().toUpperCase());
   if (!room) return { error: 'Room not found' };
   if (room.game) return { error: 'Game already started' };
   if (room.players.filter(player => player.connected !== false).length >= room.maxPlayers) return { error: 'Room is full' };
   const playerId = crypto.randomUUID();
-  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true, connected: true, disconnectedAt: null, timedOut: false, coins: STARTING_COINS, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false });
+  room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), avatar: sanitizeAvatar(options.avatar), ready: true, connected: true, disconnectedAt: null, timedOut: false, coins: STARTING_COINS, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false });
   appendRoomNotice(room, `${room.players[room.players.length - 1].name} joined the room.`);
   room.updatedAt = Date.now();
   rememberRoomSessions(room);
@@ -656,6 +671,7 @@ function startRoomGame(code, playerId) {
     index,
     finished: false,
     coins: player.coins,
+    avatar: playerAvatar(player),
     hand: hands[index]
   }));
   const startingPlayer = findStartingPlayer(gamePlayers);
@@ -800,7 +816,7 @@ function createHttpServer() {
       req.on('end', () => {
         try {
           const parsed = body ? JSON.parse(body) : {};
-          const { room, playerId } = createRoom(parsed.name);
+          const { room, playerId } = createRoom(parsed.name, { avatar: parsed.avatar, straightRule: parsed.straightRule });
           return json(res, 201, { room: publicRoom(room), playerId });
         } catch (_) {
           return json(res, 400, { error: 'Invalid create room request' });
@@ -815,7 +831,7 @@ function createHttpServer() {
       req.on('end', () => {
         try {
           const parsed = body ? JSON.parse(body) : {};
-          const result = joinRoom(parsed.code, parsed.name);
+          const result = joinRoom(parsed.code, parsed.name, { avatar: parsed.avatar });
           if (result.error) return json(res, 404, { error: result.error });
           return json(res, 200, { room: publicRoom(result.room), playerId: result.playerId });
         } catch (_) {
