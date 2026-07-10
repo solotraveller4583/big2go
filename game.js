@@ -3,7 +3,6 @@
 
   const SAVE_KEY = 'big2go-save-v1';
   const COIN_KEY = 'big2go-virtual-coins-v1';
-  const AVATAR_KEY = 'big2go-avatar-v1';
   const SOUND_SETTINGS_KEY = 'big2go-sound-settings-v1';
   const STARTING_COINS = 100;
   const ENTRY_FEE_COINS = 5;
@@ -27,14 +26,6 @@
     { key: 'S', symbol: '♠', name: 'spades', color: 'black' }
   ];
   const AI_NAMES = ['Brownie', 'Bunny', 'Cookie', 'Mochi', 'Panda', 'Milo', 'Coco', 'Luna', 'Toto', 'Sunny'];
-  const AI_AVATARS = [
-    { gender: 'male', style: '😎', hair: 'cap', outfit: 'blue', color: '#45d6ff', emoji: '👦' },
-    { gender: 'female', style: '🥰', hair: 'bob', outfit: 'pink', color: '#ff8fd6', emoji: '👧' },
-    { gender: 'male', style: '😀', hair: 'curly', outfit: 'mint', color: '#63f0b0', emoji: '👦' },
-    { gender: 'female', style: '😇', hair: 'long', outfit: 'gold', color: '#ffd86b', emoji: '👧' },
-    { gender: 'male', style: '🥰', hair: 'short', outfit: 'purple', color: '#9b7bff', emoji: '👦' },
-    { gender: 'female', style: '😎', hair: 'twin', outfit: 'aqua', color: '#5ee7ff', emoji: '👧' }
-  ];
   const FIVE_KIND_ORDER = { 'straight': 1, 'flush': 2, 'full-house': 3, 'four-kind': 4, 'straight-flush': 5 };
   const STRAIGHT_RULES = Object.freeze({
     TRADITIONAL: 'traditional',
@@ -70,7 +61,6 @@
     sound: true,
     soundVolume: 0.72,
     voiceVolume: 0.9,
-    avatar: null,
     gameOver: false,
     busy: false,
     sortMode: 'rank',
@@ -249,38 +239,6 @@
     return state.sortMode === 'suit' ? 'Suit/Flush' : state.sortMode === 'combo' ? 'Combo' : 'Rank';
   }
 
-  function normalizeAvatar(input = {}) {
-    const gender = input.gender === 'female' ? 'female' : 'male';
-    const style = ['😀', '😎', '🥰', '😇'].includes(input.style) ? input.style : '😀';
-    const hair = String(input.hair || (gender === 'female' ? 'bob' : 'short')).replace(/[^a-z0-9-]/gi, '').slice(0, 18) || 'short';
-    const outfit = String(input.outfit || 'casual').replace(/[^a-z0-9-]/gi, '').slice(0, 18) || 'casual';
-    const color = /^#[0-9a-f]{6}$/i.test(String(input.color || '')) ? input.color : (gender === 'female' ? '#ff8fd6' : '#45d6ff');
-    return { gender, style, hair, outfit, color, emoji: gender === 'female' ? '👧' : '👦' };
-  }
-
-  function loadAvatar() {
-    try { return normalizeAvatar(JSON.parse(localStorage.getItem(AVATAR_KEY) || 'null') || {}); }
-    catch (_) { return normalizeAvatar(); }
-  }
-
-  function saveAvatar(avatar) {
-    state.avatar = normalizeAvatar(avatar);
-    try { localStorage.setItem(AVATAR_KEY, JSON.stringify(state.avatar)); } catch (_) {}
-    renderHomeAvatar();
-    return state.avatar;
-  }
-
-  function playerAvatar(player, index = 0) {
-    if (player?.avatar) return normalizeAvatar(player.avatar);
-    if (index === state.humanIndex || player?.isHuman) return normalizeAvatar(state.avatar || loadAvatar());
-    return normalizeAvatar(AI_AVATARS[(Math.max(0, index - 1)) % AI_AVATARS.length]);
-  }
-
-  function avatarMarkup(avatar, extraClass = '') {
-    const safe = normalizeAvatar(avatar);
-    return `<span class="social-avatar ${extraClass} ${safe.gender} hair-${safe.hair} outfit-${safe.outfit}" style="--avatar-color:${safe.color}" aria-hidden="true"><b>${safe.emoji}</b><i>${safe.style}</i></span>`;
-  }
-
   function loadSoundSettings() {
     try {
       const saved = JSON.parse(localStorage.getItem(SOUND_SETTINGS_KEY) || 'null') || {};
@@ -293,17 +251,6 @@
     try { localStorage.setItem(SOUND_SETTINGS_KEY, JSON.stringify({ soundVolume: state.soundVolume, voiceVolume: state.voiceVolume })); } catch (_) {}
     if (audio.master) audio.master.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * 0.16;
     state.voice.peers?.forEach(entry => { if (entry.audio) entry.audio.volume = state.voiceVolume; });
-  }
-
-  function renderHomeAvatar() {
-    const avatar = normalizeAvatar(state.avatar || loadAvatar());
-    document.querySelectorAll('.profile-avatar').forEach(node => {
-      if (node.closest('.brand-pill')) {
-        node.textContent = avatar.emoji;
-        node.style.setProperty('--avatar-color', avatar.color);
-        node.classList.add('home-avatar-ready');
-      }
-    });
   }
 
   function nextSortMode() {
@@ -507,7 +454,6 @@
       state.players.push({
         name: i === 0 ? 'You' : AI_NAMES[i - 1] || AI_NAMES[i % AI_NAMES.length],
         isHuman: i === 0,
-        avatar: i === 0 ? playerAvatar(null, 0) : playerAvatar(null, i),
         finished: false,
         coins: i === 0 ? state.coins.balance : STARTING_COINS,
         hand: []
@@ -517,9 +463,7 @@
 
   function dealCards(playerCount) {
     const deck = shuffle(createDeck());
-    const hands = Array.from({ length: playerCount }, () => []);
-    deck.forEach((card, index) => hands[index % playerCount].push(card));
-    return hands.map(sortCards);
+    return Array.from({ length: playerCount }, (_, index) => sortCards(deck.slice(index * 13, index * 13 + 13)));
   }
 
   function findStartingPlayer() {
@@ -565,7 +509,6 @@
         players: state.players.map(player => ({
           name: player.name,
           isHuman: player.isHuman,
-          avatar: playerAvatar(player, state.players.indexOf(player)),
           finished: player.finished,
           hand: player.hand.map(card => card.id)
         })),
@@ -620,7 +563,6 @@
       state.players = saved.players.map((player, index) => ({
         name: player.name || (index === 0 ? 'You' : AI_NAMES[index - 1] || AI_NAMES[index % AI_NAMES.length]),
         isHuman: Boolean(player.isHuman),
-        avatar: playerAvatar(player, index),
         finished: Boolean(player.finished),
         hand: (player.hand || []).map(cardFromId).filter(Boolean)
       }));
@@ -1011,46 +953,9 @@
     showHelp(title, message);
   }
 
-  function showAvatarSetup() {
-    const avatar = normalizeAvatar(state.avatar || loadAvatar());
-    showHelp('Create Your Avatar', `
-      <div class="avatar-modal">
-        <div class="avatar-preview">${avatarMarkup(avatar, 'preview-avatar')}<strong>Your Big2Go character</strong><small>Saved on this device</small></div>
-        <label>Gender</label>
-        <div class="avatar-choice-row" data-avatar-field="gender"><button type="button" data-value="male">👦 Male</button><button type="button" data-value="female">👧 Female</button></div>
-        <label>Style</label>
-        <div class="avatar-choice-row" data-avatar-field="style"><button type="button" data-value="😀">😀</button><button type="button" data-value="😎">😎</button><button type="button" data-value="🥰">🥰</button><button type="button" data-value="😇">😇</button></div>
-        <label>Hair</label>
-        <div class="avatar-choice-row" data-avatar-field="hair"><button type="button" data-value="short">Short</button><button type="button" data-value="bob">Bob</button><button type="button" data-value="curly">Curly</button><button type="button" data-value="long">Long</button><button type="button" data-value="cap">Cap</button></div>
-        <label>Outfit</label>
-        <div class="avatar-choice-row" data-avatar-field="outfit"><button type="button" data-value="casual">Casual</button><button type="button" data-value="blue">Blue</button><button type="button" data-value="pink">Pink</button><button type="button" data-value="mint">Mint</button><button type="button" data-value="gold">Gold</button></div>
-        <label>Colour</label>
-        <div class="avatar-choice-row" data-avatar-field="color"><button type="button" data-value="#45d6ff">Sky</button><button type="button" data-value="#ff8fd6">Rose</button><button type="button" data-value="#63f0b0">Mint</button><button type="button" data-value="#ffd86b">Gold</button><button type="button" data-value="#9b7bff">Violet</button></div>
-        <button class="primary avatar-save-button" id="avatar-save-button" value="ok">Save Avatar</button>
-      </div>`);
-    let draft = { ...avatar };
-    const refresh = () => {
-      draft = normalizeAvatar(draft);
-      const preview = document.querySelector('.avatar-preview');
-      if (preview) preview.innerHTML = `${avatarMarkup(draft, 'preview-avatar')}<strong>Your Big2Go character</strong><small>Saved on this device</small>`;
-      document.querySelectorAll('[data-avatar-field]').forEach(row => {
-        const field = row.dataset.avatarField;
-        row.querySelectorAll('button').forEach(button => button.classList.toggle('selected', String(draft[field]) === button.dataset.value));
-      });
-    };
-    setTimeout(() => {
-      document.querySelectorAll('[data-avatar-field] button').forEach(button => {
-        button.addEventListener('click', () => { draft[button.closest('[data-avatar-field]').dataset.avatarField] = button.dataset.value; refresh(); playUiSound('tap'); });
-      });
-      document.querySelector('#avatar-save-button')?.addEventListener('click', () => { saveAvatar(draft); playUiSound('coin'); document.querySelector('#help-dialog')?.close?.(); });
-      refresh();
-    }, 0);
-  }
-
   function showSettingsPanel() {
     showHelp('Big2Go Settings', `
       <div class="settings-modal">
-        <button type="button" class="primary avatar-open-button" id="avatar-open-button">Create Your Avatar</button>
         <label>Sound Volume <strong id="sound-volume-label">${Math.round(state.soundVolume * 100)}%</strong></label>
         <input id="sound-volume-range" type="range" min="0" max="100" value="${Math.round(state.soundVolume * 100)}" />
         <label>Voice Chat Volume <strong id="voice-volume-label">${Math.round(state.voiceVolume * 100)}%</strong></label>
@@ -1058,7 +963,6 @@
         <p class="settings-note">Gameplay sounds are clearer on mobile speaker. Voice chat stays separate.</p>
       </div>`);
     setTimeout(() => {
-      document.querySelector('#avatar-open-button')?.addEventListener('click', showAvatarSetup);
       const soundRange = document.querySelector('#sound-volume-range');
       const voiceRange = document.querySelector('#voice-volume-range');
       soundRange?.addEventListener('input', () => { state.soundVolume = Number(soundRange.value) / 100; document.querySelector('#sound-volume-label').textContent = `${soundRange.value}%`; saveSoundSettings(); });
@@ -1072,7 +976,6 @@
       state.players.push({
         name: i === 0 ? 'You' : AI_NAMES[i - 1] || AI_NAMES[i % AI_NAMES.length],
         isHuman: i === 0,
-        avatar: i === 0 ? playerAvatar(null, 0) : playerAvatar(null, i),
         finished: false,
         coins: i === 0 ? state.coins.balance : STARTING_COINS,
         hand: []
@@ -1108,6 +1011,7 @@
     state.sound = true;
     state.gameOver = false;
     state.busy = false;
+    state.dealAnimationShown = false;
     els.sound.textContent = '🔊';
     showGameScreen();
     updateHeat(10, 'The opening player can lead any valid Big Two hand.');
@@ -1157,29 +1061,21 @@
     state.players.forEach((player, index) => {
       const isSelf = index === state.humanIndex;
       if (isSelf && !state.liveRoom?.code) return;
-      const avatar = playerAvatar(player, index);
       const row = document.createElement('div');
-      row.className = `opponent-row avatar-player-card${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
-      row.style.setProperty('--avatar-color', avatar.color);
-      const face = document.createElement('div');
-      face.className = `player-avatar-face ${avatar.gender} hair-${avatar.hair} outfit-${avatar.outfit}`;
-      face.innerHTML = `<b>${avatar.emoji}</b><i>${avatar.style}</i>`;
-      const text = document.createElement('div');
-      text.className = 'player-social-copy';
+      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
       const name = document.createElement('div');
       name.className = 'opponent-name';
-      name.textContent = `${isSelf ? 'You' : player.name} ${player.connected === false ? '🔴' : '🟢'}`;
+      name.textContent = isSelf ? 'You' : player.name;
       const coins = document.createElement('div');
       coins.className = 'opponent-coins';
       coins.textContent = `🪙${playerCoins(player, index)}`;
       const meta = document.createElement('div');
       meta.className = 'opponent-meta';
-      meta.textContent = player.finished ? 'Finished' : `${player.hand.length} cards`;
-      text.appendChild(name);
-      text.appendChild(coins);
-      text.appendChild(meta);
-      row.appendChild(face);
-      row.appendChild(text);
+      const status = player.connected === false ? 'Offline' : 'Online';
+      meta.textContent = player.finished ? 'Finished' : `${player.hand.length} cards · ${status}`;
+      row.appendChild(name);
+      row.appendChild(coins);
+      row.appendChild(meta);
       els.opponents.appendChild(row);
     });
   }
@@ -1193,10 +1089,8 @@
       return;
     }
     els.trickPlay.classList.remove('empty');
-    state.trick.play.cards.forEach((card, index) => {
+    state.trick.play.cards.forEach(card => {
       const tile = renderCardTile(card, false);
-      tile.classList.add('played-card-fly');
-      tile.style.setProperty('--deal-delay', `${Math.min(420, index * 70)}ms`);
       tile.disabled = true;
       els.trickPlay.appendChild(tile);
     });
@@ -1656,13 +1550,17 @@
   function renderHand() {
     els.hand.innerHTML = '';
     const human = getHumanPlayer();
+    const shouldAnimateDeal = !state.dealAnimationShown;
     sortedHumanHand(human.hand).forEach((card, index) => {
       const tile = renderCardTile(card, true);
-      tile.classList.add('deal-card-in');
-      tile.style.setProperty('--deal-delay', `${Math.min(520, index * 32)}ms`);
+      if (shouldAnimateDeal) {
+        tile.classList.add('deal-card-in');
+        tile.style.setProperty('--deal-delay', `${Math.min(520, index * 32)}ms`);
+      }
       tile.style.zIndex = String(index + 1);
       els.hand.appendChild(tile);
     });
+    if (shouldAnimateDeal) state.dealAnimationShown = true;
     els.selectedCount.textContent = `${state.selected.size} selected`;
     document.querySelector('.hand-head h2')?.setAttribute('data-count', String(human.hand.length));
   }
@@ -2226,7 +2124,6 @@
       id: player.id,
       name: index === game.playerIndex ? 'You' : player.name,
       isHuman: index === game.playerIndex,
-      avatar: playerAvatar(player, index),
       finished: Boolean(player.finished),
       connected: player.connected !== false,
       coins: Number.isFinite(player.coins) ? player.coins : STARTING_COINS,
@@ -2286,8 +2183,7 @@
         if (player.id === room.hostId) tags.push('Host');
         if (player.connected === false) tags.push(player.timedOut ? 'Timed out' : 'Disconnected');
         else tags.push('Online');
-        const avatar = playerAvatar(player, index);
-        item.innerHTML = `${avatarMarkup(avatar, 'room-list-avatar')}<span>${index + 1}. ${displayName} · 🪙 ${Number.isFinite(player.coins) ? player.coins : STARTING_COINS}${tags.length ? ` · ${tags.join(' · ')}` : ''}</span>`;
+        item.textContent = `${index + 1}. ${displayName} · 🪙 ${Number.isFinite(player.coins) ? player.coins : STARTING_COINS}${tags.length ? ` · ${tags.join(' · ')}` : ''}`;
         if (player.connected === false) item.dataset.left = 'true';
         playersEl.appendChild(item);
       });
@@ -2378,7 +2274,7 @@
     const response = await fetch('/api/rooms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ name, avatar: playerAvatar(null, 0), straightRule: state.settings.straightRule })
+      body: JSON.stringify({ name, straightRule: state.settings.straightRule })
     });
     if (!response.ok) throw new Error('Could not create room');
     return response.json();
@@ -2388,7 +2284,7 @@
     const response = await fetch('/api/rooms/join', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ code, name, avatar: playerAvatar(null, 0) })
+      body: JSON.stringify({ code, name })
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || 'Could not join room');
@@ -2611,7 +2507,7 @@
   }
 
   function bindEvents() {
-    els.start.addEventListener('click', () => { if (!localStorage.getItem(AVATAR_KEY)) showAvatarSetup(); else newGame(); });
+    els.start.addEventListener('click', newGame);
     els.continue.addEventListener('click', () => {
       if (!restoreGame()) newGame();
     });
@@ -2626,36 +2522,6 @@
     });
     document.querySelectorAll('[data-reaction]').forEach(button => {
       button.addEventListener('click', () => showReaction(button.dataset.reaction || '👏'));
-    });
-    const handleAvatarDialogAction = event => {
-      const avatarButton = event.target.closest?.('[data-avatar-field] button');
-      if (avatarButton) {
-        const field = avatarButton.closest('[data-avatar-field]')?.dataset.avatarField;
-        if (field) {
-          window.big2goAvatarDraft = normalizeAvatar({ ...(window.big2goAvatarDraft || state.avatar || loadAvatar()), [field]: avatarButton.dataset.value });
-          document.querySelectorAll('[data-avatar-field]').forEach(row => row.querySelectorAll('button').forEach(button => button.classList.toggle('selected', String(window.big2goAvatarDraft[row.dataset.avatarField]) === button.dataset.value)));
-          const preview = document.querySelector('.avatar-preview');
-          if (preview) preview.innerHTML = `${avatarMarkup(window.big2goAvatarDraft, 'preview-avatar')}<strong>Your Big2Go character</strong><small>Saved on this device</small>`;
-          playUiSound('tap');
-        }
-      }
-      if (event.target.closest?.('#avatar-save-button')) {
-        saveAvatar(window.big2goAvatarDraft || state.avatar || loadAvatar());
-        window.big2goAvatarDraft = null;
-        playUiSound('coin');
-        document.querySelector('#help-dialog')?.close?.();
-      }
-      if (event.target.closest?.('#avatar-open-button')) showAvatarSetup();
-    };
-    document.addEventListener('pointerup', handleAvatarDialogAction);
-    document.addEventListener('click', handleAvatarDialogAction);
-    els.helpDialog?.querySelector('form')?.addEventListener('submit', event => {
-      if (event.submitter?.id === 'avatar-save-button' || document.querySelector('.avatar-modal')) {
-        saveAvatar(window.big2goAvatarDraft || state.avatar || loadAvatar());
-        window.big2goAvatarDraft = null;
-        playUiSound('coin');
-        setTimeout(() => document.querySelector('#help-dialog')?.close?.(), 0);
-      }
     });
     els.chatForm?.addEventListener('submit', event => {
       event.preventDefault();
@@ -2817,12 +2683,10 @@
   }
 
   function init() {
-    state.avatar = loadAvatar();
     loadSoundSettings();
     saveSoundSettings();
     state.coins.balance = loadCoinBalance();
     renderCoinHud();
-    renderHomeAvatar();
     bindEvents();
     installReconnectTestMode();
     registerServiceWorker();

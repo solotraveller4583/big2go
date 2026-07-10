@@ -51,22 +51,27 @@ test('multiplayer play validation uses the configured straight rules and compari
   assert.deepEqual(room.game.trick.play.score, [1, 3, 3], 'multiplayer compares 2-3-4-5-6 by 6♠');
 });
 
-test('private room preserves user names and avatars without replacing room player names', () => {
-  const hostAvatar = { gender: 'female', style: '🥰', hair: 'bob', outfit: 'mint', color: '#63f0b0' };
-  const friendAvatar = { gender: 'male', style: '😎', hair: 'cap', outfit: 'blue', color: '#45d6ff' };
-  const { room, playerId: hostId } = server.createRoom('Tarn', { avatar: hostAvatar });
-  const joined = server.joinRoom(room.code, 'Jack', { avatar: friendAvatar });
+test('two-player deal gives each player 13 unique cards instead of splitting the whole deck into 26-card hands', () => {
+  const hands = server.dealCards(2);
+  const ids = hands.flat().map(card => card.id);
+
+  assert.equal(hands.length, 2);
+  assert.deepEqual(hands.map(hand => hand.length), [13, 13]);
+  assert.equal(new Set(ids).size, ids.length, 'dealt cards must not duplicate');
+});
+
+test('private room preserves user names without replacing room player names', () => {
+  const { room, playerId: hostId } = server.createRoom('Tarn');
+  const joined = server.joinRoom(room.code, 'Jack');
 
   const publicView = server.publicRoom(room);
   assert.equal(publicView.players.find(player => player.id === hostId).name, 'Tarn');
   assert.equal(publicView.players.find(player => player.id === joined.playerId).name, 'Jack');
-  assert.equal(publicView.players.find(player => player.id === hostId).avatar.emoji, '👧');
-  assert.equal(publicView.players.find(player => player.id === joined.playerId).avatar.emoji, '👦');
 
   server.startRoomGame(room.code, hostId);
   const hostGame = server.privateRoomState(room, hostId).game;
-  assert.equal(hostGame.players[0].avatar.emoji, '👧');
-  assert.equal(hostGame.players[1].avatar.emoji, '👦');
+  assert.equal(hostGame.players[0].name, 'Tarn');
+  assert.equal(hostGame.players[1].name, 'Jack');
 });
 
 test('private room can start a shared multiplayer game with custom names and 13-card hands', () => {
