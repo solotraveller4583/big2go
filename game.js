@@ -1932,14 +1932,14 @@
       const status = saved.status || saved.roomStatus || 'Playing';
       const cards = saved.handCount ? ` · ${saved.handCount} cards` : '';
       const turn = saved.currentTurn ? ` · Turn: ${saved.currentTurn === saved.playerName ? 'You' : saved.currentTurn}` : '';
-      els.roomRecoverySummary.textContent = `Big2Go Arena · Room ${saved.code} · Seat Player ${seat} · ${status}${cards}${turn}`;
+      els.roomRecoverySummary.textContent = `Big2Go Arena · Room ${saved.code} · Seat ${seat} · ${status}${cards}${turn}`;
     }
     if (els.roomRecoveryPlayers) {
       els.roomRecoveryPlayers.innerHTML = '';
       (saved.players || []).slice(0, 4).forEach(player => {
         const chip = document.createElement('span');
         const isYou = player.id === saved.playerId;
-        const statusIcon = player.connected === false || isYou && saved.connected === false ? '🔴' : '🟢';
+        const statusIcon = isYou || player.connected === false ? '🔴' : '🟢';
         chip.textContent = `${statusIcon} ${isYou ? 'You disconnected' : player.name}`;
         els.roomRecoveryPlayers.appendChild(chip);
       });
@@ -2565,8 +2565,9 @@
       if (state.liveRoom?.code) {
         const leave = window.confirm('Leave game?\n\nYour current game progress will be saved.\n\nPress Cancel to stay, or OK to leave the room.');
         if (!leave) return;
+        saveRoomSession();
         leaveCurrentRoom();
-        clearRoomSession();
+        setTimeout(renderRoomRecovery, 0);
       }
       cancelAiTimer();
       state.busy = false;
@@ -2619,6 +2620,7 @@
     if (!isLocal) return;
     window.big2goReconnectTestMode = {
       getSavedSession: getRoomSession,
+      getLiveRoom: () => state.liveRoom ? { ...state.liveRoom } : null,
       clearSavedSession: clearRoomSession,
       showResumeCard: () => {
         renderRoomRecovery();
@@ -2661,6 +2663,17 @@
         showHomeScreen();
         await verifySavedRoomSession();
         showHomeScreen();
+        renderRoomRecovery();
+        return getRoomSession();
+      },
+      async simulateBackToResume() {
+        saveRoomSession();
+        leaveCurrentRoom();
+        cancelAiTimer();
+        state.busy = false;
+        showHomeScreen();
+        updateContinueButton();
+        await new Promise(resolve => setTimeout(resolve, 0));
         renderRoomRecovery();
         return getRoomSession();
       }
