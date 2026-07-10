@@ -5,6 +5,52 @@ const assert = require('node:assert/strict');
 
 const server = require('../server');
 
+const cards = ids => ids.map(id => server.cardFromId(id));
+
+test('alternative straight rules allow low-2 straights and rank them by the sequence high card', () => {
+  const straight = server.buildPlay(cards(['2S', '3H', '4C', '5D', '6S']));
+  assert.ok(straight, '2-3-4-5-6 should be a valid straight in alternative rules');
+  assert.equal(straight.kind, 'straight');
+  assert.deepEqual(straight.score, [1, 3, 3], '2-3-4-5-6 ranks by 6♠, not 2♠');
+
+  const lowerSuitStraight = server.buildPlay(cards(['2H', '3C', '4D', '5S', '6C']));
+  assert.ok(lowerSuitStraight);
+  assert.equal(server.playBeats(straight, { play: lowerSuitStraight }), true, '6♠ straight beats 6♣ straight');
+});
+
+test('traditional straight rules reject low-2 straights but keep 3-4-5-6-7 as lowest', () => {
+  const options = { straightRule: 'traditional' };
+  assert.equal(server.buildPlay(cards(['2S', '3H', '4C', '5D', '6S']), options), null);
+  assert.equal(server.buildPlay(cards(['AS', '2H', '3C', '4D', '5S']), options), null);
+
+  const lowest = server.buildPlay(cards(['3S', '4H', '5C', '6D', '7S']), options);
+  assert.ok(lowest);
+  assert.equal(lowest.kind, 'straight');
+  assert.deepEqual(lowest.score, [1, 4, 3]);
+});
+
+test('straight validation rejects non-consecutive five-card selections', () => {
+  assert.equal(server.buildPlay(cards(['3S', '4H', '5C', '7D', '8S'])), null);
+});
+
+test('multiplayer play validation uses the configured straight rules and comparison score', () => {
+  const { room, playerId: hostId } = server.createRoom('Host');
+  server.joinRoom(room.code, 'Friend');
+  server.startRoomGame(room.code, hostId);
+
+  const current = room.game.players[room.game.currentPlayer];
+  current.hand = cards(['2S', '3H', '4C', '5D', '6S']);
+  room.game.firstTrick = false;
+  room.game.trick.play = server.buildPlay(cards(['2H', '3C', '4D', '5S', '6C']));
+  room.game.trick.leader = (current.index + 1) % room.game.players.length;
+
+  const result = server.applyRoomPlay(room.code, current.id, current.hand.map(card => card.id));
+
+  assert.equal(result.ok, true);
+  assert.equal(room.game.trick.play.kind, 'straight');
+  assert.deepEqual(room.game.trick.play.score, [1, 3, 3], 'multiplayer compares 2-3-4-5-6 by 6♠');
+});
+
 test('private room can start a shared multiplayer game with custom names and 13-card hands', () => {
   const { room, playerId: hostId } = server.createRoom('Alex');
   const joined = server.joinRoom(room.code, 'Maya');

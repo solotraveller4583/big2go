@@ -26,6 +26,11 @@
   ];
   const AI_NAMES = ['Lantern Bot', 'Drum Bot', 'Smoke Bot'];
   const FIVE_KIND_ORDER = { 'straight': 1, 'flush': 2, 'full-house': 3, 'four-kind': 4, 'straight-flush': 5 };
+  const STRAIGHT_RULES = Object.freeze({
+    TRADITIONAL: 'traditional',
+    ALTERNATIVE: 'alternative'
+  });
+  const DEFAULT_STRAIGHT_RULE = STRAIGHT_RULES.ALTERNATIVE;
   const ORACLE = {
     single: ['Small spark, big nerve.', 'The alley hushes for a beat.', 'A neat little slash through the night.'],
     pair: ['Two cards, one rhythm.', 'The crowd hears the bass line.', 'A tidy little power chord.'],
@@ -39,7 +44,7 @@
   const OPENING_LINE = '♦ 3 Holder Starts';
 
   const state = {
-    settings: { players: 4 },
+    settings: { players: 4, straightRule: DEFAULT_STRAIGHT_RULE },
     players: [],
     humanIndex: 0,
     currentPlayer: 0,
@@ -293,7 +298,7 @@
     return `${name}: ${describeCards(cards)}`;
   }
 
-  function buildPlay(cards) {
+  function buildPlay(cards, options = {}) {
     const sorted = sortCards(cards);
     const count = sorted.length;
     if (![1, 2, 3, 5].includes(count)) return null;
@@ -309,23 +314,51 @@
       return { kind: count === 2 ? 'pair' : 'triple', count, cards: sorted, score: [count, sorted[0].rankIndex, Math.max(...sorted.map(card => card.suitIndex))] };
     }
 
-    return buildFiveCardPlay(sorted);
+    return buildFiveCardPlay(sorted, options);
   }
 
-  function buildFiveCardPlay(cards) {
+  function straightInfo(cards, options = {}) {
+    const sorted = sortCards(cards);
+    const uniqueRanks = [...new Set(sorted.map(card => card.rankIndex))];
+    if (uniqueRanks.length !== 5) return null;
+
+    const traditionalHigh = uniqueRanks.every((rank, index, arr) => index === 0 || rank === arr[index - 1] + 1) && uniqueRanks[4] < 12
+      ? uniqueRanks[4]
+      : null;
+    if (traditionalHigh !== null) {
+      const highCard = sorted.find(card => card.rankIndex === traditionalHigh);
+      return { highRankIndex: traditionalHigh, highSuitIndex: highCard.suitIndex, highCard };
+    }
+
+    const rule = options.straightRule || DEFAULT_STRAIGHT_RULE;
+    if (rule !== STRAIGHT_RULES.ALTERNATIVE) return null;
+
+    const lowTwoStraights = [
+      { ranks: [0, 1, 2, 11, 12], highRankIndex: 2 },
+      { ranks: [0, 1, 2, 3, 12], highRankIndex: 3 }
+    ];
+    for (const candidate of lowTwoStraights) {
+      if (candidate.ranks.every(rank => uniqueRanks.includes(rank))) {
+        const highCard = sorted.find(card => card.rankIndex === candidate.highRankIndex);
+        return { highRankIndex: candidate.highRankIndex, highSuitIndex: highCard.suitIndex, highCard };
+      }
+    }
+
+    return null;
+  }
+
+  function buildFiveCardPlay(cards, options = {}) {
     const sorted = sortCards(cards);
     const rankGroups = groupByRank(sorted);
     const suitGroups = groupBySuit(sorted);
-    const uniqueRanks = [...new Set(sorted.map(card => card.rankIndex))];
     const counts = [...rankGroups.values()].map(group => group.length).sort((a, b) => b - a);
     const rankEntries = [...rankGroups.entries()].sort((a, b) => b[1].length - a[1].length || b[0] - a[0]);
 
     const isFlush = suitGroups.size === 1;
-    const isStraight = uniqueRanks.length === 5 && uniqueRanks.every((rank, index, arr) => index === 0 || (rank === arr[index - 1] + 1 && rank < 12));
+    const straight = straightInfo(sorted, options);
 
-    if (isStraight && isFlush) {
-      const high = highestCard(sorted);
-      return { kind: 'straight-flush', count: 5, cards: sorted, score: [5, high.rankIndex, high.suitIndex] };
+    if (straight && isFlush) {
+      return { kind: 'straight-flush', count: 5, cards: sorted, score: [5, straight.highRankIndex, straight.highSuitIndex] };
     }
 
     if (counts[0] === 4) {
@@ -357,9 +390,8 @@
       return { kind: 'flush', count: 5, cards: sortCards(best), score: [2, ...best.flatMap(card => [card.rankIndex, card.suitIndex])] };
     }
 
-    if (isStraight) {
-      const high = highestCard(sorted);
-      return { kind: 'straight', count: 5, cards: sorted, score: [1, high.rankIndex, high.suitIndex] };
+    if (straight) {
+      return { kind: 'straight', count: 5, cards: sorted, score: [1, straight.highRankIndex, straight.highSuitIndex] };
     }
 
     return null;
@@ -1549,7 +1581,7 @@
   }
 
   function validateHumanPlay(cards) {
-    const play = buildPlay(cards);
+    const play = buildPlay(cards, state.settings);
     if (!play) return { ok: false, reason: 'That selection is not a valid Big Two hand.' };
     if (state.trick.play && !playBeats(play, state.trick)) {
       return { ok: false, reason: `You must beat ${describePlay(state.trick.play)} with a stronger hand of the same size.` };
@@ -1589,7 +1621,7 @@
   function applyPlay(playerIndex, cards, source = 'played') {
     const player = state.players[playerIndex];
     removeCardsFromHand(player, cards);
-    const play = buildPlay(cards);
+    const play = buildPlay(cards, state.settings);
     advanceTurnAfterPlay(playerIndex, play);
     const comment = playComment(play);
     logState(`${player.name} ${source} ${describePlay(play)}. ${comment}`);
@@ -1654,7 +1686,7 @@
     const candidates = [];
     const seen = new Set();
     const add = combo => {
-      const play = buildPlay(combo);
+      const play = buildPlay(combo, state.settings);
       if (!play) return;
       const key = playKey(play.cards);
       if (seen.has(key)) return;
@@ -2035,6 +2067,7 @@
     };
     saveRoomSession(room, game);
     state.settings.players = game.players.length;
+    state.settings.straightRule = room?.rules?.straightRule || state.settings.straightRule || DEFAULT_STRAIGHT_RULE;
     state.humanIndex = game.playerIndex;
     state.currentPlayer = game.currentPlayer;
     state.startingPlayer = game.startingPlayer;
@@ -2095,6 +2128,7 @@
     const copyEl = document.querySelector('#room-copy-button');
     const shareEl = document.querySelector('#room-share-button');
     const myPlayerId = state.liveRoom?.playerId;
+    if (room?.rules?.straightRule) state.settings.straightRule = room.rules.straightRule;
     if (state.liveRoom && room.hostId) state.liveRoom.hostId = room.hostId;
     const isHost = Boolean(myPlayerId && room.hostId === myPlayerId);
     const hasCode = Boolean(room.code && room.code !== '-----');
@@ -2383,7 +2417,7 @@
     setTimeout(() => {
       state.busy = false;
       removeCardsFromHand(getHumanPlayer(), cards);
-      const play = buildPlay(cards);
+      const play = buildPlay(cards, state.settings);
       const comment = playComment(play);
       logState(`You played ${describePlay(play)}. ${comment}`);
       advanceTurnAfterPlay(state.humanIndex, play);

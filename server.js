@@ -25,6 +25,11 @@ const SUITS = [
   { key: 'S', symbol: '♠', name: 'spades', color: 'black' }
 ];
 const FIVE_KIND_ORDER = { straight: 1, flush: 2, 'full-house': 3, 'four-kind': 4, 'straight-flush': 5 };
+const STRAIGHT_RULES = Object.freeze({
+  TRADITIONAL: 'traditional',
+  ALTERNATIVE: 'alternative'
+});
+const DEFAULT_STRAIGHT_RULE = STRAIGHT_RULES.ALTERNATIVE;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -121,19 +126,47 @@ function groupBySuit(cards) {
   return groups;
 }
 
-function buildFiveCardPlay(cards) {
+function straightInfo(cards, options = {}) {
+  const sorted = sortCards(cards);
+  const uniqueRanks = [...new Set(sorted.map(card => card.rankIndex))];
+  if (uniqueRanks.length !== 5) return null;
+
+  const traditionalHigh = uniqueRanks.every((rank, index, arr) => index === 0 || rank === arr[index - 1] + 1) && uniqueRanks[4] < 12
+    ? uniqueRanks[4]
+    : null;
+  if (traditionalHigh !== null) {
+    const highCard = sorted.find(card => card.rankIndex === traditionalHigh);
+    return { highRankIndex: traditionalHigh, highSuitIndex: highCard.suitIndex, highCard };
+  }
+
+  const rule = options.straightRule || DEFAULT_STRAIGHT_RULE;
+  if (rule !== STRAIGHT_RULES.ALTERNATIVE) return null;
+
+  const lowTwoStraights = [
+    { ranks: [0, 1, 2, 11, 12], highRankIndex: 2 }, // A-2-3-4-5 ranks by 5
+    { ranks: [0, 1, 2, 3, 12], highRankIndex: 3 }  // 2-3-4-5-6 ranks by 6
+  ];
+  for (const candidate of lowTwoStraights) {
+    if (candidate.ranks.every(rank => uniqueRanks.includes(rank))) {
+      const highCard = sorted.find(card => card.rankIndex === candidate.highRankIndex);
+      return { highRankIndex: candidate.highRankIndex, highSuitIndex: highCard.suitIndex, highCard };
+    }
+  }
+
+  return null;
+}
+
+function buildFiveCardPlay(cards, options = {}) {
   const sorted = sortCards(cards);
   const rankGroups = groupByRank(sorted);
   const suitGroups = groupBySuit(sorted);
-  const uniqueRanks = [...new Set(sorted.map(card => card.rankIndex))];
   const counts = [...rankGroups.values()].map(group => group.length).sort((a, b) => b - a);
   const rankEntries = [...rankGroups.entries()].sort((a, b) => b[1].length - a[1].length || b[0] - a[0]);
   const isFlush = suitGroups.size === 1;
-  const isStraight = uniqueRanks.length === 5 && uniqueRanks.every((rank, index, arr) => index === 0 || (rank === arr[index - 1] + 1 && rank < 12));
+  const straight = straightInfo(sorted, options);
 
-  if (isStraight && isFlush) {
-    const high = highestCard(sorted);
-    return { kind: 'straight-flush', count: 5, cards: sorted, score: [5, high.rankIndex, high.suitIndex] };
+  if (straight && isFlush) {
+    return { kind: 'straight-flush', count: 5, cards: sorted, score: [5, straight.highRankIndex, straight.highSuitIndex] };
   }
   if (counts[0] === 4) {
     const quad = rankEntries[0][1].slice(0, 4);
@@ -151,14 +184,13 @@ function buildFiveCardPlay(cards) {
     const best = sortCards(sorted).slice().sort((a, b) => b.rankIndex - a.rankIndex || b.suitIndex - a.suitIndex);
     return { kind: 'flush', count: 5, cards: sortCards(best), score: [2, ...best.flatMap(card => [card.rankIndex, card.suitIndex])] };
   }
-  if (isStraight) {
-    const high = highestCard(sorted);
-    return { kind: 'straight', count: 5, cards: sorted, score: [1, high.rankIndex, high.suitIndex] };
+  if (straight) {
+    return { kind: 'straight', count: 5, cards: sorted, score: [1, straight.highRankIndex, straight.highSuitIndex] };
   }
   return null;
 }
 
-function buildPlay(cards) {
+function buildPlay(cards, options = {}) {
   const sorted = sortCards(cards);
   const count = sorted.length;
   if (![1, 2, 3, 5].includes(count)) return null;
@@ -171,7 +203,7 @@ function buildPlay(cards) {
     if (!sameRank) return null;
     return { kind: count === 2 ? 'pair' : 'triple', count, cards: sorted, score: [count, sorted[0].rankIndex, Math.max(...sorted.map(card => card.suitIndex))] };
   }
-  return buildFiveCardPlay(sorted);
+  return buildFiveCardPlay(sorted, options);
 }
 
 function playBeats(candidate, current) {
@@ -294,6 +326,7 @@ function publicRoom(room) {
     status: room.game ? 'playing' : room.players.filter(player => player.connected !== false).length >= 2 ? 'ready' : 'waiting',
     playerCount: room.players.filter(player => player.connected !== false).length,
     maxPlayers: room.maxPlayers,
+    rules: normalizeRuleConfig(room.rules),
     notice: room.notice || '',
     entryFee: ENTRY_FEE_COINS,
     prizePool: room.game?.prizePool || 0,
@@ -505,13 +538,22 @@ function cleanupRooms() {
   }
 }
 
-function createRoom(name = 'Host') {
+function normalizeRuleConfig(options = {}) {
+  return {
+    straightRule: options.straightRule === STRAIGHT_RULES.TRADITIONAL
+      ? STRAIGHT_RULES.TRADITIONAL
+      : STRAIGHT_RULES.ALTERNATIVE
+  };
+}
+
+function createRoom(name = 'Host', options = {}) {
   const code = generateCode();
   const hostId = crypto.randomUUID();
   const room = {
     code,
     hostId,
     maxPlayers: MAX_PLAYERS,
+    rules: normalizeRuleConfig(options),
     players: [{ id: hostId, name: sanitizeName(name, 'Host'), ready: true, connected: true, disconnectedAt: null, timedOut: false, coins: STARTING_COINS, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false }],
     clients: new Set(),
     game: null,
@@ -677,7 +719,7 @@ function applyRoomPlay(code, playerId, cardIds) {
   const selected = requested.map(id => handMap.get(id)).filter(Boolean);
   if (selected.length !== requested.length || new Set(requested).size !== requested.length) return { ok: false, error: 'Those cards are not in your hand' };
 
-  const play = buildPlay(selected);
+  const play = buildPlay(selected, room.rules || normalizeRuleConfig());
   if (!play) return { ok: false, error: 'That is not a valid Big Two hand' };
   if (!playBeats(play, room.game.trick)) return { ok: false, error: 'You must beat the current play' };
 
