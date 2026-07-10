@@ -1026,7 +1026,7 @@
         <div class="avatar-choice-row" data-avatar-field="outfit"><button type="button" data-value="casual">Casual</button><button type="button" data-value="blue">Blue</button><button type="button" data-value="pink">Pink</button><button type="button" data-value="mint">Mint</button><button type="button" data-value="gold">Gold</button></div>
         <label>Colour</label>
         <div class="avatar-choice-row" data-avatar-field="color"><button type="button" data-value="#45d6ff">Sky</button><button type="button" data-value="#ff8fd6">Rose</button><button type="button" data-value="#63f0b0">Mint</button><button type="button" data-value="#ffd86b">Gold</button><button type="button" data-value="#9b7bff">Violet</button></div>
-        <button type="button" class="primary avatar-save-button" id="avatar-save-button">Save Avatar</button>
+        <button class="primary avatar-save-button" id="avatar-save-button" value="ok">Save Avatar</button>
       </div>`);
     let draft = { ...avatar };
     const refresh = () => {
@@ -2627,7 +2627,7 @@
     document.querySelectorAll('[data-reaction]').forEach(button => {
       button.addEventListener('click', () => showReaction(button.dataset.reaction || '👏'));
     });
-    document.addEventListener('click', event => {
+    const handleAvatarDialogAction = event => {
       const avatarButton = event.target.closest?.('[data-avatar-field] button');
       if (avatarButton) {
         const field = avatarButton.closest('[data-avatar-field]')?.dataset.avatarField;
@@ -2646,6 +2646,16 @@
         document.querySelector('#help-dialog')?.close?.();
       }
       if (event.target.closest?.('#avatar-open-button')) showAvatarSetup();
+    };
+    document.addEventListener('pointerup', handleAvatarDialogAction);
+    document.addEventListener('click', handleAvatarDialogAction);
+    els.helpDialog?.querySelector('form')?.addEventListener('submit', event => {
+      if (event.submitter?.id === 'avatar-save-button' || document.querySelector('.avatar-modal')) {
+        saveAvatar(window.big2goAvatarDraft || state.avatar || loadAvatar());
+        window.big2goAvatarDraft = null;
+        playUiSound('coin');
+        setTimeout(() => document.querySelector('#help-dialog')?.close?.(), 0);
+      }
     });
     els.chatForm?.addEventListener('submit', event => {
       event.preventDefault();

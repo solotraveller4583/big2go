@@ -72,6 +72,7 @@
 .avatar-choice-row button.selected { background: linear-gradient(135deg, #ffd86b, #ff8fd6); color: #170b24; }
 .avatar-save-button,
 .avatar-open-button { margin-top: 4px; }
+.avatar-save-button { position: sticky; bottom: 0; z-index: 3; min-height: 52px; box-shadow: 0 -8px 24px rgba(7,4,24,.34); }
 .settings-modal label { display: flex; justify-content: space-between; gap: 8px; font-weight: 900; }
 .settings-modal input[type="range"] { width: 100%; accent-color: #ffd86b; }
 .settings-note { margin: 0; color: rgba(255,255,255,.72); font-size: .82rem; }
