@@ -1,45 +1,95 @@
 /* Big2Go — single-player AI emoji reactions (presentation only) */
 
 (function () {
-  const AI_EMOTIONS = [
-    { emoji: '😂', text: 'Laugh', tags: ['positive', 'funny'] },
-    { emoji: '👏', text: 'Nice move', tags: ['positive', 'friendly'] },
-    { emoji: '🔥', text: 'Good play', tags: ['positive', 'aggressive'] },
-    { emoji: '😮', text: 'Wow', tags: ['positive', 'friendly'] },
-    { emoji: '😍', text: 'Amazing', tags: ['positive', 'friendly'] },
-    { emoji: '👍', text: 'Respect', tags: ['positive', 'friendly'] },
-    { emoji: '🤩', text: 'Impressive', tags: ['positive', 'friendly'] },
-    { emoji: '😎', text: 'Cool', tags: ['positive', 'aggressive'] },
-    { emoji: '🎉', text: 'Celebration', tags: ['positive', 'friendly'] },
-    { emoji: '⏰', text: 'Hurry up', tags: ['waiting'] },
-    { emoji: '👀', text: 'Watching', tags: ['waiting'] },
-    { emoji: '🤔', text: 'Thinking', tags: ['waiting'] },
-    { emoji: '⌛', text: 'Waiting', tags: ['waiting'] },
-    { emoji: '😴', text: 'Slow move', tags: ['waiting', 'funny'] },
-    { emoji: '🙄', text: 'Still waiting', tags: ['waiting', 'funny'] },
-    { emoji: '😏', text: 'My turn', tags: ['competitive', 'aggressive'] },
-    { emoji: '💪', text: 'Strong', tags: ['competitive', 'aggressive'] },
-    { emoji: '😈', text: 'Challenge', tags: ['competitive', 'aggressive'] },
-    { emoji: '🧐', text: 'Interesting', tags: ['competitive'] },
-    { emoji: '😤', text: 'Almost got you', tags: ['competitive', 'aggressive'] },
-    { emoji: '😱', text: 'Oh no', tags: ['bad_luck'] },
-    { emoji: '😭', text: 'Sad', tags: ['bad_luck', 'friendly'] },
-    { emoji: '😵', text: 'Confused', tags: ['bad_luck', 'funny'] },
-    { emoji: '😅', text: 'Close one', tags: ['bad_luck', 'funny'] },
-    { emoji: '🤦', text: 'Mistake', tags: ['bad_luck', 'funny'] }
-  ];
+  const AI_AVATAR = {
+    Brownie: '🐻',
+    Bunny: '🐰',
+    Cookie: '🍪'
+  };
 
-  const EVENT_EMOJIS = {
-    player_slow: ['⏰', '👀', '🤔', '⌛'],
-    ai_strong_play: ['🔥', '😎', '😈', '💪'],
+  const AI_SLOT = {
+    Brownie: 'left',
+    Bunny: 'center',
+    Cookie: 'right'
+  };
+
+  const PERSONALITY_LINES = {
+    Brownie: {
+      player_slow: [
+        'Hurry up! 😆',
+        'Your turn already! ⏰',
+        "I'm waiting... 👀",
+        'Come on, show me your move 🔥',
+        'Thinking too long? 😂',
+        "Let's go! ⚡"
+      ],
+      ai_strong_play: [
+        'How about this? 🔥',
+        'Beat that! 😈',
+        'Strong hand 💪',
+        'Your move now 😎'
+      ],
+      ai_win_round: ['Told you 😎', 'Mine! 🎉', 'Too easy 🔥'],
+      ai_lose_round: ['Lucky break 😤', 'Nice one 😅', 'You got me 🤦'],
+      ai_win: ['Victory! 🎉', 'Champion 😎', 'GG 🔥'],
+      ai_lose: ['Well played 👏', 'You win 😭', 'Rematch? 😤'],
+      player_strong_play: ['Bold move 🤔', 'Interesting... 🧐', 'Show me more 🔥']
+    },
+    Bunny: {
+      player_slow: [
+        'Take your time 😊',
+        'I am ready 🐰',
+        'No rush! 💫',
+        'Still here with you 🌸',
+        'Thinking hard? 🤔'
+      ],
+      ai_strong_play: [
+        'Hope you like this 😊',
+        'Can you beat this? 😏',
+        'Nice combo coming! ✨',
+        'Your turn friend 🐰'
+      ],
+      ai_win_round: ['Yay! 🎉', 'Got it 😊', 'Lucky bunny 🐰'],
+      ai_lose_round: ['Good job! 👏', 'Wow 😮', 'So close 😅'],
+      ai_win: ['We did it! 🎉', 'Happy win 😊', 'Great game 🌸'],
+      ai_lose: ['Congrats! 👏', 'Well done 😊', 'You earned it 🎉'],
+      player_strong_play: ['Interesting move 🤔', 'Nice play! 👏', 'Impressive 😮']
+    },
+    Cookie: {
+      player_slow: [
+        'Waiting here 🍪',
+        "Don't keep us waiting 😜",
+        'My cards are ready 😎',
+        'Tick tock... ⏰',
+        'Still snacking 🍪',
+        'Hello? 👀'
+      ],
+      ai_strong_play: [
+        'Fresh play! 🍪',
+        'Try this 😜',
+        'Cookie power 💪',
+        'Crunch time 🔥'
+      ],
+      ai_win_round: ['Nom nom win 🍪', 'Sweet! 🎉', 'Gotcha 😎'],
+      ai_lose_round: ['Oops 😅', 'Crumbled 😱', 'That hurt 🍪'],
+      ai_win: ['Cookie wins! 🎉', 'Delicious victory 😎', 'Munch time 🔥'],
+      ai_lose: ['You ate me up 😭', 'Crispy defeat 🍪', 'GG 😅'],
+      player_strong_play: ['Spicy move 🌶️', 'Tasty play 😋', 'Oh wow 😮']
+    }
+  };
+
+  const GENERIC_LINES = {
+    player_slow: ['⏰ Hurry up', '👀 Watching', '🤔 Thinking', '⌛ Waiting'],
+    ai_strong_play: ['🔥 Good play', '😎 Cool', '😈 Challenge', '💪 Strong'],
     ai_lose_round: ['😭', '😱', '😅', '🤦'],
     ai_win_round: ['🎉', '😎', '🔥'],
     ai_win: ['🎉', '😎', '🔥'],
-    ai_lose: ['😭', '😱', '😅', '🤦']
+    ai_lose: ['😭', '😱', '😅', '🤦'],
+    player_strong_play: ['🔥 Good play', '😮 Wow', '👏 Nice']
   };
 
   const EVENT_PROB = {
-    player_slow: 0.55,
+    player_slow: 0.88,
     ai_strong_play: 0.3,
     ai_lose_round: 0.4,
     ai_win_round: 0.5,
@@ -48,28 +98,25 @@
     player_strong_play: 0.3
   };
 
-  const AI_PERSONALITY = {
-    Brownie: { prefer: ['aggressive', 'competitive'] },
-    Bunny: { prefer: ['friendly', 'positive'] },
-    Cookie: { prefer: ['funny', 'waiting'] }
-  };
-
-  const MAX_REACTIONS_PER_ROUND = 3;
   const COOLDOWN_MS = 5000;
-  const HUMAN_IDLE_MS = 5000;
-  const MAX_IDLE_PULSES = 3;
+  const IDLE_FIRST_MIN_MS = 3000;
+  const IDLE_FIRST_MAX_MS = 5000;
+  const IDLE_REPEAT_MIN_MS = 5000;
+  const IDLE_REPEAT_MAX_MS = 8000;
+  const MAX_EVENT_REACTIONS_PER_ROUND = 5;
+  const BUBBLE_MS = 3200;
 
   const reactionState = {
     lastReactAt: 0,
     round: 0,
-    countThisRound: 0,
+    eventCountThisRound: 0,
     idleTimer: null,
     idleTurnKey: null,
-    idlePulse: 0
+    lastIdleAi: null
   };
 
-  function emotionByEmoji(emoji) {
-    return AI_EMOTIONS.find(entry => entry.emoji === emoji) || { emoji, text: '', tags: ['positive'] };
+  function randomBetween(min, max) {
+    return min + Math.floor(Math.random() * (max - min + 1));
   }
 
   function isStrongPlay(play) {
@@ -83,63 +130,97 @@
     const next = Number(round) || 0;
     if (next !== reactionState.round) {
       reactionState.round = next;
-      reactionState.countThisRound = 0;
+      reactionState.eventCountThisRound = 0;
     }
   }
 
-  function canReact(gameState) {
+  function canReactForIdle(gameState) {
+    if (!gameState || gameState.liveRoom || gameState.gameOver) return false;
+    return Date.now() - reactionState.lastReactAt >= COOLDOWN_MS;
+  }
+
+  function canReactForEvent(gameState) {
     if (!gameState || gameState.liveRoom || gameState.gameOver) return false;
     syncRound(gameState.round);
-    if (reactionState.countThisRound >= MAX_REACTIONS_PER_ROUND) return false;
-    if (Date.now() - reactionState.lastReactAt < COOLDOWN_MS) return false;
-    return true;
+    if (reactionState.eventCountThisRound >= MAX_EVENT_REACTIONS_PER_ROUND) return false;
+    return Date.now() - reactionState.lastReactAt >= COOLDOWN_MS;
   }
 
-  function chooseRandomAIReaction(event, playerIndex, gameState) {
-    const emojiChoices = EVENT_EMOJIS[event];
-    let pool = emojiChoices
-      ? emojiChoices.map(emotionByEmoji)
-      : AI_EMOTIONS.slice();
+  function getPlayerName(gameState, playerIndex) {
+    return gameState?.players?.[playerIndex]?.name || 'AI';
+  }
 
-    const name = gameState?.players?.[playerIndex]?.name;
-    const personality = name ? AI_PERSONALITY[name] : null;
-    if (personality?.prefer?.length) {
-      const preferred = pool.filter(entry => entry.tags.some(tag => personality.prefer.includes(tag)));
-      if (preferred.length) pool = preferred;
-    }
-
+  function choosePersonalityLine(name, event) {
+    const pool = PERSONALITY_LINES[name]?.[event] || GENERIC_LINES[event] || GENERIC_LINES.player_slow;
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  function showAIReactionBubble(playerIndex, emoji, text) {
-    const row = document.querySelector(`#opponent-area .opponent-row[data-player-index="${playerIndex}"]`)
-      || document.querySelector(`.opponent-row[data-player-index="${playerIndex}"]`);
-    if (!row) return false;
+  function getReactionLayer() {
+    return document.getElementById('ai-reaction-layer')
+      || document.querySelector('#game-screen .table-arena .ai-reaction-layer');
+  }
 
-    row.querySelectorAll('.ai-reaction-bubble').forEach(node => node.remove());
+  function ensureReactionLayer() {
+    let layer = getReactionLayer();
+    if (layer) return layer;
+    const arena = document.querySelector('#game-screen .table-arena');
+    if (!arena) return null;
+    layer = document.createElement('div');
+    layer.id = 'ai-reaction-layer';
+    layer.className = 'ai-reaction-layer';
+    layer.setAttribute('aria-live', 'polite');
+    arena.appendChild(layer);
+    return layer;
+  }
+
+  function dismissTableReactions() {
+    document.querySelectorAll('.ai-table-reaction').forEach(node => {
+      node.classList.remove('show');
+      window.setTimeout(() => node.remove(), 280);
+    });
+  }
+
+  function showAIReactionBubble(playerIndex, message, gameState) {
+    const layer = ensureReactionLayer();
+    if (!layer || !message) return false;
+
+    const name = getPlayerName(gameState, playerIndex);
+    const slot = AI_SLOT[name] || 'center';
+    const avatar = AI_AVATAR[name] || name.charAt(0).toUpperCase();
+
+    layer.querySelectorAll(`.ai-table-reaction--${slot}`).forEach(node => node.remove());
 
     const bubble = document.createElement('div');
-    bubble.className = 'ai-reaction-bubble';
+    bubble.className = `ai-table-reaction ai-table-reaction--${slot} ai-table-reaction--${name.toLowerCase()}`;
     bubble.setAttribute('role', 'status');
-    bubble.setAttribute('aria-live', 'polite');
 
-    const emojiSpan = document.createElement('span');
-    emojiSpan.className = 'ai-reaction-emoji';
-    emojiSpan.textContent = emoji;
-    bubble.appendChild(emojiSpan);
+    const head = document.createElement('div');
+    head.className = 'ai-table-reaction-head';
 
-    if (text) {
-      const label = document.createElement('small');
-      label.textContent = text;
-      bubble.appendChild(label);
-    }
+    const avatarEl = document.createElement('span');
+    avatarEl.className = 'ai-table-reaction-avatar';
+    avatarEl.textContent = avatar;
 
-    row.appendChild(bubble);
+    const nameEl = document.createElement('strong');
+    nameEl.className = 'ai-table-reaction-name';
+    nameEl.textContent = name;
+
+    head.appendChild(avatarEl);
+    head.appendChild(nameEl);
+
+    const msg = document.createElement('p');
+    msg.className = 'ai-table-reaction-msg';
+    msg.textContent = message;
+
+    bubble.appendChild(head);
+    bubble.appendChild(msg);
+    layer.appendChild(bubble);
+
     requestAnimationFrame(() => bubble.classList.add('show'));
     window.setTimeout(() => {
       bubble.classList.remove('show');
-      window.setTimeout(() => bubble.remove(), 320);
-    }, 2500);
+      window.setTimeout(() => bubble.remove(), 340);
+    }, BUBBLE_MS);
     return true;
   }
 
@@ -157,20 +238,57 @@
     return indices[Math.floor(Math.random() * indices.length)];
   }
 
-  function triggerAIReaction(playerIndex, event, gameState) {
+  function pickIdleAiIndex(gameState) {
+    const indices = gameState.players
+      .map((player, index) => index)
+      .filter(index => {
+        if (index === gameState.humanIndex) return false;
+        const player = gameState.players[index];
+        return player && !player.isHuman && !player.finished;
+      });
+    if (!indices.length) return null;
+
+    const personalityFirst = indices.filter(index => {
+      const name = getPlayerName(gameState, index);
+      return PERSONALITY_LINES[name];
+    });
+    const pool = personalityFirst.length ? personalityFirst : indices;
+
+    if (reactionState.lastIdleAi != null && pool.length > 1) {
+      const rotated = pool.filter(index => index !== reactionState.lastIdleAi);
+      if (rotated.length) {
+        const pick = rotated[Math.floor(Math.random() * rotated.length)];
+        reactionState.lastIdleAi = pick;
+        return pick;
+      }
+    }
+
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    reactionState.lastIdleAi = pick;
+    return pick;
+  }
+
+  function triggerAIReaction(playerIndex, event, gameState, options = {}) {
     if (!gameState || gameState.liveRoom) return false;
     if (playerIndex == null || playerIndex === gameState.humanIndex) return false;
-    syncRound(gameState.round);
-    if (!canReact(gameState)) return false;
 
-    const probability = EVENT_PROB[event] ?? 0.2;
+    const isIdle = event === 'player_slow';
+    if (isIdle) {
+      if (!canReactForIdle(gameState)) return false;
+    } else {
+      syncRound(gameState.round);
+      if (!canReactForEvent(gameState)) return false;
+    }
+
+    const probability = options.probability ?? EVENT_PROB[event] ?? 0.25;
     if (Math.random() > probability) return false;
 
-    const pick = chooseRandomAIReaction(event, playerIndex, gameState);
-    if (!showAIReactionBubble(playerIndex, pick.emoji, pick.text)) return false;
+    const name = getPlayerName(gameState, playerIndex);
+    const message = choosePersonalityLine(name, event);
+    if (!showAIReactionBubble(playerIndex, message, gameState)) return false;
 
     reactionState.lastReactAt = Date.now();
-    reactionState.countThisRound += 1;
+    if (!isIdle) reactionState.eventCountThisRound += 1;
     return true;
   }
 
@@ -179,25 +297,31 @@
       clearTimeout(reactionState.idleTimer);
       reactionState.idleTimer = null;
     }
-    reactionState.idlePulse = 0;
-    if (resetTurnKey) reactionState.idleTurnKey = null;
+    reactionState.lastIdleAi = null;
+    if (resetTurnKey) {
+      reactionState.idleTurnKey = null;
+      dismissTableReactions();
+    }
   }
 
-  function scheduleIdlePulse(gameState, turnKey) {
+  function scheduleIdlePulse(gameState, turnKey, isFirst) {
+    const delay = isFirst
+      ? randomBetween(IDLE_FIRST_MIN_MS, IDLE_FIRST_MAX_MS)
+      : randomBetween(IDLE_REPEAT_MIN_MS, IDLE_REPEAT_MAX_MS);
+
     reactionState.idleTimer = window.setTimeout(() => {
       reactionState.idleTimer = null;
       if (!gameState || gameState.liveRoom || gameState.gameOver) return;
       if (gameState.currentPlayer !== gameState.humanIndex) return;
       if (reactionState.idleTurnKey !== turnKey) return;
 
-      const aiIndex = pickRandomAiIndex(gameState);
+      const aiIndex = pickIdleAiIndex(gameState);
       if (aiIndex != null) triggerAIReaction(aiIndex, 'player_slow', gameState);
 
-      reactionState.idlePulse += 1;
-      if (reactionState.idlePulse < MAX_IDLE_PULSES && gameState.currentPlayer === gameState.humanIndex) {
-        scheduleIdlePulse(gameState, turnKey);
+      if (gameState.currentPlayer === gameState.humanIndex && reactionState.idleTurnKey === turnKey) {
+        scheduleIdlePulse(gameState, turnKey, false);
       }
-    }, HUMAN_IDLE_MS);
+    }, delay);
   }
 
   function onHumanTurnStart(gameState) {
@@ -209,16 +333,15 @@
 
     clearHumanIdleTimer(false);
     reactionState.idleTurnKey = turnKey;
-    reactionState.idlePulse = 0;
-    scheduleIdlePulse(gameState, turnKey);
+    scheduleIdlePulse(gameState, turnKey, true);
   }
 
   function resetAIReactions(round) {
     reactionState.lastReactAt = 0;
     reactionState.round = Number(round) || 0;
-    reactionState.countThisRound = 0;
+    reactionState.eventCountThisRound = 0;
     clearHumanIdleTimer(true);
-    document.querySelectorAll('.ai-reaction-bubble').forEach(node => node.remove());
+    dismissTableReactions();
   }
 
   function onAiPlayComplete(playerIndex, play, gameState) {
@@ -261,9 +384,8 @@
   }
 
   window.Big2GoAIReactions = {
-    AI_EMOTIONS,
-    chooseRandomAIReaction,
-    canReact,
+    canReactForIdle,
+    canReactForEvent,
     triggerAIReaction,
     showAIReactionBubble,
     resetAIReactions,
@@ -274,6 +396,7 @@
     onTrickWon,
     onVictory,
     isStrongPlay,
-    pickRandomAiIndex
+    pickRandomAiIndex,
+    choosePersonalityLine
   };
 })();
