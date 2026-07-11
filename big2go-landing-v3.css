@@ -598,14 +598,10 @@
 }
 
 #home-screen.landing-v3 .mode-carousel {
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: calc((100% - min(76vw, 320px)) / 2);
-  padding: 8px 0 12px;
-  margin: 0 -14px;
-  scrollbar-width: none;
+  overflow: visible;
+  padding: 0 16px 12px;
+  margin: 0;
+  scroll-snap-type: none;
 }
 
 #home-screen.landing-v3 .mode-carousel::-webkit-scrollbar {
@@ -613,17 +609,18 @@
 }
 
 #home-screen.landing-v3 .player-options {
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
-  padding: 4px calc((100% - min(76vw, 320px)) / 2);
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
 }
 
 #home-screen.landing-v3 .player-option {
-  flex: 0 0 min(76vw, 320px);
-  scroll-snap-align: center;
+  flex: unset;
+  scroll-snap-align: none;
   position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
@@ -631,8 +628,10 @@
   align-items: center;
   column-gap: 12px;
   row-gap: 2px;
-  min-height: 132px;
-  padding: 16px 18px;
+  min-height: 102px;
+  min-width: 0;
+  width: 100%;
+  padding: 14px 16px;
   border-radius: 18px;
   border: 1.5px solid rgba(78, 43, 168, 0.45);
   background: linear-gradient(160deg, rgba(21, 16, 68, 0.98) 0%, rgba(13, 16, 48, 1) 100%);
@@ -640,6 +639,11 @@
   color: var(--v3-text-soft);
   text-align: left;
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+#home-screen.landing-v3 .player-option[data-player-choice="4"] {
+  grid-column: 1 / -1;
+  min-height: 118px;
 }
 
 #home-screen.landing-v3 .player-option span {
@@ -864,11 +868,16 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     width: 100%;
-    padding: 4px 0;
+    padding: 0;
   }
 
   #home-screen.landing-v3 .player-option {
     flex: unset;
+    min-height: 128px;
+  }
+
+  #home-screen.landing-v3 .player-option[data-player-choice="4"] {
+    grid-column: auto;
     min-height: 128px;
   }
 }
@@ -905,8 +914,13 @@
     min-height: 76px;
   }
 
-  #home-screen.landing-v3 .player-option {
-    min-height: 120px;
+  #home-screen.landing-v3 .player-option[data-player-choice="4"] {
+    min-height: 112px;
+  }
+
+  #home-screen.landing-v3 .player-option[data-player-choice="3"],
+  #home-screen.landing-v3 .player-option[data-player-choice="2"] {
+    min-height: 96px;
   }
 }
 

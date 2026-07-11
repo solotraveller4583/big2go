@@ -16,13 +16,15 @@
 
   width: min(100vw, 430px) !important;
   max-width: 430px !important;
-  height: 100dvh !important;
+  height: auto !important;
+  min-height: 0 !important;
   max-height: 100dvh !important;
   margin: 0 auto !important;
-  padding: max(6px, env(safe-area-inset-top)) 10px max(6px, env(safe-area-inset-bottom)) !important;
+  padding: max(6px, env(safe-area-inset-top)) 10px max(12px, calc(env(safe-area-inset-bottom) + 12px)) !important;
   display: grid !important;
-  gap: 6px !important;
-  overflow: hidden !important;
+  gap: 5px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   border: 0 !important;
   border-radius: 0 !important;
   background:
@@ -31,15 +33,15 @@
   box-shadow: none !important;
 }
 
-/* Solo stack — ~40% tighter center column vs prior layout */
+/* Solo stack — content-sized rows */
 #game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel.hidden) {
-  grid-template-rows: 46px 68px minmax(108px, 0.58fr) 26px minmax(112px, 22dvh) 90px !important;
+  grid-template-rows: 46px 68px minmax(108px, auto) 26px auto 90px !important;
   gap: 5px !important;
 }
 
 /* Room stack */
 #game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel:not(.hidden)) {
-  grid-template-rows: 46px 68px 40px minmax(100px, 0.52fr) 26px minmax(108px, 20dvh) 90px !important;
+  grid-template-rows: 46px 68px 40px minmax(100px, auto) 26px auto 90px !important;
   gap: 5px !important;
 }
 
@@ -284,11 +286,11 @@
 /* ── Table arena (Snap-style play zone) ── */
 #game-screen.gameplay-premium .table-arena {
   position: relative !important;
-  min-height: 0 !important;
-  height: 100% !important;
+  min-height: 108px !important;
+  height: auto !important;
   padding: 8px 10px 8px !important;
   display: grid !important;
-  grid-template-rows: 22px minmax(0, 1fr) 28px !important;
+  grid-template-rows: 22px auto 28px !important;
   gap: 4px !important;
   border-radius: 22px !important;
   border: 2px solid rgba(108, 63, 209, 0.45) !important;
@@ -403,8 +405,8 @@
 #game-screen.gameplay-premium #trick-play {
   position: relative !important;
   z-index: 2 !important;
-  min-height: 0 !important;
-  height: 100% !important;
+  min-height: 72px !important;
+  height: auto !important;
   padding: 6px 8px !important;
   display: flex !important;
   align-items: center !important;
@@ -512,7 +514,7 @@
 /* ── Hand — responsive fit fan (13 cards, no horizontal scroll) ── */
 #game-screen.gameplay-premium .hand-card {
   min-height: 0 !important;
-  height: 100% !important;
+  height: auto !important;
   padding: 6px 8px 4px !important;
   display: grid !important;
   grid-template-rows: 18px minmax(0, 1fr) !important;
@@ -557,8 +559,8 @@
   --card-w: min(50px, calc(var(--hand-inner) / (1 + 12 * (1 - var(--overlap-ratio)))));
 
   position: relative !important;
-  height: 100% !important;
-  min-height: 0 !important;
+  height: auto !important;
+  min-height: calc(var(--card-w) * 1.38 + 24px) !important;
   padding: 12px var(--hand-pad-x) 6px !important;
   display: flex !important;
   justify-content: center !important;
@@ -744,9 +746,31 @@
   50% { opacity: 1; transform: scale(1.03); }
 }
 
+/* Remove body purple orb + shell padding while gameplay is active */
+body:has(#game-screen.gameplay-premium:not(.hidden)) {
+  overflow: hidden !important;
+  background: #07091D !important;
+}
+
+body:has(#game-screen.gameplay-premium:not(.hidden))::before {
+  display: none !important;
+  content: none !important;
+}
+
+body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
+  width: min(100%, 430px) !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+}
+
 @media (max-width: 380px), (max-height: 720px) {
   #game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel.hidden) {
-    grid-template-rows: 44px 62px minmax(96px, 0.55fr) 24px minmax(104px, 21dvh) 88px !important;
+    grid-template-rows: 44px 62px minmax(96px, auto) 24px auto 88px !important;
+  }
+
+  #game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel:not(.hidden)) {
+    grid-template-rows: 44px 62px 38px minmax(92px, auto) 24px auto 88px !important;
   }
 
   #game-screen.gameplay-premium .opponent-row {
