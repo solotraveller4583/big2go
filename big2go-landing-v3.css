@@ -1156,6 +1156,50 @@
       max(20px, env(safe-area-inset-right))
       max(16px, env(safe-area-inset-bottom))
       max(20px, env(safe-area-inset-left));
+    grid-template-areas:
+      "v3-topbar"
+      "v3-hero"
+      "v3-play"
+      "v3-actions"
+      "v3-match"
+      "v3-footer";
+    grid-template-rows: auto auto auto auto auto auto;
+  }
+
+  #home-screen.landing-v3:has(#room-recovery-card:not(.hidden)) {
+    grid-template-areas:
+      "v3-topbar"
+      "v3-hero"
+      "v3-play"
+      "v3-recovery"
+      "v3-actions"
+      "v3-match"
+      "v3-footer";
+    grid-template-rows: auto auto auto auto auto auto auto;
+  }
+
+  #home-screen.landing-v3:has(#room-recovery-card:not(.hidden)) .landing-v3-footer {
+    display: none;
+  }
+
+  #home-screen.landing-v3.hero.casino-home.b2g-home {
+    min-height: 100dvh;
+    max-height: none;
+    height: auto;
+    border-radius: 0;
+    overflow-y: auto !important;
+  }
+
+  #home-screen.landing-v3 .player-panel.table-select {
+    height: auto;
+    min-height: 0;
+    justify-content: flex-start;
+  }
+
+  #home-screen.landing-v3 .landing-v3-footer {
+    align-self: auto;
+    margin-top: 0;
+    padding-top: 8px;
   }
 
   #home-screen.landing-v3 .home-topbar.instant-topbar {
