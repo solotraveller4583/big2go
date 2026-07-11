@@ -1572,16 +1572,12 @@
     els.hand.innerHTML = '';
     const human = getHumanPlayer();
     const shouldAnimateDeal = !state.dealAnimationShown;
-    const total = sortedHumanHand(human.hand).length;
     sortedHumanHand(human.hand).forEach((card, index) => {
       const tile = renderCardTile(card, true);
       if (shouldAnimateDeal) {
         tile.classList.add('deal-card-in');
         tile.style.setProperty('--deal-delay', `${Math.min(520, index * 32)}ms`);
       }
-      tile.style.setProperty('--fan-i', String(index));
-      tile.style.setProperty('--fan-n', String(Math.max(total - 1, 1)));
-      tile.style.zIndex = String(index + 1);
       els.hand.appendChild(tile);
     });
     if (shouldAnimateDeal) state.dealAnimationShown = true;
