@@ -1,4 +1,4 @@
-const CACHE_NAME = 'big2go-v104';
+const CACHE_NAME = 'big2go-v105';
 const ASSETS = [
   './',
   './index.html',
@@ -21,7 +21,7 @@ const ASSETS = [
   './big2go-coins.css?v=5',
   './big2go-mobile-redesign.css?v=8',
   './big2go-voice-mobile-override.css?v=2',
-  './big2go-landing-v3.css?v=13',
+  './big2go-landing-v3.css?v=14',
   './big2go-gameplay-premium.css?v=14',
   './aiReactions.js?v=3',
   './game.js?v=56',
