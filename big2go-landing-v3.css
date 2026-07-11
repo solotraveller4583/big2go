@@ -59,16 +59,61 @@
   display: block !important;
   position: absolute;
   inset: 0;
-  pointer-events: none;
-  z-index: 50;
+  pointer-events: none !important;
+  z-index: 1;
   border-radius: inherit;
   background: radial-gradient(ellipse 95% 88% at 50% 46%, transparent 52%, rgba(7, 9, 29, 0.48) 100%);
+}
+
+/* ── Interaction layer (must stay above all decoration) ── */
+
+#home-screen.landing-v3 .arena-orb,
+#home-screen.landing-v3 .table-glow,
+#home-screen.landing-v3::before,
+#home-screen.landing-v3::after,
+#home-screen.landing-v3 .hero-art,
+#home-screen.landing-v3 .hero-radial-glow,
+#home-screen.landing-v3 .hero-particles,
+#home-screen.landing-v3 .flying-cards,
+#home-screen.landing-v3 .hero-card,
+#home-screen.landing-v3 .hero-stage::before,
+#home-screen.landing-v3 .hero-stage::after,
+#home-screen.landing-v3 .player-panel.table-select::before,
+#home-screen.landing-v3 .player-panel.table-select::after {
+  pointer-events: none !important;
+}
+
+#home-screen.landing-v3 .home-topbar,
+#home-screen.landing-v3 .hero-stage,
+#home-screen.landing-v3 .cta-zone,
+#home-screen.landing-v3 .quick-actions,
+#home-screen.landing-v3 .player-panel,
+#home-screen.landing-v3 .landing-v3-footer,
+#home-screen.landing-v3 .room-recovery-card {
+  position: relative;
+  z-index: 100 !important;
+  pointer-events: auto !important;
+}
+
+#home-screen.landing-v3 .play-now,
+#home-screen.landing-v3 .menu-card,
+#home-screen.landing-v3 .player-option,
+#home-screen.landing-v3 .settings-pill,
+#home-screen.landing-v3 .brand-pill,
+#home-screen.landing-v3 .live-pill,
+#home-screen.landing-v3 .room-recovery-card button,
+#home-screen.landing-v3 .landing-v3-footer a {
+  position: relative;
+  z-index: 101 !important;
+  pointer-events: auto !important;
 }
 
 #home-screen.landing-v3 .arena-orb,
 #home-screen.landing-v3 .table-glow {
   opacity: 0.35;
   filter: blur(40px);
+  pointer-events: none !important;
+  z-index: 0 !important;
 }
 
 #home-screen.landing-v3 .orb-one {
@@ -111,7 +156,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.14),
     inset 0 -1px 0 rgba(0, 0, 0, 0.22);
   position: relative;
-  z-index: 10;
+  z-index: 100 !important;
   overflow: hidden;
 }
 
@@ -215,36 +260,41 @@
 #home-screen.landing-v3 .hero-stage {
   grid-area: v3-hero;
   position: relative;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  min-height: clamp(160px, 24dvh, 280px);
-  max-height: min(340px, 38dvh);
-  padding: 12px 8px 8px;
-  overflow: visible;
-  text-align: center;
-  z-index: 5;
-  isolation: isolate;
-}
-
-#home-screen.landing-v3 .hero-brand {
-  position: relative;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(4px, 0.5dvh, 8px);
-  width: min(62vw, 420px);
+  gap: clamp(2px, 0.4dvh, 6px);
+  min-height: 0;
+  max-height: none;
+  padding: 4px 8px 0;
+  overflow: hidden;
+  text-align: center;
+  z-index: 100;
+}
+
+#home-screen.landing-v3 .hero-brand {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(3px, 0.45dvh, 6px);
+  width: min(88vw, 340px);
   margin: 0 auto;
+  pointer-events: none;
 }
 
 #home-screen.landing-v3 .hero-art {
   position: relative;
-  width: min(92vw, 360px);
-  height: clamp(108px, 15dvh, 128px);
+  flex: 0 0 auto;
+  width: min(92vw, 340px);
+  height: clamp(88px, 12dvh, 108px);
   margin: 0 auto;
-  z-index: 1;
+  z-index: 0;
+  pointer-events: none;
 }
 
 #home-screen.landing-v3 .hero-art .hero-radial-glow,
@@ -252,6 +302,15 @@
 #home-screen.landing-v3 .hero-art .flying-cards {
   position: absolute;
   inset: 0;
+  pointer-events: none;
+}
+
+#home-screen.landing-v3 .hero-art .flying-cards {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(4px, 1.5vw, 10px);
+  padding: 0 4px 2px;
 }
 
 #home-screen.landing-v3 .hero-art .hero-radial-glow {
@@ -355,19 +414,25 @@
 #home-screen.landing-v3 .flying-cards {
   position: relative;
   width: min(92vw, 380px);
-  height: clamp(96px, 14vh, 120px);
-  margin: 0 auto -28px;
-  z-index: 1;
+  height: clamp(88px, 12dvh, 108px);
+  margin: 0 auto;
+  z-index: 0;
+  pointer-events: none;
   animation: none;
 }
 
 #home-screen.landing-v3 .hero-card {
-  position: absolute;
-  bottom: 0;
-  width: clamp(64px, 18vw, 82px);
-  height: clamp(88px, 24vw, 112px);
-  border-radius: 16px;
-  padding: 8px 10px;
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  flex: 0 0 auto;
+  width: clamp(58px, 15vw, 76px);
+  height: auto;
+  aspect-ratio: 66 / 88;
+  border-radius: 14px;
+  padding: 7px 8px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -375,11 +440,11 @@
   background: linear-gradient(165deg, #ffffff 0%, #faf8f5 100%);
   color: var(--v3-card-black);
   box-shadow:
-    0 14px 28px rgba(0, 0, 0, 0.38),
-    0 4px 10px rgba(0, 0, 0, 0.18),
+    0 10px 20px rgba(0, 0, 0, 0.34),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  transform-origin: 50% 90%;
-  animation: v3CardFloat 5s ease-in-out infinite;
+  transform-origin: 50% 100%;
+  animation: none !important;
+  pointer-events: none !important;
 }
 
 #home-screen.landing-v3 .hero-card span {
@@ -393,55 +458,34 @@
 }
 
 #home-screen.landing-v3 .card-a {
-  left: 8%;
-  transform: rotate(-12deg);
-  animation-delay: 0s;
-  animation-duration: 5s;
+  transform: rotate(-12deg) translateY(4px);
   z-index: 1;
   color: var(--v3-card-red);
-  box-shadow:
-    0 14px 28px rgba(0, 0, 0, 0.38),
-    0 0 22px rgba(217, 77, 121, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 #home-screen.landing-v3 .card-b {
-  left: 50%;
-  transform: translateX(-50%) rotate(0deg);
-  animation-delay: 0.8s;
-  animation-duration: 5.8s;
+  transform: translateY(-6px);
   z-index: 2;
+  width: clamp(62px, 16vw, 80px);
   color: var(--v3-card-red);
-  box-shadow:
-    0 16px 32px rgba(0, 0, 0, 0.4),
-    0 0 24px rgba(217, 77, 121, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 #home-screen.landing-v3 .card-c {
-  right: 8%;
-  left: auto;
-  transform: rotate(12deg);
-  animation-delay: 1.6s;
-  animation-duration: 6.4s;
+  transform: rotate(12deg) translateY(4px);
   z-index: 1;
   color: var(--v3-card-black);
-  box-shadow:
-    0 14px 28px rgba(0, 0, 0, 0.38),
-    0 0 18px rgba(23, 39, 51, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 #home-screen.landing-v3 .hero-stage h1 {
   position: relative;
-  z-index: 3;
+  z-index: 1;
   margin: 0;
-  width: clamp(58%, 62vw, 68%);
-  max-width: 420px;
-  font-size: clamp(2.8rem, 14vw, 4.2rem);
+  width: 100%;
+  max-width: 100%;
+  font-size: clamp(2.75rem, 13.5vw, 3.75rem);
   font-weight: 1000;
   letter-spacing: -0.04em;
-  line-height: 0.9;
+  line-height: 0.88;
   color: var(--v3-text);
   text-shadow:
     0 1px 0 rgba(180, 100, 0, 0.35),
@@ -449,7 +493,8 @@
     0 3px 0 rgba(100, 56, 0, 0.22),
     0 0 42px rgba(255, 200, 61, 0.38),
     0 4px 16px rgba(0, 0, 0, 0.45);
-  animation: v3LogoGlow 5s ease-in-out infinite;
+  animation: none;
+  pointer-events: none;
 }
 
 #home-screen.landing-v3 .hero-stage h1 span.logo-accent {
@@ -485,9 +530,10 @@
   place-items: center;
   gap: 0;
   margin-top: 0;
-  padding: 0 0 4px;
+  padding: 0;
   position: relative;
-  z-index: 8;
+  z-index: 100 !important;
+  pointer-events: auto !important;
 }
 
 #home-screen.landing-v3 .play-now {
@@ -565,7 +611,8 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   position: relative;
-  z-index: 6;
+  z-index: 100 !important;
+  pointer-events: auto !important;
 }
 
 #home-screen.landing-v3 .quick-actions .menu-card {
@@ -1232,11 +1279,11 @@
 
   #home-screen.landing-v3 {
     --v3-mobile-inset: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
-    --v3-mobile-gap: clamp(5px, 0.85dvh, 8px);
-    --v3-row-header: clamp(64px, 9dvh, 72px);
-    --v3-row-hero: clamp(210px, 28dvh, 230px);
-    --v3-row-play: clamp(58px, 8dvh, 64px);
-    --v3-row-actions: clamp(66px, 9dvh, 70px);
+    --v3-mobile-gap: clamp(4px, 0.75dvh, 7px);
+    --v3-row-header: clamp(58px, 8dvh, 68px);
+    --v3-row-hero: minmax(168px, 24dvh);
+    --v3-row-play: clamp(56px, 7.5dvh, 62px);
+    --v3-row-actions: clamp(62px, 8.5dvh, 68px);
 
     width: 100%;
     max-width: 100%;
@@ -1247,7 +1294,7 @@
     padding:
       max(4px, env(safe-area-inset-top))
       var(--v3-mobile-inset)
-      0
+      max(2px, env(safe-area-inset-bottom))
       var(--v3-mobile-inset);
     overflow: hidden !important;
     grid-template-areas:
@@ -1337,146 +1384,79 @@
 
   /* ── 2. Hero ── */
   #home-screen.landing-v3 .hero-stage {
-    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: var(--v3-row-hero);
-    min-height: var(--v3-row-hero);
-    max-height: var(--v3-row-hero);
-    margin-bottom: 0;
-    padding: 2px 0 0;
-    overflow: visible;
-    gap: 0;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    gap: clamp(2px, 0.35dvh, 4px);
   }
 
   #home-screen.landing-v3 .hero-art {
-    position: relative;
-    width: min(100%, 340px);
-    height: clamp(112px, 15.5dvh, 128px);
-    flex: 0 0 auto;
-    margin: 0 auto;
-    z-index: 1;
+    width: min(100%, 320px);
+    height: clamp(82px, 11dvh, 96px);
   }
 
   #home-screen.landing-v3 .hero-art .hero-radial-glow {
-    position: absolute;
     left: 50%;
-    top: 58%;
+    top: 62%;
     transform: translate(-50%, -50%);
     width: 108%;
-    height: 138%;
-    inset: auto;
+    height: 130%;
     opacity: 1;
     background:
-      radial-gradient(circle, rgba(108, 63, 209, 0.88) 0%, rgba(108, 63, 209, 0.52) 22%, rgba(78, 43, 168, 0.22) 48%, transparent 76%);
-  }
-
-  #home-screen.landing-v3 .hero-art .hero-radial-glow::after {
-    left: 6%;
-    right: 6%;
-    bottom: 8%;
-    height: 46%;
-    background: radial-gradient(ellipse, rgba(255, 200, 61, 0.62) 0%, rgba(255, 159, 26, 0.22) 42%, transparent 76%);
-  }
-
-  #home-screen.landing-v3 .hero-art .hero-particles {
-    opacity: 0.4;
+      radial-gradient(circle, rgba(108, 63, 209, 0.82) 0%, rgba(108, 63, 209, 0.46) 24%, rgba(78, 43, 168, 0.18) 50%, transparent 76%);
   }
 
   #home-screen.landing-v3 .hero-art .flying-cards {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    z-index: 2;
-    pointer-events: none;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(2px, 1vw, 8px);
+    padding: 0 2px 1px;
   }
 
   #home-screen.landing-v3 .hero-card {
-    position: absolute;
-    top: auto;
-    bottom: 0;
-    height: auto;
-    aspect-ratio: 66 / 88;
-    padding: 8px 9px;
-    border-radius: 15px;
-    animation: none !important;
-    z-index: 2;
-    box-shadow:
-      0 12px 24px rgba(0, 0, 0, 0.36),
-      0 0 18px rgba(255, 200, 61, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    position: relative;
+    width: clamp(54px, 14vw, 70px);
+    padding: 6px 7px;
+    border-radius: 13px;
   }
 
   #home-screen.landing-v3 .hero-card span {
-    font-size: clamp(1.4rem, 4.6vw, 1.9rem);
+    font-size: clamp(1.2rem, 4vw, 1.55rem);
   }
 
   #home-screen.landing-v3 .hero-card strong {
-    font-size: clamp(0.82rem, 2.5vw, 0.98rem);
-  }
-
-  #home-screen.landing-v3 .card-a {
-    left: 7%;
-    right: auto;
-    width: clamp(72px, 18vw, 94px);
-    transform: rotate(-14deg);
-    z-index: 2;
+    font-size: clamp(0.72rem, 2.2vw, 0.88rem);
   }
 
   #home-screen.landing-v3 .card-b {
-    left: 50%;
-    bottom: 6px;
-    right: auto;
-    width: clamp(78px, 19vw, 100px);
-    transform: translateX(-50%) rotate(-1deg);
-    z-index: 3;
-  }
-
-  #home-screen.landing-v3 .card-c {
-    right: 7%;
-    left: auto;
-    width: clamp(72px, 18vw, 94px);
-    transform: rotate(14deg);
-    z-index: 2;
+    width: clamp(58px, 15vw, 74px);
+    transform: translateY(-4px);
   }
 
   #home-screen.landing-v3 .hero-brand {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
-    flex: 0 0 auto;
-    z-index: 4;
-    width: min(92vw, 340px);
-    margin: -8px auto 0;
-    gap: clamp(3px, 0.5dvh, 5px);
+    width: min(90vw, 320px);
+    margin: 0;
+    gap: clamp(2px, 0.35dvh, 4px);
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
-    position: relative;
-    z-index: 4;
-    width: 100%;
-    max-width: 100%;
-    font-size: clamp(2.85rem, 14.5vw, 3.55rem);
-    margin: 0;
+    font-size: clamp(2.55rem, 12.8vw, 3.2rem);
     line-height: 0.88;
-    text-shadow:
-      0 1px 0 rgba(180, 100, 0, 0.38),
-      0 2px 0 rgba(140, 78, 0, 0.3),
-      0 3px 0 rgba(100, 56, 0, 0.24),
-      0 0 44px rgba(255, 200, 61, 0.42),
-      0 4px 14px rgba(0, 0, 0, 0.42);
   }
 
   #home-screen.landing-v3 .hero-kicker {
-    position: relative;
-    z-index: 4;
     margin: 0;
-    font-size: clamp(0.56rem, 2.3vw, 0.66rem);
+    font-size: clamp(0.54rem, 2.15vw, 0.62rem);
     letter-spacing: 0.14em;
     color: var(--v3-gold);
   }
@@ -1591,17 +1571,17 @@
   #home-screen.landing-v3 .player-panel.table-select {
     position: relative;
     display: grid;
-    grid-template-rows: auto auto;
-    gap: 6px;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 5px;
     height: 100%;
     min-height: 0;
-    align-self: end;
+    align-self: stretch;
     margin-top: 0;
     margin-left: calc(-1 * var(--v3-mobile-inset));
     margin-right: calc(-1 * var(--v3-mobile-inset));
     width: calc(100% + var(--v3-mobile-inset) + var(--v3-mobile-inset));
-    padding: 8px 12px 10px;
-    border-radius: 20px 20px 0 0;
+    padding: 7px 12px 8px;
+    border-radius: 18px 18px 0 0;
     border: 1px solid rgba(108, 63, 209, 0.35);
     border-bottom: 0;
     background:
@@ -1612,6 +1592,8 @@
       0 -4px 24px rgba(108, 63, 209, 0.12);
     overflow: hidden;
     isolation: isolate;
+    z-index: 100 !important;
+    pointer-events: auto !important;
   }
 
   #home-screen.landing-v3 .player-panel.table-select::before {
@@ -1668,34 +1650,36 @@
     color: var(--v3-text);
   }
 
-  #home-screen.landing-v3 .mode-carousel {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    min-height: 0;
-    height: auto;
-    padding: 0;
-    margin: 0;
-    overflow: visible;
-  }
-
   #home-screen.landing-v3 .player-options {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: clamp(5px, 1.5vw, 7px);
     width: 100%;
-    height: auto;
+    height: 100%;
     min-height: 0;
     max-height: none;
     align-self: stretch;
   }
 
+  #home-screen.landing-v3 .mode-carousel {
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+  }
+
   #home-screen.landing-v3 .player-option.mode-card {
     gap: 3px;
-    min-height: clamp(130px, 18dvh, 150px);
-    height: auto;
-    padding: 8px 5px 7px;
-    border-radius: 15px;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    padding: 7px 5px 6px;
+    border-radius: 14px;
   }
 
   #home-screen.landing-v3 .mode-icon {
@@ -1780,146 +1764,67 @@
 
 @media (max-width: 639px) and (max-height: 700px) {
   #home-screen.landing-v3 {
-    --v3-mobile-gap: clamp(4px, 0.7dvh, 6px);
-    --v3-row-header: clamp(60px, 8.5dvh, 68px);
-    --v3-row-hero: clamp(196px, 26dvh, 218px);
-    --v3-row-play: 58px;
-    --v3-row-actions: 64px;
+    --v3-mobile-gap: 4px;
+    --v3-row-header: 56px;
+    --v3-row-hero: minmax(156px, 22dvh);
+    --v3-row-play: 54px;
+    --v3-row-actions: 60px;
   }
 
   #home-screen.landing-v3 .hero-art {
-    height: clamp(100px, 14dvh, 114px);
-  }
-
-  #home-screen.landing-v3 .hero-brand {
-    width: min(88vw, 300px);
-    margin-top: -6px;
+    height: clamp(76px, 10dvh, 88px);
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
-    font-size: clamp(2.45rem, 12.5vw, 3rem) !important;
+    font-size: clamp(2.35rem, 12vw, 2.85rem) !important;
   }
 
   #home-screen.landing-v3 .hero-kicker {
-    font-size: clamp(0.52rem, 2.1vw, 0.6rem) !important;
-    margin-top: 0 !important;
-  }
-
-  #home-screen.landing-v3 .hero-art .flying-cards {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    margin: 0 !important;
+    font-size: clamp(0.5rem, 2vw, 0.58rem) !important;
   }
 
   #home-screen.landing-v3 .hero-card {
-    position: absolute !important;
-    top: auto !important;
-    bottom: 0 !important;
-    height: auto !important;
-    aspect-ratio: 66 / 88 !important;
-    padding: 7px 8px !important;
+    width: clamp(50px, 13vw, 64px) !important;
     animation: none !important;
-  }
-
-  #home-screen.landing-v3 .card-a,
-  #home-screen.landing-v3 .card-c {
-    width: clamp(64px, 16vw, 82px) !important;
+    pointer-events: none !important;
   }
 
   #home-screen.landing-v3 .card-b {
-    width: clamp(68px, 17vw, 86px) !important;
-    bottom: 4px !important;
-  }
-
-  #home-screen.landing-v3 .hero-card span {
-    font-size: clamp(1.22rem, 3.8vw, 1.58rem) !important;
-  }
-
-  #home-screen.landing-v3 .player-option.mode-card {
-    min-height: clamp(118px, 17dvh, 136px);
-    padding: 6px 4px 5px;
-  }
-
-  #home-screen.landing-v3 .mode-icon {
-    width: clamp(30px, 8.5vw, 36px);
-    height: clamp(30px, 8.5vw, 36px);
+    width: clamp(54px, 14vw, 68px) !important;
   }
 }
 
-/* Override legacy cascade layers on all mobile landing viewports */
+/* Beat legacy cascade + polish layers on landing only */
 @media (max-width: 639px) {
-  #home-screen.landing-v3.hero.casino-home.b2g-home.panel {
-    display: grid !important;
-    grid-template-rows:
-      var(--v3-row-header)
-      var(--v3-row-hero)
-      var(--v3-row-play)
-      var(--v3-row-actions)
-      minmax(0, 1fr)
-      auto !important;
-    gap: var(--v3-mobile-gap) !important;
-    min-height: 100dvh !important;
-    max-height: 100dvh !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
-    border-radius: 0 !important;
-    border: 0 !important;
-    box-shadow: none !important;
+  #home-screen.landing-v3 > *:not(.arena-orb):not(.table-glow) {
+    z-index: 100 !important;
   }
 
-  #home-screen.landing-v3 .flying-cards {
-    height: 100% !important;
-    margin-bottom: 0 !important;
-  }
-
+  #home-screen.landing-v3 .flying-cards,
   #home-screen.landing-v3 .hero-card {
+    z-index: 0 !important;
+    pointer-events: none !important;
     animation: none !important;
   }
 
-  #home-screen.landing-v3 .hero-stage h1 {
-    position: relative !important;
-    z-index: 4 !important;
-  }
-
-  #home-screen.landing-v3 .quick-actions .menu-card {
-    min-height: var(--v3-row-actions) !important;
-    height: var(--v3-row-actions) !important;
-  }
-
-  #home-screen.landing-v3 .quick-actions .menu-card small {
-    display: block !important;
-  }
-
-  #home-screen.landing-v3 .player-option.mode-card {
-    min-height: clamp(118px, 17dvh, 150px) !important;
-  }
-
-  #home-screen.landing-v3 .mode-copy .mode-sub,
-  #home-screen.landing-v3 .mode-copy .mode-meta {
-    display: block !important;
+  #home-screen.landing-v3 .play-now,
+  #home-screen.landing-v3 .menu-card,
+  #home-screen.landing-v3 .player-option,
+  #home-screen.landing-v3 .settings-pill {
+    z-index: 101 !important;
+    pointer-events: auto !important;
   }
 }
 
 @media (max-width: 390px), (max-height: 720px) {
-  #home-screen.landing-v3 .flying-cards {
-    height: 100% !important;
-    margin-bottom: 0 !important;
-  }
-
+  #home-screen.landing-v3 .flying-cards,
   #home-screen.landing-v3 .hero-card {
-    width: auto !important;
-    height: auto !important;
+    pointer-events: none !important;
     animation: none !important;
   }
 
   #home-screen.landing-v3 .quick-actions .menu-card small {
     display: block !important;
-  }
-
-  #home-screen.landing-v3 .player-option.mode-card {
-    min-height: clamp(110px, 16dvh, 140px) !important;
   }
 }
 
