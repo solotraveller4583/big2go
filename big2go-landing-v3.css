@@ -974,10 +974,12 @@
     padding: 0;
     gap: 0;
     overflow: hidden;
+    place-items: start;
+    align-content: start;
   }
 
   #home-screen.landing-v3 {
-    --v3-mobile-gap: 8px;
+    --v3-mobile-gap: 10px;
     --v3-mobile-hero: clamp(165px, 24vh, 210px);
     --v3-mobile-topbar: clamp(54px, 7vh, 58px);
     --v3-mobile-play: 60px;
@@ -1001,9 +1003,10 @@
       var(--v3-mobile-hero)
       auto
       var(--v3-mobile-actions)
-      minmax(0, 1fr)
+      auto
       minmax(22px, 26px);
-    align-content: stretch;
+    align-content: start;
+    justify-content: flex-start;
   }
 
   #home-screen.landing-v3:has(#room-recovery-card:not(.hidden)) {
@@ -1014,7 +1017,7 @@
       auto
       auto
       var(--v3-mobile-actions)
-      minmax(0, 1fr)
+      auto
       minmax(0, 0px);
   }
 
@@ -1196,8 +1199,9 @@
   #home-screen.landing-v3 .player-panel.table-select {
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    gap: 6px;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-top: 4px;
     min-height: 0;
     overflow: hidden;
   }
