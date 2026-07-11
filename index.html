@@ -35,10 +35,12 @@
   <link rel="stylesheet" href="big2go-coins.css?v=2" />
   <link rel="stylesheet" href="big2go-mobile-redesign.css?v=8" />
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=2" />
+  <link rel="stylesheet" href="big2go-landing-v3.css?v=1" />
+  <link rel="stylesheet" href="big2go-gameplay-premium.css?v=2" />
 </head>
 <body>
   <main class="app-shell">
-    <section class="panel hero casino-home b2g-home" id="home-screen" aria-label="Big2Go home screen">
+    <section class="panel hero casino-home b2g-home landing-v3" id="home-screen" aria-label="Big2Go home screen">
       <div class="arena-orb orb-one" aria-hidden="true"></div>
       <div class="arena-orb orb-two" aria-hidden="true"></div>
       <div class="table-glow" aria-hidden="true"></div>
@@ -49,6 +51,7 @@
           <strong>Big2Go</strong>
         </div>
         <div class="online-pill live-pill" aria-label="Private rooms available">
+          <span class="room-status-dot" aria-hidden="true"></span>
           <strong>ROOM</strong>
           <small>private play</small>
         </div>
@@ -56,6 +59,8 @@
       </header>
 
       <section class="hero-stage" aria-label="Big2Go game intro">
+        <div class="hero-radial-glow" aria-hidden="true"></div>
+        <div class="hero-particles" aria-hidden="true"></div>
         <div class="flying-cards" aria-hidden="true">
           <div class="hero-card card-a"><strong>3</strong><span>♦</span></div>
           <div class="hero-card card-b"><strong>A</strong><span>♥</span></div>
@@ -82,6 +87,13 @@
         </div>
       </section>
 
+      <div class="quick-actions instant-actions" aria-label="Quick actions">
+        <button class="menu-card" id="continue-button"><span>▶</span><strong>CONTINUE</strong><small>Resume</small></button>
+        <button class="menu-card" id="private-room-button"><span>🔐</span><strong>ROOM</strong><small>Create / join</small></button>
+        <button class="menu-card" id="rules-button"><span>?</span><strong>RULES</strong><small>How to play</small></button>
+        <button class="menu-card share-card" id="share-button"><span>↗</span><strong>SHARE</strong><small>Invite</small></button>
+      </div>
+
       <section class="player-panel table-select" aria-label="Choose players">
         <div class="panel-title-row">
           <div>
@@ -89,10 +101,12 @@
             <h2>Match Mode</h2>
           </div>
         </div>
-        <div class="player-options" role="group" aria-label="Number of players">
-          <button class="player-option selected" type="button" data-player-choice="4"><span>👥</span><strong>4P CLASSIC</strong><small>Full table</small><i>✓</i></button>
-          <button class="player-option" type="button" data-player-choice="3"><span>⚡</span><strong>3P FAST</strong><small>Quick</small><i>✓</i></button>
-          <button class="player-option" type="button" data-player-choice="2"><span>⚔️</span><strong>2P DUEL</strong><small>Head-to-head</small><i>✓</i></button>
+        <div class="mode-carousel" role="region" aria-label="Match mode carousel">
+          <div class="player-options" role="group" aria-label="Number of players">
+            <button class="player-option selected" type="button" data-player-choice="4"><span>👥</span><strong>4P CLASSIC</strong><small>Full table</small><i>✓</i></button>
+            <button class="player-option" type="button" data-player-choice="3"><span>⚡</span><strong>3P FAST</strong><small>Quick</small><i>✓</i></button>
+            <button class="player-option" type="button" data-player-choice="2"><span>⚔️</span><strong>2P DUEL</strong><small>Head-to-head</small><i>✓</i></button>
+          </div>
         </div>
         <select id="player-count" class="sr-select" aria-label="Number of players">
           <option value="4" selected>4 players — classic table</option>
@@ -101,15 +115,14 @@
         </select>
       </section>
 
-      <div class="quick-actions instant-actions" aria-label="Quick actions">
-        <button class="menu-card" id="continue-button"><span>▶</span><strong>CONTINUE</strong><small>Resume</small></button>
-        <button class="menu-card" id="private-room-button"><span>🔐</span><strong>ROOM</strong><small>Create / join</small></button>
-        <button class="menu-card" id="rules-button"><span>?</span><strong>RULES</strong><small>How to play</small></button>
-        <button class="menu-card share-card" id="share-button"><span>↗</span><strong>SHARE</strong><small>Invite</small></button>
-      </div>
+      <footer class="landing-v3-footer" aria-label="Big2Go information">
+        <span>Big2Go</span>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </footer>
     </section>
 
-    <section class="panel game-screen hidden b2g-match" id="game-screen" aria-label="Big2Go table">
+    <section class="panel game-screen hidden b2g-match gameplay-premium" id="game-screen" aria-label="Big2Go table">
       <header class="match-topbar">
         <button class="icon-button" id="back-button" aria-label="Back to menu">‹</button>
         <div class="match-title">
@@ -162,6 +175,11 @@
       <div id="remote-audio" class="remote-audio" aria-hidden="true"></div>
 
       <section class="table-arena" aria-label="Current trick">
+        <div class="table-stage-fx" aria-hidden="true">
+          <div class="table-felt-glow"></div>
+          <div class="table-rim-light"></div>
+        </div>
+        <span class="table-room-id" id="table-room-id" aria-live="polite"></span>
         <div class="prize-pool" id="prize-pool" aria-label="Virtual prize pool"><small>Prize Pool</small><strong>🪙 <span id="prize-pool-value">0</span></strong></div>
         <div class="arena-header">
           <div>

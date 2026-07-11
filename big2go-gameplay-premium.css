@@ -1,0 +1,796 @@
+/* Big2Go Gameplay Premium — Clash Royale × UNO Mobile × Marvel Snap */
+
+#game-screen.gameplay-premium:not(.hidden) {
+  --gp-bg: #07091D;
+  --gp-surface: #151044;
+  --gp-purple: #4E2BA8;
+  --gp-purple-bright: #6C3FD1;
+  --gp-gold: #FFC83D;
+  --gp-gold-mid: #FF9F1A;
+  --gp-gold-dark: #D97800;
+  --gp-text: #FFFFFF;
+  --gp-soft: #D9D8EF;
+  --gp-muted: #9E9ABF;
+  --gp-green: #36D17E;
+  --gp-felt: #0f2a4a;
+
+  width: min(100vw, 430px) !important;
+  max-width: 430px !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  margin: 0 auto !important;
+  padding: max(6px, env(safe-area-inset-top)) 10px max(6px, env(safe-area-inset-bottom)) !important;
+  display: grid !important;
+  gap: 6px !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background:
+    radial-gradient(ellipse 120% 70% at 50% 0%, rgba(108, 63, 209, 0.2), transparent 55%),
+    linear-gradient(180deg, #0D1030 0%, var(--gp-bg) 100%) !important;
+  box-shadow: none !important;
+}
+
+/* Solo stack — ~40% tighter center column vs prior layout */
+#game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel.hidden) {
+  grid-template-rows: 46px 68px minmax(108px, 0.58fr) 26px minmax(112px, 22dvh) 90px !important;
+  gap: 5px !important;
+}
+
+/* Room stack */
+#game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel:not(.hidden)) {
+  grid-template-rows: 46px 68px 40px minmax(100px, 0.52fr) 26px minmax(108px, 20dvh) 90px !important;
+  gap: 5px !important;
+}
+
+#game-screen.gameplay-premium:not(.hidden) > * {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+#game-screen.gameplay-premium .match-hud,
+#game-screen.gameplay-premium .momentum-card,
+#game-screen.gameplay-premium .match-log,
+#game-screen.gameplay-premium .remote-audio {
+  display: none !important;
+}
+
+/* ── Top bar ── */
+#game-screen.gameplay-premium .match-topbar {
+  min-height: 46px !important;
+  height: 46px !important;
+  padding: 0 !important;
+  display: grid !important;
+  grid-template-columns: 44px 1fr 88px !important;
+  gap: 8px !important;
+  align-items: center !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(108, 63, 209, 0.35) !important;
+  background: rgba(21, 16, 68, 0.82) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 6px 18px rgba(0, 0, 0, 0.28) !important;
+}
+
+#game-screen.gameplay-premium .icon-button {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(108, 63, 209, 0.4) !important;
+  background: linear-gradient(180deg, rgba(108, 63, 209, 0.35), rgba(21, 16, 68, 0.9)) !important;
+  color: var(--gp-soft) !important;
+  font-size: 22px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 10px rgba(0, 0, 0, 0.22) !important;
+}
+
+#game-screen.gameplay-premium .match-topbar #sound-button {
+  display: none !important;
+}
+
+#game-screen.gameplay-premium .match-title {
+  min-width: 0 !important;
+  text-align: center !important;
+}
+
+#game-screen.gameplay-premium .match-title .eyebrow {
+  margin: 0 !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: var(--gp-gold) !important;
+  line-height: 1 !important;
+  text-shadow: 0 0 12px rgba(255, 200, 61, 0.35) !important;
+}
+
+#game-screen.gameplay-premium .match-title h2 {
+  margin: 2px 0 0 !important;
+  font-size: 17px !important;
+  font-weight: 1000 !important;
+  line-height: 1.05 !important;
+  color: var(--gp-text) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#game-screen.gameplay-premium .header-subtitle {
+  display: none !important;
+}
+
+#game-screen.gameplay-premium .coin-wallet {
+  width: 88px !important;
+  min-width: 88px !important;
+  height: 44px !important;
+  padding: 4px 8px !important;
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  grid-template-rows: auto auto !important;
+  align-items: center !important;
+  column-gap: 5px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 200, 61, 0.4) !important;
+  background: linear-gradient(180deg, rgba(255, 200, 61, 0.18), rgba(21, 16, 68, 0.92)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 4px 12px rgba(0, 0, 0, 0.24) !important;
+}
+
+#game-screen.gameplay-premium .coin-wallet span {
+  grid-row: 1 / 3 !important;
+  font-size: 18px !important;
+}
+
+#game-screen.gameplay-premium .coin-wallet strong {
+  font-size: 16px !important;
+  color: var(--gp-gold) !important;
+  line-height: 1 !important;
+}
+
+#game-screen.gameplay-premium .coin-wallet small {
+  font-size: 8px !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--gp-muted) !important;
+  line-height: 1 !important;
+}
+
+/* ── Opponent panels ── */
+#game-screen.gameplay-premium .opponent-rail {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+#game-screen.gameplay-premium .opponent-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+#game-screen.gameplay-premium:has(.room-chat-panel:not(.hidden)) .opponent-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+#game-screen.gameplay-premium .opponent-row {
+  position: relative !important;
+  min-height: 64px !important;
+  padding: 6px 8px 6px 6px !important;
+  display: grid !important;
+  grid-template-columns: 38px 1fr auto !important;
+  grid-template-rows: 1fr !important;
+  align-items: center !important;
+  gap: 0 6px !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(108, 63, 209, 0.35) !important;
+  background: linear-gradient(165deg, rgba(21, 16, 68, 0.96), rgba(13, 16, 48, 0.98)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 6px 14px rgba(0, 0, 0, 0.26) !important;
+  overflow: hidden !important;
+}
+
+#game-screen.gameplay-premium .opponent-row::before {
+  display: none !important;
+}
+
+#game-screen.gameplay-premium .opponent-row.current {
+  border-color: rgba(255, 200, 61, 0.75) !important;
+  background: linear-gradient(165deg, rgba(78, 43, 168, 0.45), rgba(21, 16, 68, 0.96)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 20px rgba(255, 200, 61, 0.22),
+    0 8px 18px rgba(0, 0, 0, 0.28) !important;
+  transform: translateY(-2px) !important;
+}
+
+#game-screen.gameplay-premium .opponent-row.self {
+  border-color: rgba(108, 63, 209, 0.65) !important;
+}
+
+#game-screen.gameplay-premium .opponent-row.disconnected {
+  opacity: 0.72 !important;
+  border-color: rgba(255, 107, 107, 0.45) !important;
+}
+
+#game-screen.gameplay-premium .opponent-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 14px !important;
+  font-weight: 1000 !important;
+  color: var(--gp-gold) !important;
+  background: linear-gradient(145deg, var(--gp-purple-bright), var(--gp-purple)) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.22),
+    0 4px 10px rgba(0, 0, 0, 0.28) !important;
+  border: 2px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+#game-screen.gameplay-premium .opponent-stack {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 2px !important;
+}
+
+#game-screen.gameplay-premium .opponent-name {
+  margin: 0 !important;
+  font-size: 11px !important;
+  font-weight: 1000 !important;
+  line-height: 1.1 !important;
+  color: var(--gp-text) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#game-screen.gameplay-premium .opponent-stats {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 4px 6px !important;
+  align-items: center !important;
+}
+
+#game-screen.gameplay-premium .opponent-coins {
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  color: var(--gp-gold) !important;
+  line-height: 1 !important;
+}
+
+#game-screen.gameplay-premium .opponent-cards {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  color: var(--gp-muted) !important;
+  line-height: 1 !important;
+}
+
+#game-screen.gameplay-premium .opponent-online {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: var(--gp-green) !important;
+  box-shadow: 0 0 8px rgba(54, 209, 126, 0.55) !important;
+  flex-shrink: 0 !important;
+}
+
+#game-screen.gameplay-premium .opponent-row.disconnected .opponent-online {
+  background: #ff6b6b !important;
+  box-shadow: 0 0 8px rgba(255, 107, 107, 0.45) !important;
+}
+
+#game-screen.gameplay-premium .opponent-row.finished .opponent-cards {
+  color: var(--gp-gold-mid) !important;
+}
+
+/* ── Table arena (Snap-style play zone) ── */
+#game-screen.gameplay-premium .table-arena {
+  position: relative !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 8px 10px 8px !important;
+  display: grid !important;
+  grid-template-rows: 22px minmax(0, 1fr) 28px !important;
+  gap: 4px !important;
+  border-radius: 22px !important;
+  border: 2px solid rgba(108, 63, 209, 0.45) !important;
+  background:
+    radial-gradient(ellipse 88% 72% at 50% 58%, rgba(255, 200, 61, 0.14), transparent 48%),
+    radial-gradient(ellipse 95% 80% at 50% 52%, rgba(15, 80, 120, 0.55), rgba(8, 30, 58, 0.92) 58%, rgba(5, 12, 32, 0.98) 100%) !important;
+  box-shadow:
+    inset 0 0 48px rgba(108, 63, 209, 0.22),
+    inset 0 -16px 32px rgba(0, 0, 0, 0.35),
+    0 10px 28px rgba(0, 0, 0, 0.32) !important;
+  overflow: hidden !important;
+}
+
+#game-screen.gameplay-premium .table-stage-fx {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  overflow: hidden !important;
+  border-radius: inherit !important;
+}
+
+#game-screen.gameplay-premium .table-felt-glow {
+  position: absolute !important;
+  inset: 12% 8% 18% !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle, rgba(54, 209, 126, 0.08), transparent 68%) !important;
+  animation: gpTablePulse 5s ease-in-out infinite !important;
+}
+
+#game-screen.gameplay-premium .table-rim-light {
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: inherit !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 18%, transparent 82%, rgba(255, 200, 61, 0.08) 100%) !important;
+}
+
+#game-screen.gameplay-premium .table-room-id {
+  position: absolute !important;
+  top: 8px !important;
+  left: 10px !important;
+  z-index: 4 !important;
+  padding: 3px 8px !important;
+  border-radius: 999px !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--gp-muted) !important;
+  background: rgba(7, 9, 29, 0.72) !important;
+  border: 1px solid rgba(108, 63, 209, 0.35) !important;
+}
+
+#game-screen.gameplay-premium .table-room-id:empty {
+  display: none !important;
+}
+
+#game-screen.gameplay-premium .prize-pool {
+  position: absolute !important;
+  top: 6px !important;
+  right: 8px !important;
+  z-index: 4 !important;
+  min-width: 68px !important;
+  padding: 5px 9px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(255, 200, 61, 0.5) !important;
+  background: linear-gradient(180deg, rgba(255, 200, 61, 0.22), rgba(21, 16, 68, 0.92)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 4px 14px rgba(0, 0, 0, 0.28) !important;
+  text-align: center !important;
+}
+
+#game-screen.gameplay-premium .prize-pool small {
+  display: block !important;
+  font-size: 8px !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--gp-muted) !important;
+}
+
+#game-screen.gameplay-premium .prize-pool strong {
+  font-size: 15px !important;
+  color: var(--gp-gold) !important;
+  line-height: 1.1 !important;
+}
+
+#game-screen.gameplay-premium .arena-header {
+  position: relative !important;
+  z-index: 2 !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  justify-items: center !important;
+  align-items: center !important;
+  min-height: 22px !important;
+}
+
+#game-screen.gameplay-premium .arena-header small,
+#game-screen.gameplay-premium #selected-count {
+  display: none !important;
+}
+
+#game-screen.gameplay-premium .arena-header h2 {
+  margin: 0 !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: var(--gp-soft) !important;
+  text-shadow: 0 0 10px rgba(108, 63, 209, 0.4) !important;
+}
+
+#game-screen.gameplay-premium #trick-play {
+  position: relative !important;
+  z-index: 2 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 6px 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: clamp(3px, 1vw, 6px) !important;
+  border-radius: 50% / 42% !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 50%, rgba(255, 200, 61, 0.12), rgba(78, 43, 168, 0.18) 42%, rgba(5, 10, 28, 0.35) 100%) !important;
+  box-shadow: inset 0 0 32px rgba(255, 255, 255, 0.04) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  overflow: visible !important;
+}
+
+#game-screen.gameplay-premium #trick-play.empty {
+  padding: 10px 16px !important;
+  font-size: 12px !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+#game-screen.gameplay-premium .trick-meta {
+  display: none !important;
+}
+
+#game-screen.gameplay-premium .trick-help {
+  position: relative !important;
+  z-index: 2 !important;
+  min-height: 28px !important;
+  height: 28px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 200, 61, 0.45) !important;
+  background: rgba(7, 9, 29, 0.78) !important;
+  color: var(--gp-gold) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+}
+
+#game-screen.gameplay-premium #trick-play .card-tile {
+  width: clamp(48px, 12vw, 58px) !important;
+  height: clamp(68px, 17vw, 80px) !important;
+  min-width: clamp(48px, 12vw, 58px) !important;
+  flex: 0 0 clamp(48px, 12vw, 58px) !important;
+  border-radius: 12px !important;
+  border: 2px solid rgba(255, 255, 255, 0.92) !important;
+  box-shadow:
+    0 0 0 2px rgba(255, 200, 61, 0.2),
+    0 0 20px rgba(255, 200, 61, 0.28),
+    0 12px 22px rgba(0, 0, 0, 0.4) !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:only-child) .card-tile {
+  width: clamp(64px, 16vw, 78px) !important;
+  height: clamp(90px, 22vw, 108px) !important;
+  min-width: clamp(64px, 16vw, 78px) !important;
+  flex-basis: clamp(64px, 16vw, 78px) !important;
+  transform: translateY(-4px) !important;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.85),
+    0 0 28px rgba(255, 200, 61, 0.38),
+    0 16px 28px rgba(0, 0, 0, 0.45) !important;
+}
+
+#game-screen.gameplay-premium #trick-play .card-tile:nth-child(1) { transform: translateY(2px) rotate(-4deg) !important; }
+#game-screen.gameplay-premium #trick-play .card-tile:nth-child(2) { transform: translateY(-2px) rotate(-1deg) !important; }
+#game-screen.gameplay-premium #trick-play .card-tile:nth-child(3) { transform: translateY(-4px) rotate(0deg) !important; }
+#game-screen.gameplay-premium #trick-play .card-tile:nth-child(4) { transform: translateY(-2px) rotate(1deg) !important; }
+#game-screen.gameplay-premium #trick-play .card-tile:nth-child(5) { transform: translateY(2px) rotate(4deg) !important; }
+
+/* ── Reactions (compact) ── */
+#game-screen.gameplay-premium .reaction-row {
+  height: 26px !important;
+  min-height: 26px !important;
+  margin: 0 !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 6px !important;
+}
+
+#game-screen.gameplay-premium .reaction-row button {
+  min-height: 26px !important;
+  height: 26px !important;
+  padding: 0 4px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(108, 63, 209, 0.35) !important;
+  background: rgba(21, 16, 68, 0.88) !important;
+  color: var(--gp-soft) !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── Hand — responsive fit fan (13 cards, no horizontal scroll) ── */
+#game-screen.gameplay-premium .hand-card {
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 6px 8px 4px !important;
+  display: grid !important;
+  grid-template-rows: 18px minmax(0, 1fr) !important;
+  gap: 4px !important;
+  border-radius: 18px 18px 0 0 !important;
+  border: 1px solid rgba(108, 63, 209, 0.3) !important;
+  border-bottom: 0 !important;
+  background: linear-gradient(180deg, rgba(21, 16, 68, 0.92), rgba(13, 16, 48, 0.96)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 -8px 24px rgba(0, 0, 0, 0.28) !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+#game-screen.gameplay-premium .hand-head {
+  padding: 0 4px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+#game-screen.gameplay-premium .hand-head h2 {
+  margin: 0 !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--gp-muted) !important;
+}
+
+#game-screen.gameplay-premium .hand-head h2::after {
+  content: ' (' attr(data-count) ')' !important;
+  color: var(--gp-gold) !important;
+}
+
+#game-screen.gameplay-premium .hand-head p {
+  display: none !important;
+}
+
+#game-screen.gameplay-premium #hand {
+  --hand-pad-x: 12px;
+  --hand-inner: calc(100% - 2 * var(--hand-pad-x));
+  --overlap-ratio: 0.52;
+  --card-w: min(50px, calc(var(--hand-inner) / (1 + 12 * (1 - var(--overlap-ratio)))));
+
+  position: relative !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 12px var(--hand-pad-x) 6px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-end !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+  perspective: 900px !important;
+  border-radius: 16px !important;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 100%, rgba(108, 63, 209, 0.18), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)) !important;
+}
+
+#game-screen.gameplay-premium #hand .card-tile {
+  --fan-i: 0;
+  --fan-n: 12;
+  --fan-angle: calc((var(--fan-i) - (var(--fan-n) / 2)) / (var(--fan-n) / 2) * 4deg);
+
+  width: var(--card-w) !important;
+  height: calc(var(--card-w) * 1.38) !important;
+  min-width: var(--card-w) !important;
+  max-width: var(--card-w) !important;
+  flex: 0 0 var(--card-w) !important;
+  margin-left: calc(-1 * var(--overlap-ratio) * var(--card-w)) !important;
+  border-radius: 11px !important;
+  transform-origin: 50% 100% !important;
+  transform: rotate(var(--fan-angle)) !important;
+  z-index: calc(var(--fan-i) + 1) !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.38) !important;
+  transition: transform 160ms ease, box-shadow 160ms ease !important;
+}
+
+#game-screen.gameplay-premium #hand .card-tile:first-child {
+  margin-left: 0 !important;
+}
+
+#game-screen.gameplay-premium #hand .card-tile.selected {
+  transform: rotate(var(--fan-angle)) translateY(-12px) !important;
+  z-index: calc(var(--fan-i) + 2) !important;
+  outline: 2px solid var(--gp-gold) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 200, 61, 0.35),
+    0 0 16px rgba(255, 200, 61, 0.28),
+    0 12px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+#game-screen.gameplay-premium #hand .card-tile:active {
+  transform: rotate(var(--fan-angle)) !important;
+}
+
+#game-screen.gameplay-premium #hand .card-tile.selected:active {
+  transform: rotate(var(--fan-angle)) translateY(-12px) !important;
+}
+
+#game-screen.gameplay-premium #hand .card-rank {
+  font-size: clamp(15px, calc(var(--card-w) * 0.4), 20px) !important;
+  line-height: 0.9 !important;
+}
+
+#game-screen.gameplay-premium #hand .card-suit-small {
+  font-size: clamp(11px, calc(var(--card-w) * 0.3), 15px) !important;
+  line-height: 0.9 !important;
+}
+
+#game-screen.gameplay-premium #hand .card-suit {
+  font-size: clamp(16px, calc(var(--card-w) * 0.46), 22px) !important;
+  opacity: 0.92 !important;
+}
+
+/* ── Action dock — premium mobile controls ── */
+#game-screen.gameplay-premium .action-dock {
+  min-height: 90px !important;
+  height: 90px !important;
+  padding: 0 0 max(2px, env(safe-area-inset-bottom)) !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  grid-template-rows: 38px 46px !important;
+  gap: 6px !important;
+  border: 0 !important;
+  background: linear-gradient(180deg, rgba(13, 16, 48, 0.55), rgba(7, 9, 29, 0.98)) !important;
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.38) !important;
+  z-index: 20 !important;
+}
+
+#game-screen.gameplay-premium .action-dock .secondary {
+  min-height: 0 !important;
+  height: 100% !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(108, 63, 209, 0.45) !important;
+  background: linear-gradient(180deg, rgba(78, 43, 168, 0.35), rgba(21, 16, 68, 0.95)) !important;
+  color: var(--gp-soft) !important;
+  font-size: 12px !important;
+  font-weight: 1000 !important;
+  letter-spacing: 0.02em !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 5px 12px rgba(0, 0, 0, 0.28) !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35) !important;
+}
+
+#game-screen.gameplay-premium .action-dock .secondary:active:not(:disabled) {
+  transform: scale(0.97) !important;
+}
+
+#game-screen.gameplay-premium .pass-action {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+
+#game-screen.gameplay-premium #sort-button {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+}
+
+#game-screen.gameplay-premium #hint-button {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+}
+
+#game-screen.gameplay-premium .play-action {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  min-height: 46px !important;
+  height: 46px !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  font-size: 17px !important;
+  font-weight: 1000 !important;
+  letter-spacing: 0.03em !important;
+  color: #2a1200 !important;
+  background: linear-gradient(180deg, var(--gp-gold) 0%, var(--gp-gold-mid) 55%, var(--gp-gold-dark) 100%) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.5),
+    0 6px 0 #8a4200,
+    0 10px 22px rgba(0, 0, 0, 0.32),
+    0 0 20px rgba(255, 200, 61, 0.22) !important;
+}
+
+#game-screen.gameplay-premium .play-action:disabled {
+  opacity: 0.55 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 3px 0 #6a3500 !important;
+}
+
+#game-screen.gameplay-premium .play-action:active:not(:disabled) {
+  transform: scale(0.98) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    0 3px 0 #8a4200,
+    0 6px 14px rgba(0, 0, 0, 0.28) !important;
+}
+
+#game-screen.gameplay-premium .restart-action {
+  display: none !important;
+}
+
+#game-screen.gameplay-premium .action-dock button:focus-visible {
+  outline: 2px solid var(--gp-gold) !important;
+  outline-offset: 2px !important;
+}
+
+/* ── Room chat / voice (preserve behaviour, match skin) ── */
+#game-screen.gameplay-premium .room-chat-panel.hidden {
+  display: none !important;
+}
+
+#game-screen.gameplay-premium .room-chat-panel:not(.expanded) {
+  min-height: 0 !important;
+  height: 40px !important;
+  padding: 0 !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(108, 63, 209, 0.35) !important;
+  background: rgba(21, 16, 68, 0.88) !important;
+  overflow: hidden !important;
+}
+
+#game-screen.gameplay-premium .voice-panel {
+  position: absolute !important;
+  top: 52px !important;
+  right: 10px !important;
+  z-index: 15 !important;
+}
+
+@keyframes gpTablePulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+@media (max-width: 380px), (max-height: 720px) {
+  #game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel.hidden) {
+    grid-template-rows: 44px 62px minmax(96px, 0.55fr) 24px minmax(104px, 21dvh) 88px !important;
+  }
+
+  #game-screen.gameplay-premium .opponent-row {
+    min-height: 58px !important;
+    padding: 5px 6px 5px 5px !important;
+  }
+
+  #game-screen.gameplay-premium .opponent-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  #game-screen.gameplay-premium #hand {
+    --hand-pad-x: 12px;
+    --overlap-ratio: 0.54;
+    --card-w: min(46px, calc(var(--hand-inner) / (1 + 12 * (1 - var(--overlap-ratio)))));
+  }
+
+  #game-screen.gameplay-premium #hand .card-rank {
+    font-size: clamp(14px, calc(var(--card-w) * 0.38), 17px) !important;
+  }
+
+  #game-screen.gameplay-premium #hand .card-suit-small {
+    font-size: clamp(10px, calc(var(--card-w) * 0.28), 13px) !important;
+  }
+
+  #game-screen.gameplay-premium #hand .card-suit {
+    font-size: clamp(14px, calc(var(--card-w) * 0.42), 18px) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #game-screen.gameplay-premium .table-felt-glow {
+    animation: none !important;
+  }
+
+  #game-screen.gameplay-premium #hand .card-tile {
+    transition: none !important;
+  }
+
+  #game-screen.gameplay-premium .opponent-row.current {
+    transform: none !important;
+  }
+}

@@ -1,0 +1,965 @@
+/* Big2Go Landing Page V3 — Clash Royale + UNO Mobile hybrid lobby */
+
+#home-screen.landing-v3 {
+  --v3-bg-deep: #07091D;
+  --v3-bg-mid: #0D1030;
+  --v3-bg-surface: #151044;
+  --v3-purple: #4E2BA8;
+  --v3-purple-bright: #6C3FD1;
+  --v3-gold: #FFC83D;
+  --v3-gold-mid: #FF9F1A;
+  --v3-gold-dark: #D97800;
+  --v3-text: #FFFFFF;
+  --v3-text-soft: #D9D8EF;
+  --v3-text-muted: #9E9ABF;
+  --v3-green: #36D17E;
+  --v3-card-red: #d94d79;
+  --v3-card-black: #172733;
+
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto auto auto auto auto;
+  gap: 16px;
+  padding: max(8px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  min-height: 100dvh;
+  max-height: none !important;
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 0%, rgba(108, 63, 209, 0.22) 0%, transparent 55%),
+    linear-gradient(180deg, var(--v3-bg-mid) 0%, var(--v3-bg-deep) 100%);
+  box-shadow: none;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+#home-screen.landing-v3::before {
+  display: none !important;
+  content: none !important;
+}
+
+#home-screen.landing-v3::after {
+  content: '' !important;
+  display: block !important;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 95% 88% at 50% 46%, transparent 52%, rgba(7, 9, 29, 0.48) 100%);
+}
+
+#home-screen.landing-v3 .arena-orb,
+#home-screen.landing-v3 .table-glow {
+  opacity: 0.35;
+  filter: blur(40px);
+}
+
+#home-screen.landing-v3 .orb-one {
+  background: radial-gradient(circle, rgba(108, 63, 209, 0.5) 0%, transparent 70%);
+  width: 180px;
+  height: 180px;
+}
+
+#home-screen.landing-v3 .orb-two {
+  background: radial-gradient(circle, rgba(255, 200, 61, 0.25) 0%, transparent 70%);
+  width: 140px;
+  height: 140px;
+}
+
+/* ── 1. Top status bar ── */
+
+#home-screen.landing-v3 .home-topbar.instant-topbar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  max-height: 76px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(108, 63, 209, 0.5);
+  background: linear-gradient(180deg, rgba(21, 16, 68, 0.9) 0%, rgba(13, 16, 48, 0.78) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+}
+
+#home-screen.landing-v3 .home-topbar.instant-topbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 38%);
+  border-radius: inherit;
+}
+
+#home-screen.landing-v3 .home-topbar.instant-topbar > * {
+  position: relative;
+  z-index: 1;
+}
+
+#home-screen.landing-v3 .brand-pill {
+  min-height: 44px;
+  padding: 4px 12px 4px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(108, 63, 209, 0.35);
+  background: rgba(21, 16, 68, 0.85);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 900;
+  color: var(--v3-text);
+}
+
+#home-screen.landing-v3 .profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: -0.04em;
+  color: var(--v3-gold);
+  background: linear-gradient(145deg, var(--v3-purple-bright), var(--v3-purple));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+#home-screen.landing-v3 .live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  min-width: auto;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(54, 209, 126, 0.35);
+  background: rgba(21, 16, 68, 0.88);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+#home-screen.landing-v3 .live-pill small {
+  display: none;
+}
+
+#home-screen.landing-v3 .room-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--v3-green);
+  box-shadow: 0 0 8px rgba(54, 209, 126, 0.65);
+  flex-shrink: 0;
+}
+
+#home-screen.landing-v3 .live-pill strong {
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  color: var(--v3-text-soft);
+}
+
+#home-screen.landing-v3 .settings-pill {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(108, 63, 209, 0.35);
+  background: rgba(21, 16, 68, 0.88);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--v3-text-soft);
+}
+
+#home-screen.landing-v3 .settings-pill:focus-visible,
+#home-screen.landing-v3 .live-pill:focus-visible,
+#home-screen.landing-v3 .brand-pill:focus-visible {
+  outline: 2px solid var(--v3-gold);
+  outline-offset: 2px;
+}
+
+/* ── 2. Hero section ── */
+
+#home-screen.landing-v3 .hero-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-height: max(220px, 30vh);
+  max-height: 340px;
+  padding: 12px 8px 8px;
+  overflow: visible;
+  text-align: center;
+  z-index: 5;
+  isolation: isolate;
+}
+
+#home-screen.landing-v3 .hero-stage::before,
+#home-screen.landing-v3 .hero-stage::after {
+  position: absolute;
+  pointer-events: none;
+  font-size: clamp(2rem, 8vw, 3.2rem);
+  line-height: 1;
+  opacity: 0.045;
+  z-index: 0;
+  text-shadow: 0 0 24px rgba(108, 63, 209, 0.2);
+}
+
+#home-screen.landing-v3 .hero-stage::before {
+  content: '♠';
+  left: 8%;
+  top: 18%;
+  color: var(--v3-text-soft);
+  animation: v3SuitDriftA 26s ease-in-out infinite;
+}
+
+#home-screen.landing-v3 .hero-stage::after {
+  content: '♥';
+  right: 10%;
+  top: 24%;
+  color: var(--v3-card-red);
+  animation: v3SuitDriftB 30s ease-in-out infinite;
+}
+
+#home-screen.landing-v3 .hero-radial-glow {
+  position: absolute;
+  inset: 4% 6% 10%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(108, 63, 209, 0.78) 0%, rgba(108, 63, 209, 0.42) 22%, rgba(78, 43, 168, 0.18) 48%, transparent 74%);
+  pointer-events: none;
+  z-index: 0;
+  animation: v3HeroGlowPulse 8s ease-in-out infinite;
+}
+
+#home-screen.landing-v3 .hero-radial-glow::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 4%;
+  height: 32%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 200, 61, 0.42) 0%, rgba(255, 159, 26, 0.12) 42%, transparent 72%);
+  pointer-events: none;
+}
+
+#home-screen.landing-v3 .hero-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 12% 22%, rgba(255, 200, 61, 0.14) 0 1px, transparent 2px),
+    radial-gradient(circle at 28% 68%, rgba(255, 255, 255, 0.1) 0 1px, transparent 2px),
+    radial-gradient(circle at 48% 14%, rgba(108, 63, 209, 0.16) 0 1px, transparent 2px),
+    radial-gradient(circle at 62% 52%, rgba(255, 255, 255, 0.08) 0 1px, transparent 2px),
+    radial-gradient(circle at 78% 30%, rgba(255, 200, 61, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 88% 72%, rgba(108, 63, 209, 0.14) 0 1px, transparent 2px),
+    radial-gradient(circle at 36% 38%, rgba(255, 255, 255, 0.06) 0 1px, transparent 2px),
+    radial-gradient(circle at 92% 18%, rgba(255, 255, 255, 0.07) 0 1px, transparent 2px);
+  animation: v3ParticleDrift 22s ease-in-out infinite;
+}
+
+#home-screen.landing-v3 .hero-particles::before,
+#home-screen.landing-v3 .hero-particles::after {
+  position: absolute;
+  pointer-events: none;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  line-height: 1;
+  opacity: 0.04;
+  z-index: 0;
+}
+
+#home-screen.landing-v3 .hero-particles::before {
+  content: '♦';
+  left: 22%;
+  bottom: 20%;
+  color: var(--v3-card-red);
+  animation: v3SuitDriftC 28s ease-in-out infinite;
+}
+
+#home-screen.landing-v3 .hero-particles::after {
+  content: '♣';
+  right: 18%;
+  bottom: 16%;
+  color: var(--v3-card-black);
+  animation: v3SuitDriftD 32s ease-in-out infinite;
+}
+
+#home-screen.landing-v3 .flying-cards {
+  position: relative;
+  width: min(92vw, 380px);
+  height: clamp(96px, 14vh, 120px);
+  margin: 0 auto -28px;
+  z-index: 1;
+  animation: none;
+}
+
+#home-screen.landing-v3 .hero-card {
+  position: absolute;
+  bottom: 0;
+  width: clamp(64px, 18vw, 82px);
+  height: clamp(88px, 24vw, 112px);
+  border-radius: 16px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  background: linear-gradient(165deg, #ffffff 0%, #faf8f5 100%);
+  color: var(--v3-card-black);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.38),
+    0 4px 10px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transform-origin: 50% 90%;
+  animation: v3CardFloat 5s ease-in-out infinite;
+}
+
+#home-screen.landing-v3 .hero-card span {
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  line-height: 1;
+}
+
+#home-screen.landing-v3 .hero-card strong {
+  font-size: clamp(0.9rem, 2.8vw, 1.1rem);
+  line-height: 1;
+}
+
+#home-screen.landing-v3 .card-a {
+  left: 8%;
+  transform: rotate(-12deg);
+  animation-delay: 0s;
+  animation-duration: 5s;
+  z-index: 1;
+  color: var(--v3-card-red);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.38),
+    0 0 22px rgba(217, 77, 121, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+#home-screen.landing-v3 .card-b {
+  left: 50%;
+  transform: translateX(-50%) rotate(0deg);
+  animation-delay: 0.8s;
+  animation-duration: 5.8s;
+  z-index: 2;
+  color: var(--v3-card-red);
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.4),
+    0 0 24px rgba(217, 77, 121, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+#home-screen.landing-v3 .card-c {
+  right: 8%;
+  left: auto;
+  transform: rotate(12deg);
+  animation-delay: 1.6s;
+  animation-duration: 6.4s;
+  z-index: 1;
+  color: var(--v3-card-black);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.38),
+    0 0 18px rgba(23, 39, 51, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+#home-screen.landing-v3 .hero-stage h1 {
+  position: relative;
+  z-index: 3;
+  margin: 0;
+  width: clamp(58%, 62vw, 68%);
+  max-width: 420px;
+  font-size: clamp(2.8rem, 14vw, 4.2rem);
+  font-weight: 1000;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  color: var(--v3-text);
+  text-shadow:
+    0 0 40px rgba(108, 63, 209, 0.5),
+    0 2px 0 rgba(217, 120, 0, 0.35),
+    0 4px 16px rgba(0, 0, 0, 0.45);
+  animation: v3LogoGlow 5s ease-in-out infinite;
+}
+
+#home-screen.landing-v3 .hero-stage h1 span {
+  color: var(--v3-gold);
+}
+
+#home-screen.landing-v3 .hero-kicker {
+  position: relative;
+  z-index: 3;
+  margin: 8px 0 0;
+  font-size: clamp(0.68rem, 2.8vw, 0.82rem);
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--v3-gold-mid);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+#home-screen.landing-v3 .hero-promise,
+#home-screen.landing-v3 .cta-zone > p {
+  display: none;
+}
+
+/* ── 3. Play Now button ── */
+
+#home-screen.landing-v3 .cta-zone {
+  display: grid;
+  place-items: center;
+  gap: 0;
+  margin-top: 0;
+  padding: 0 0 4px;
+  position: relative;
+  z-index: 8;
+}
+
+#home-screen.landing-v3 .play-now {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: min(92vw, 90%);
+  max-width: 420px;
+  min-height: 72px;
+  height: clamp(68px, 10vw, 76px);
+  padding: 0 20px 0 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: clamp(1.35rem, 5.5vw, 1.65rem);
+  font-weight: 1000;
+  letter-spacing: 0.04em;
+  color: #2a1200;
+  background:
+    linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.38) 50%, transparent 62%),
+    linear-gradient(180deg, var(--v3-gold) 0%, var(--v3-gold-mid) 55%, var(--v3-gold-dark) 100%);
+  background-size: 220% 100%, 100% 100%;
+  background-position: -120% 0, 0 0;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    0 8px 0 #8a4200,
+    0 14px 28px rgba(0, 0, 0, 0.32);
+  animation: v3PlayIdleGlow 5.5s ease-in-out infinite, v3PlaySweep 5.5s ease-in-out infinite;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+#home-screen.landing-v3 .play-now span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: 4px;
+  border-radius: 50%;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #2a1200;
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+#home-screen.landing-v3 .play-now:active {
+  transform: scale(0.97);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    0 4px 0 #8a4200,
+    0 8px 16px rgba(0, 0, 0, 0.28);
+}
+
+#home-screen.landing-v3 .play-now:focus-visible {
+  outline: 2px solid var(--v3-text);
+  outline-offset: 3px;
+}
+
+/* ── Room recovery (preserved) ── */
+
+#home-screen.landing-v3 .room-recovery-card {
+  margin: 0;
+  border-color: rgba(255, 200, 61, 0.4);
+  background: linear-gradient(135deg, rgba(255, 200, 61, 0.12), rgba(78, 43, 168, 0.18));
+}
+
+/* ── 4. Quick actions ── */
+
+#home-screen.landing-v3 .quick-actions.instant-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  position: relative;
+  z-index: 6;
+}
+
+#home-screen.landing-v3 .quick-actions .menu-card {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  min-height: 80px;
+  padding: 10px 8px;
+  border-radius: 19px;
+  border: 1px solid rgba(108, 63, 209, 0.35);
+  background: linear-gradient(180deg, rgba(21, 16, 68, 0.95) 0%, rgba(13, 16, 48, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 6px 16px rgba(0, 0, 0, 0.28);
+  color: var(--v3-text-soft);
+  transition: transform 140ms ease, border-color 140ms ease;
+}
+
+#home-screen.landing-v3 .quick-actions .menu-card:nth-child(1) {
+  border-color: rgba(255, 200, 61, 0.3);
+}
+
+#home-screen.landing-v3 .quick-actions .menu-card:nth-child(2) {
+  border-color: rgba(108, 63, 209, 0.5);
+}
+
+#home-screen.landing-v3 .quick-actions .menu-card:nth-child(3) {
+  border-color: rgba(154, 148, 191, 0.35);
+}
+
+#home-screen.landing-v3 .quick-actions .menu-card.share-card {
+  border-color: rgba(54, 209, 126, 0.3);
+  background: linear-gradient(180deg, rgba(21, 16, 68, 0.95) 0%, rgba(13, 16, 48, 0.98) 100%);
+}
+
+#home-screen.landing-v3 .quick-actions .menu-card span {
+  font-size: 1.35rem;
+  line-height: 1;
+  filter: none;
+}
+
+#home-screen.landing-v3 .quick-actions .menu-card strong {
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.05em;
+  color: var(--v3-text);
+}
+
+#home-screen.landing-v3 .quick-actions .menu-card small {
+  font-size: 0.58rem;
+  color: var(--v3-text-muted);
+}
+
+#home-screen.landing-v3 .quick-actions .menu-card:focus-visible {
+  outline: 2px solid var(--v3-gold);
+  outline-offset: 2px;
+}
+
+#home-screen.landing-v3 .quick-actions .menu-card:active {
+  transform: scale(0.97);
+}
+
+/* ── 5. Game mode selector ── */
+
+#home-screen.landing-v3 .player-panel.table-select {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 12px;
+}
+
+#home-screen.landing-v3 .panel-title-row {
+  justify-content: center;
+  text-align: center;
+  padding: 0 4px;
+}
+
+#home-screen.landing-v3 .panel-title-row small {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--v3-gold);
+}
+
+#home-screen.landing-v3 .panel-title-row h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 1000;
+  color: var(--v3-text);
+  letter-spacing: -0.02em;
+}
+
+#home-screen.landing-v3 .mode-carousel {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: calc((100% - min(76vw, 320px)) / 2);
+  padding: 8px 0 12px;
+  margin: 0 -14px;
+  scrollbar-width: none;
+}
+
+#home-screen.landing-v3 .mode-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+#home-screen.landing-v3 .player-options {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12px;
+  padding: 4px calc((100% - min(76vw, 320px)) / 2);
+  width: max-content;
+  min-width: 100%;
+}
+
+#home-screen.landing-v3 .player-option {
+  flex: 0 0 min(76vw, 320px);
+  scroll-snap-align: center;
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 2px;
+  min-height: 132px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1.5px solid rgba(78, 43, 168, 0.45);
+  background: linear-gradient(160deg, rgba(21, 16, 68, 0.98) 0%, rgba(13, 16, 48, 1) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 20px rgba(0, 0, 0, 0.25);
+  color: var(--v3-text-soft);
+  text-align: left;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+#home-screen.landing-v3 .player-option span {
+  grid-row: 1 / 3;
+  font-size: 2rem;
+  opacity: 1;
+}
+
+#home-screen.landing-v3 .player-option strong {
+  font-size: 0.82rem;
+  font-weight: 1000;
+  letter-spacing: 0.04em;
+  color: var(--v3-text);
+}
+
+#home-screen.landing-v3 .player-option small {
+  font-size: 0.72rem;
+  color: var(--v3-text-muted);
+}
+
+#home-screen.landing-v3 .player-option i {
+  display: none;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  place-items: center;
+  font-size: 0.85rem;
+  font-style: normal;
+  font-weight: 1000;
+  color: #2a1200;
+  background: linear-gradient(180deg, var(--v3-gold), var(--v3-gold-mid));
+  box-shadow: 0 3px 0 var(--v3-gold-dark), 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+#home-screen.landing-v3 .player-option.selected {
+  transform: translateY(-4px);
+  border-color: var(--v3-gold);
+  background: linear-gradient(160deg, rgba(78, 43, 168, 0.35) 0%, rgba(21, 16, 68, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 24px rgba(255, 200, 61, 0.22),
+    0 10px 24px rgba(0, 0, 0, 0.3);
+  color: var(--v3-text);
+  animation: v3ModeBreath 4.5s ease-in-out infinite;
+}
+
+#home-screen.landing-v3 .player-option.selected i {
+  display: grid;
+}
+
+#home-screen.landing-v3 .player-option:focus-visible {
+  outline: 2px solid var(--v3-gold);
+  outline-offset: 2px;
+}
+
+#home-screen.landing-v3 .player-option:active {
+  transform: scale(0.98);
+}
+
+#home-screen.landing-v3 .player-option.selected:active {
+  transform: translateY(-4px) scale(0.98);
+}
+
+/* ── 6. Footer ── */
+
+#home-screen.landing-v3 .landing-v3-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  padding: 8px 4px 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--v3-text-muted);
+}
+
+#home-screen.landing-v3 .landing-v3-footer a {
+  color: var(--v3-text-muted);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+#home-screen.landing-v3 .landing-v3-footer a:hover,
+#home-screen.landing-v3 .landing-v3-footer a:focus-visible {
+  color: var(--v3-text-soft);
+  text-decoration: underline;
+  outline: none;
+}
+
+#home-screen.landing-v3 .landing-v3-footer span {
+  opacity: 0.7;
+}
+
+/* ── Animations ── */
+
+@keyframes v3CardFloat {
+  0%, 100% { transform: translateY(0) rotate(var(--card-rot, 0deg)); }
+  50% { transform: translateY(-6px) rotate(var(--card-rot, 0deg)); }
+}
+
+#home-screen.landing-v3 .card-a {
+  --card-rot: -12deg;
+  animation-name: v3CardFloatA;
+  animation-duration: 5s;
+}
+
+#home-screen.landing-v3 .card-b {
+  animation-name: v3CardFloatB;
+  animation-duration: 5.8s;
+}
+
+#home-screen.landing-v3 .card-c {
+  --card-rot: 12deg;
+  animation-name: v3CardFloatC;
+  animation-duration: 6.4s;
+}
+
+@keyframes v3CardFloatA {
+  0%, 100% { transform: rotate(-12deg) translateY(0); }
+  50% { transform: rotate(-12deg) translateY(-6px); }
+}
+
+@keyframes v3CardFloatB {
+  0%, 100% { transform: translateX(-50%) rotate(0deg) translateY(0); }
+  50% { transform: translateX(-50%) rotate(0deg) translateY(-8px); }
+}
+
+@keyframes v3CardFloatC {
+  0%, 100% { transform: rotate(12deg) translateY(0); }
+  50% { transform: rotate(12deg) translateY(-6px); }
+}
+
+@keyframes v3LogoGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.06); }
+}
+
+@keyframes v3PlayIdleGlow {
+  0%, 100% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), 0 8px 0 #8a4200, 0 14px 28px rgba(0, 0, 0, 0.32); }
+  50% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), 0 8px 0 #8a4200, 0 14px 28px rgba(0, 0, 0, 0.32), 0 0 28px rgba(255, 200, 61, 0.28); }
+}
+
+@keyframes v3PlaySweep {
+  0%, 72%, 100% { background-position: -120% 0, 0 0; }
+  88% { background-position: 120% 0, 0 0; }
+}
+
+@keyframes v3ModeBreath {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 0 16px rgba(255, 200, 61, 0.16),
+      0 10px 24px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 0 32px rgba(255, 200, 61, 0.32),
+      0 10px 24px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes v3HeroGlowPulse {
+  0%, 100% { opacity: 0.88; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+@keyframes v3SuitDriftA {
+  0%, 100% { transform: translate(0, 0) rotate(-8deg); opacity: 0.04; }
+  50% { transform: translate(6px, -10px) rotate(-4deg); opacity: 0.055; }
+}
+
+@keyframes v3SuitDriftB {
+  0%, 100% { transform: translate(0, 0) rotate(6deg); opacity: 0.035; }
+  50% { transform: translate(-8px, 8px) rotate(10deg); opacity: 0.05; }
+}
+
+@keyframes v3SuitDriftC {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.035; }
+  50% { transform: translate(10px, -6px) rotate(6deg); opacity: 0.05; }
+}
+
+@keyframes v3SuitDriftD {
+  0%, 100% { transform: translate(0, 0) rotate(-6deg); opacity: 0.03; }
+  50% { transform: translate(-6px, -8px) rotate(-10deg); opacity: 0.045; }
+}
+
+@keyframes v3ParticleDrift {
+  0%, 100% { opacity: 0.7; transform: translateY(0); }
+  50% { opacity: 0.95; transform: translateY(-6px); }
+}
+
+/* ── Responsive ── */
+
+@media (min-width: 520px) {
+  #home-screen.landing-v3 .quick-actions.instant-actions {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  #home-screen.landing-v3 .quick-actions .menu-card {
+    min-height: 84px;
+  }
+}
+
+@media (min-width: 640px) {
+  #home-screen.landing-v3 .home-topbar.instant-topbar {
+    min-height: 68px;
+    max-height: 76px;
+  }
+
+  #home-screen.landing-v3 .mode-carousel {
+    scroll-padding-inline: 0;
+    margin: 0;
+    overflow-x: visible;
+  }
+
+  #home-screen.landing-v3 .player-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    padding: 4px 0;
+  }
+
+  #home-screen.landing-v3 .player-option {
+    flex: unset;
+    min-height: 128px;
+  }
+}
+
+@media (max-height: 720px) {
+  #home-screen.landing-v3 {
+    gap: 12px;
+  }
+
+  #home-screen.landing-v3 .hero-stage {
+    min-height: 220px;
+    max-height: 280px;
+  }
+
+  #home-screen.landing-v3 .flying-cards {
+    height: 88px;
+    margin-bottom: -22px;
+  }
+
+  #home-screen.landing-v3 .hero-card {
+    width: 58px;
+    height: 80px;
+  }
+
+  #home-screen.landing-v3 .hero-stage h1 {
+    font-size: clamp(2.4rem, 12vw, 3.4rem);
+  }
+
+  #home-screen.landing-v3 .play-now {
+    min-height: 68px;
+  }
+
+  #home-screen.landing-v3 .quick-actions .menu-card {
+    min-height: 76px;
+  }
+
+  #home-screen.landing-v3 .player-option {
+    min-height: 120px;
+  }
+}
+
+@media (max-height: 700px) {
+  #home-screen.landing-v3 .hero-stage {
+    align-content: center !important;
+    min-height: 220px !important;
+  }
+
+  #home-screen.landing-v3 .flying-cards {
+    height: 88px !important;
+    margin-bottom: -22px !important;
+  }
+
+  #home-screen.landing-v3 .hero-card {
+    width: 58px !important;
+    height: 80px !important;
+    padding: 8px !important;
+  }
+
+  #home-screen.landing-v3 .hero-card span {
+    font-size: 1.6rem !important;
+  }
+
+  #home-screen.landing-v3 .hero-stage h1 {
+    font-size: clamp(2.4rem, 12vw, 3.4rem) !important;
+  }
+
+  #home-screen.landing-v3 .hero-kicker {
+    font-size: clamp(0.64rem, 2.6vw, 0.78rem) !important;
+    margin-top: 6px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #home-screen.landing-v3 .hero-card,
+  #home-screen.landing-v3 .hero-stage h1,
+  #home-screen.landing-v3 .play-now,
+  #home-screen.landing-v3 .hero-particles,
+  #home-screen.landing-v3 .hero-radial-glow,
+  #home-screen.landing-v3 .hero-stage::before,
+  #home-screen.landing-v3 .hero-stage::after,
+  #home-screen.landing-v3 .hero-particles::before,
+  #home-screen.landing-v3 .hero-particles::after,
+  #home-screen.landing-v3 .player-option.selected {
+    animation: none !important;
+  }
+
+  #home-screen.landing-v3 .player-option.selected {
+    transform: translateY(-4px);
+  }
+
+  #home-screen.landing-v3 .player-option.selected:active {
+    transform: translateY(-4px) scale(0.98);
+  }
+}

@@ -1052,6 +1052,8 @@
     els.trickCount.textContent = state.trick.play ? String(state.trick.play.count) : 'Open';
     els.turnLabel.textContent = state.gameOver ? 'Game over' : `${current.isHuman ? 'Your' : current.name + '\'s'} turn`;
     els.tableSubtitle.textContent = state.gameOver ? 'Match finished.' : `${requirement} · Round ${state.round} · Sparks ${state.sparks}`;
+    const roomIdEl = document.querySelector('#table-room-id');
+    if (roomIdEl) roomIdEl.textContent = state.liveRoom?.code ? `ROOM ${state.liveRoom.code}` : '';
     els.trickHelp.textContent = selectionFeedback();
     renderCoinHud();
   }
@@ -1063,19 +1065,33 @@
       if (isSelf && !state.liveRoom?.code) return;
       const row = document.createElement('div');
       row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
+      const avatar = document.createElement('div');
+      avatar.className = 'opponent-avatar';
+      avatar.setAttribute('aria-hidden', 'true');
+      avatar.textContent = (isSelf ? 'Y' : (player.name?.charAt(0) || 'P')).toUpperCase();
+      const stack = document.createElement('div');
+      stack.className = 'opponent-stack';
       const name = document.createElement('div');
       name.className = 'opponent-name';
       name.textContent = isSelf ? 'You' : player.name;
-      const coins = document.createElement('div');
+      const stats = document.createElement('div');
+      stats.className = 'opponent-stats';
+      const coins = document.createElement('span');
       coins.className = 'opponent-coins';
-      coins.textContent = `🪙${playerCoins(player, index)}`;
-      const meta = document.createElement('div');
-      meta.className = 'opponent-meta';
-      const status = player.connected === false ? 'Offline' : 'Online';
-      meta.textContent = player.finished ? 'Finished' : `${player.hand.length} cards · ${status}`;
-      row.appendChild(name);
-      row.appendChild(coins);
-      row.appendChild(meta);
+      coins.textContent = `🪙 ${playerCoins(player, index)}`;
+      const cards = document.createElement('span');
+      cards.className = 'opponent-cards';
+      cards.textContent = player.finished ? 'Out' : `${player.hand.length} cards`;
+      const online = document.createElement('span');
+      online.className = 'opponent-online';
+      online.setAttribute('aria-label', player.connected === false ? 'Offline' : 'Online');
+      stats.appendChild(coins);
+      stats.appendChild(cards);
+      stack.appendChild(name);
+      stack.appendChild(stats);
+      row.appendChild(avatar);
+      row.appendChild(stack);
+      row.appendChild(online);
       els.opponents.appendChild(row);
     });
   }
@@ -1551,12 +1567,15 @@
     els.hand.innerHTML = '';
     const human = getHumanPlayer();
     const shouldAnimateDeal = !state.dealAnimationShown;
+    const total = sortedHumanHand(human.hand).length;
     sortedHumanHand(human.hand).forEach((card, index) => {
       const tile = renderCardTile(card, true);
       if (shouldAnimateDeal) {
         tile.classList.add('deal-card-in');
         tile.style.setProperty('--deal-delay', `${Math.min(520, index * 32)}ms`);
       }
+      tile.style.setProperty('--fan-i', String(index));
+      tile.style.setProperty('--fan-n', String(Math.max(total - 1, 1)));
       tile.style.zIndex = String(index + 1);
       els.hand.appendChild(tile);
     });
