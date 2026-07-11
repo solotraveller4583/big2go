@@ -574,6 +574,7 @@
       els.sound.textContent = state.sound ? '🔊' : '🔇';
       showGameScreen();
       logState('The table returns from save. Pick up where you left off.');
+      window.Big2GoAIReactions?.resetAIReactions(state.round);
       render();
       scheduleAiTurn();
       return true;
@@ -933,11 +934,13 @@
     state.gameOver = true;
     state.busy = false;
     cancelAiTimer();
+    window.Big2GoAIReactions?.clearHumanIdleTimer();
     clearSelection();
     clearSave();
     const coinPrize = state.liveRoom ? (state.coins.prizePool || 0) : paySinglePlayerPrize(winner);
     renderConfetti(winner.isHuman ? 56 : 42);
     playUiSound(winner.isHuman ? 'win' : 'pass');
+    window.Big2GoAIReactions?.onVictory(winner, state);
     showVictoryCelebration(winner, coinPrize);
     render();
   }
@@ -1016,6 +1019,7 @@
     showGameScreen();
     updateHeat(10, 'The opening player can lead any valid Big Two hand.');
     logState(`The table begins. ${state.players[state.startingPlayer].name} holds the 3♦ and starts the game.`);
+    window.Big2GoAIReactions?.resetAIReactions(state.round);
     render();
     saveGame();
     playUiSound('start');
@@ -1065,6 +1069,7 @@
       if (isSelf && !state.liveRoom?.code) return;
       const row = document.createElement('div');
       row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
+      row.dataset.playerIndex = String(index);
       const avatar = document.createElement('div');
       avatar.className = 'opponent-avatar';
       avatar.setAttribute('aria-hidden', 'true');
@@ -1605,6 +1610,11 @@
       els.hint.disabled = !humanTurn;
       els.sort.textContent = `Sort: ${sortModeLabel()}`;
       els.sort.disabled = !humanTurn;
+      if (humanTurn && !state.liveRoom) {
+        window.Big2GoAIReactions?.onHumanTurnStart(state);
+      } else {
+        window.Big2GoAIReactions?.clearHumanIdleTimer();
+      }
     } else {
       els.play.disabled = true;
       els.pass.disabled = true;
@@ -1694,6 +1704,9 @@
     }
     if (player.hand.length <= 2) updateHeat(7, `${player.name} is down to ${player.hand.length} cards.`);
     if (finishIfNeeded(playerIndex)) return;
+    if (!state.liveRoom && !player.isHuman) {
+      window.Big2GoAIReactions?.onAiPlayComplete(playerIndex, play, state);
+    }
     render();
     scheduleAiTurn();
   }
@@ -2494,6 +2507,7 @@
         state.busy = false;
         return;
       }
+      window.Big2GoAIReactions?.onPlayerPlayComplete(play, state);
       render();
       scheduleAiTurn();
     }, 140);
