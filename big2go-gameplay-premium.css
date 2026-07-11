@@ -513,11 +513,13 @@
 
 /* ── Hand — responsive fit fan (13 cards, no horizontal scroll) ── */
 #game-screen.gameplay-premium .hand-card {
+  container-type: inline-size;
+  container-name: gp-hand;
   min-height: 0 !important;
   height: auto !important;
-  padding: 4px 2px 2px !important;
+  padding: 4px 0 2px !important;
   display: grid !important;
-  grid-template-rows: 18px minmax(118px, 1fr) !important;
+  grid-template-rows: 18px minmax(132px, 1fr) !important;
   gap: 4px !important;
   border-radius: 18px 18px 0 0 !important;
   border: 1px solid rgba(108, 63, 209, 0.3) !important;
@@ -553,22 +555,19 @@
 }
 
 #game-screen.gameplay-premium #hand {
-  --hand-inner: 100%;
-  --card-peek: 20px;
-  --card-step: calc((var(--hand-inner) - var(--card-peek)) / 13);
-  --card-w: calc(var(--card-step) + var(--card-peek));
-  --card-aspect: 1.48;
+  --card-peek: 26px;
+  --card-aspect: 1.52;
   --gp-hand-lift: -8px;
 
   position: relative !important;
   width: 100% !important;
   max-width: 100% !important;
   height: auto !important;
-  min-height: calc(var(--card-w) * var(--card-aspect) + 14px) !important;
-  padding: 12px 0 6px !important;
+  min-height: calc(((100cqw + 12 * var(--card-peek)) / 13) * var(--card-aspect) + 16px) !important;
+  padding: 10px 0 6px !important;
   display: flex !important;
   flex-wrap: nowrap !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   align-items: flex-end !important;
   overflow: hidden !important;
   border-radius: 16px !important;
@@ -578,11 +577,12 @@
 }
 
 #game-screen.gameplay-premium #hand .card-tile {
-  width: var(--card-w) !important;
-  min-width: var(--card-w) !important;
-  max-width: var(--card-w) !important;
-  height: calc(var(--card-w) * var(--card-aspect)) !important;
-  flex: 0 0 var(--card-w) !important;
+  --gp-card-w: calc((100cqw + 12 * var(--card-peek)) / 13);
+  width: var(--gp-card-w) !important;
+  min-width: var(--gp-card-w) !important;
+  max-width: var(--gp-card-w) !important;
+  height: calc(var(--gp-card-w) * var(--card-aspect)) !important;
+  flex: 0 0 var(--gp-card-w) !important;
   margin: 0 !important;
   margin-left: calc(-1 * var(--card-peek)) !important;
   border-radius: 12px !important;
@@ -625,18 +625,18 @@
 }
 
 #game-screen.gameplay-premium #hand .card-rank {
-  font-size: clamp(18px, calc(var(--card-w) * 0.44), 26px) !important;
+  font-size: clamp(16px, calc(var(--gp-card-w, 52px) * 0.46), 28px) !important;
   line-height: 0.88 !important;
   font-weight: 1000 !important;
 }
 
 #game-screen.gameplay-premium #hand .card-suit-small {
-  font-size: clamp(13px, calc(var(--card-w) * 0.32), 18px) !important;
+  font-size: clamp(12px, calc(var(--gp-card-w, 52px) * 0.34), 20px) !important;
   line-height: 0.88 !important;
 }
 
 #game-screen.gameplay-premium #hand .card-suit {
-  font-size: clamp(20px, calc(var(--card-w) * 0.52), 28px) !important;
+  font-size: clamp(18px, calc(var(--gp-card-w, 52px) * 0.54), 30px) !important;
   opacity: 0.92 !important;
 }
 
@@ -799,7 +799,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     --gp-mobile-header: 68px;
     --gp-mobile-opponents: 78px;
     --gp-mobile-reactions: 44px;
-    --gp-mobile-hand: 188px;
+    --gp-mobile-hand: 210px;
     --gp-mobile-dock: 122px;
     --gp-table-max: min(36dvh, 100%);
     --gp-selected-lift: -8px;
@@ -995,7 +995,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     --gp-mobile-header: 60px;
     --gp-mobile-opponents: 68px;
     --gp-mobile-reactions: 40px;
-    --gp-mobile-hand: 168px;
+    --gp-mobile-hand: 190px;
     --gp-mobile-dock: 114px;
     --gp-table-max: min(30dvh, 100%);
     --gp-selected-lift: -8px;
@@ -1057,25 +1057,25 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
 
 @media (max-width: 360px) {
   #game-screen.gameplay-premium #hand {
-    --card-peek: 18px;
+    --card-peek: 22px;
   }
 
   #game-screen.gameplay-premium #hand .card-rank {
-    font-size: clamp(17px, calc(var(--card-w) * 0.42), 22px) !important;
+    font-size: clamp(17px, calc(var(--gp-card-w, 52px) * 0.42), 22px) !important;
   }
 
   #game-screen.gameplay-premium #hand .card-suit-small {
-    font-size: clamp(12px, calc(var(--card-w) * 0.3), 16px) !important;
+    font-size: clamp(12px, calc(var(--gp-card-w, 52px) * 0.3), 16px) !important;
   }
 
   #game-screen.gameplay-premium #hand .card-suit {
-    font-size: clamp(18px, calc(var(--card-w) * 0.5), 24px) !important;
+    font-size: clamp(18px, calc(var(--gp-card-w, 52px) * 0.5), 24px) !important;
   }
 }
 
 @media (min-width: 400px) and (max-width: 639px) {
   #game-screen.gameplay-premium #hand {
-    --card-peek: 21px;
+    --card-peek: 28px;
   }
 }
 
@@ -1083,12 +1083,12 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
 #game-screen.gameplay-premium.b2g-match #hand,
 #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand,
 #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand {
-  --hand-inner: 100% !important;
+  --card-peek: 26px !important;
   display: flex !important;
   flex-wrap: nowrap !important;
   grid-auto-flow: unset !important;
   grid-auto-columns: unset !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   align-items: flex-end !important;
   width: 100% !important;
   max-width: 100% !important;
@@ -1101,11 +1101,12 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
 #game-screen.gameplay-premium.b2g-match #hand .card-tile,
 #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile,
 #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand .card-tile {
-  width: var(--card-w) !important;
-  min-width: var(--card-w) !important;
-  max-width: var(--card-w) !important;
-  height: calc(var(--card-w) * var(--card-aspect)) !important;
-  flex: 0 0 var(--card-w) !important;
+  --gp-card-w: calc((100cqw + 12 * var(--card-peek)) / 13) !important;
+  width: var(--gp-card-w) !important;
+  min-width: var(--gp-card-w) !important;
+  max-width: var(--gp-card-w) !important;
+  height: calc(var(--gp-card-w) * var(--card-aspect)) !important;
+  flex: 0 0 var(--gp-card-w) !important;
   margin: 0 !important;
   margin-left: calc(-1 * var(--card-peek)) !important;
   position: relative !important;
@@ -1163,20 +1164,20 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
   #game-screen.gameplay-premium.b2g-match #hand,
   #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand,
   #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand {
-    --hand-inner: 100% !important;
-    --card-peek: 20px;
-    min-height: calc(var(--card-w) * var(--card-aspect) + 14px) !important;
-    padding: 12px 0 6px !important;
+    --card-peek: 26px !important;
+    min-height: calc(((100cqw + 12 * var(--card-peek)) / 13) * var(--card-aspect) + 16px) !important;
+    padding: 10px 0 6px !important;
   }
 
   #game-screen.gameplay-premium.b2g-match #hand .card-tile,
   #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile,
   #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand .card-tile {
-    width: var(--card-w) !important;
-    min-width: var(--card-w) !important;
-    max-width: var(--card-w) !important;
-    height: calc(var(--card-w) * var(--card-aspect)) !important;
-    flex: 0 0 var(--card-w) !important;
+    --gp-card-w: calc((100cqw + 12 * var(--card-peek)) / 13) !important;
+    width: var(--gp-card-w) !important;
+    min-width: var(--gp-card-w) !important;
+    max-width: var(--gp-card-w) !important;
+    height: calc(var(--gp-card-w) * var(--card-aspect)) !important;
+    flex: 0 0 var(--gp-card-w) !important;
     margin-left: calc(-1 * var(--card-peek)) !important;
   }
 
@@ -1190,7 +1191,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
 @media (max-width: 380px) {
   #game-screen.gameplay-premium.b2g-match #hand,
   #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand {
-    --card-peek: 18px;
+    --card-peek: 22px !important;
   }
 }
 
