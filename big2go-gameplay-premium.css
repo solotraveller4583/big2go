@@ -1058,3 +1058,10 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     transform: none !important;
   }
 }
+
+/* AI reaction bubbles sit above opponent rows — do not clip */
+#game-screen.gameplay-premium .opponent-rail,
+#game-screen.gameplay-premium .opponent-list,
+#game-screen.gameplay-premium .opponent-row {
+  overflow: visible !important;
+}

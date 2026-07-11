@@ -97,8 +97,15 @@
 @keyframes reactFloat { 0% { opacity:0; transform:translate(-50%, 10px) scale(.7); } 18% { opacity:1; transform:translate(-50%, -30px) scale(1.08); } 100% { opacity:0; transform:translate(-50%, -100px) scale(.85); } }
 
 /* AI opponent reaction bubbles (single player) */
-#game-screen .opponent-row {
+#game-screen .opponent-rail,
+#game-screen .opponent-list {
   overflow: visible;
+}
+#game-screen .opponent-row {
+  overflow: visible !important;
+}
+#game-screen.gameplay-premium .opponent-row {
+  overflow: visible !important;
 }
 .ai-reaction-bubble {
   position: absolute;

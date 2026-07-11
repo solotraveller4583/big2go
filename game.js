@@ -934,7 +934,7 @@
     state.gameOver = true;
     state.busy = false;
     cancelAiTimer();
-    window.Big2GoAIReactions?.clearHumanIdleTimer();
+    window.Big2GoAIReactions?.clearHumanIdleTimer(true);
     clearSelection();
     clearSave();
     const coinPrize = state.liveRoom ? (state.coins.prizePool || 0) : paySinglePlayerPrize(winner);
@@ -1613,7 +1613,7 @@
       if (humanTurn && !state.liveRoom) {
         window.Big2GoAIReactions?.onHumanTurnStart(state);
       } else {
-        window.Big2GoAIReactions?.clearHumanIdleTimer();
+        window.Big2GoAIReactions?.clearHumanIdleTimer(true);
       }
     } else {
       els.play.disabled = true;
@@ -1718,6 +1718,9 @@
     playUiSound('pass');
     if (state.trick.passes >= state.players.length - 1) {
       const leader = state.trick.leader;
+      if (!state.liveRoom) {
+        window.Big2GoAIReactions?.onTrickWon(leader, state);
+      }
       state.currentPlayer = leader;
       state.trick = { play: null, leader, passes: 0 };
       state.round += 1;
@@ -2468,6 +2471,7 @@
 
   function humanPlay() {
     if (!canHumanAct()) return;
+    window.Big2GoAIReactions?.clearHumanIdleTimer(true);
     const cards = selectedCards();
     const result = validateHumanPlay(cards);
     if (!result.ok) {
@@ -2515,6 +2519,7 @@
 
   function humanPass() {
     if (!canHumanAct() || !state.trick.play) return;
+    window.Big2GoAIReactions?.clearHumanIdleTimer(true);
     clearSelection();
     playUiSound('pass');
     if (state.liveRoom) {
