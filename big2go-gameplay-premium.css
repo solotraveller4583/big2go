@@ -567,7 +567,7 @@
   padding: 10px 0 6px !important;
   display: flex !important;
   flex-wrap: nowrap !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
   align-items: flex-end !important;
   overflow: hidden !important;
   border-radius: 16px !important;
@@ -1088,7 +1088,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
   flex-wrap: nowrap !important;
   grid-auto-flow: unset !important;
   grid-auto-columns: unset !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
   align-items: flex-end !important;
   width: 100% !important;
   max-width: 100% !important;
