@@ -553,24 +553,26 @@
 }
 
 #game-screen.gameplay-premium #hand {
-  --hand-pad-x: 10px;
-  --hand-inner: calc(100% - 2 * var(--hand-pad-x));
-  --card-overlap: 14px;
-  --card-overlap-selected: 5px;
+  --gp-hand-gutter: 86px;
+  --hand-available: calc(100vw - var(--gp-hand-gutter));
+  --card-overlap: 12px;
   --card-aspect: 1.42;
-  /* 13 cards: total width = card-w + 12 * (card-w - overlap) = hand-inner */
-  --card-w: min(58px, calc((var(--hand-inner) + 12 * var(--card-overlap)) / 13));
+  /* 13 cards: available = card-w + 12 * (card-w - overlap) */
+  --card-step: calc((var(--hand-available) - var(--card-overlap)) / 13);
+  --card-w: calc(var(--card-step) + var(--card-overlap));
   --gp-hand-lift: -8px;
 
   position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
   height: auto !important;
   min-height: 110px !important;
-  padding: 12px var(--hand-pad-x) 8px !important;
+  padding: 10px 4px 6px !important;
   display: flex !important;
+  flex-wrap: nowrap !important;
   justify-content: center !important;
   align-items: flex-end !important;
-  overflow-x: hidden !important;
-  overflow-y: hidden !important;
+  overflow: hidden !important;
   border-radius: 16px !important;
   background:
     radial-gradient(ellipse 90% 60% at 50% 100%, rgba(108, 63, 209, 0.18), transparent 55%),
@@ -578,21 +580,19 @@
 }
 
 #game-screen.gameplay-premium #hand .card-tile {
+  flex: 1 1 var(--card-w) !important;
   width: var(--card-w) !important;
-  height: calc(var(--card-w) * var(--card-aspect)) !important;
-  min-width: var(--card-w) !important;
+  min-width: 0 !important;
   max-width: var(--card-w) !important;
-  flex: 0 0 var(--card-w) !important;
+  height: calc(var(--card-w) * var(--card-aspect)) !important;
   margin-left: calc(-1 * var(--card-overlap)) !important;
   margin-right: 0 !important;
   border-radius: 12px !important;
+  position: relative !important;
   transform: none !important;
   z-index: 1 !important;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.38) !important;
-  transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    margin 160ms ease !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.34) !important;
+  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease !important;
 }
 
 #game-screen.gameplay-premium #hand .card-tile:first-child {
@@ -600,19 +600,11 @@
 }
 
 #game-screen.gameplay-premium #hand .card-tile.selected {
-  margin-left: calc(-1 * var(--card-overlap-selected)) !important;
-  margin-right: calc(-1 * var(--card-overlap-selected)) !important;
   transform: translateY(var(--gp-hand-lift)) !important;
-  z-index: 10 !important;
+  z-index: 20 !important;
+  filter: drop-shadow(0 0 8px rgba(255, 200, 61, 0.85)) !important;
   outline: 2px solid var(--gp-gold) !important;
-  box-shadow:
-    0 0 0 1px rgba(255, 200, 61, 0.45),
-    0 0 16px rgba(255, 200, 61, 0.34),
-    0 8px 16px rgba(0, 0, 0, 0.34) !important;
-}
-
-#game-screen.gameplay-premium #hand .card-tile:first-child.selected {
-  margin-left: 0 !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.34) !important;
 }
 
 #game-screen.gameplay-premium #hand .card-tile:active {
@@ -957,12 +949,12 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
   }
 
   #game-screen.gameplay-premium #hand .card-tile.selected {
-    transform: translateY(var(--gp-selected-lift)) !important;
-    z-index: 10 !important;
+    transform: translateY(-8px) !important;
+    z-index: 20 !important;
   }
 
   #game-screen.gameplay-premium #hand .card-tile.selected:active {
-    transform: translateY(var(--gp-selected-lift)) !important;
+    transform: translateY(-8px) !important;
   }
 
   /* Action dock */
@@ -1061,9 +1053,8 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
 
 @media (max-width: 360px) {
   #game-screen.gameplay-premium #hand {
-    --hand-pad-x: 8px;
-    --card-overlap: 12px;
-    --card-overlap-selected: 4px;
+    --gp-hand-gutter: 78px;
+    --card-overlap: 11px;
   }
 
   #game-screen.gameplay-premium #hand .card-rank {
@@ -1081,33 +1072,116 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
 
 @media (min-width: 400px) and (max-width: 639px) {
   #game-screen.gameplay-premium #hand {
-    --card-overlap: 14px;
-    --card-overlap-selected: 5px;
+    --gp-hand-gutter: 84px;
+    --card-overlap: 12px;
   }
 }
 
-/* Lock premium hand layout over legacy gameplay layers */
-#game-screen.gameplay-premium #hand {
+/* Authoritative hand layout — beats clarity/mobile-redesign b2g-match selectors */
+#game-screen.gameplay-premium.b2g-match #hand,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand {
   display: flex !important;
+  flex-wrap: nowrap !important;
   grid-auto-flow: unset !important;
   grid-auto-columns: unset !important;
+  justify-content: center !important;
+  align-items: flex-end !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
   overflow-x: hidden !important;
   overflow-y: hidden !important;
+  overscroll-behavior-x: auto !important;
 }
 
-#game-screen.gameplay-premium #hand .card-tile:not(.selected) {
+#game-screen.gameplay-premium.b2g-match #hand .card-tile,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand .card-tile {
+  flex: 1 1 var(--card-w) !important;
+  width: var(--card-w) !important;
+  min-width: 0 !important;
+  max-width: var(--card-w) !important;
+  height: calc(var(--card-w) * var(--card-aspect)) !important;
+  margin-left: calc(-1 * var(--card-overlap)) !important;
   margin-right: 0 !important;
+  position: relative !important;
   transform: none !important;
   scale: none !important;
+  z-index: 1 !important;
 }
 
-#game-screen.gameplay-premium #hand .card-tile.selected {
-  transform: translateY(-8px) !important;
-  z-index: 10 !important;
+#game-screen.gameplay-premium.b2g-match #hand .card-tile:first-child,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile:first-child,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand .card-tile:first-child {
+  margin-left: 0 !important;
 }
 
-#game-screen.gameplay-premium #hand .card-tile.selected:active {
+#game-screen.gameplay-premium.b2g-match #hand .card-tile.selected,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile.selected,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand .card-tile.selected {
+  margin-left: calc(-1 * var(--card-overlap)) !important;
+  margin-right: 0 !important;
   transform: translateY(-8px) !important;
+  z-index: 20 !important;
+  filter: drop-shadow(0 0 8px rgba(255, 200, 61, 0.85)) !important;
+  outline: 2px solid var(--gp-gold) !important;
+}
+
+#game-screen.gameplay-premium.b2g-match #hand .card-tile:first-child.selected,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile:first-child.selected,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand .card-tile:first-child.selected {
+  margin-left: 0 !important;
+}
+
+#game-screen.gameplay-premium.b2g-match #hand .card-tile.selected:active,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile.selected:active,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand .card-tile.selected:active {
+  transform: translateY(-8px) !important;
+}
+
+#game-screen.gameplay-premium.b2g-match .hand-card,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) .hand-card,
+#game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) .hand-card {
+  overflow: hidden !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 639px) {
+  #game-screen.gameplay-premium.b2g-match #hand,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand {
+    --gp-hand-gutter: 82px;
+    --card-overlap: 12px;
+    min-height: 104px !important;
+    padding: 10px 2px 6px !important;
+  }
+
+  #game-screen.gameplay-premium.b2g-match #hand .card-tile,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand .card-tile {
+    flex: 1 1 var(--card-w) !important;
+    width: var(--card-w) !important;
+    min-width: 0 !important;
+    max-width: var(--card-w) !important;
+    height: calc(var(--card-w) * var(--card-aspect)) !important;
+    margin: 0 !important;
+    margin-left: calc(-1 * var(--card-overlap)) !important;
+  }
+
+  #game-screen.gameplay-premium.b2g-match #hand .card-tile:first-child,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand .card-tile:first-child,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand .card-tile:first-child {
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 380px) {
+  #game-screen.gameplay-premium.b2g-match #hand,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand {
+    --gp-hand-gutter: 76px;
+    --card-overlap: 11px;
+  }
 }
 
 #game-screen.gameplay-premium .action-dock {
