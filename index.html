@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="big2go-coins.css?v=5" />
   <link rel="stylesheet" href="big2go-mobile-redesign.css?v=8" />
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=2" />
-  <link rel="stylesheet" href="big2go-landing-v3.css?v=5" />
+  <link rel="stylesheet" href="big2go-landing-v3.css?v=6" />
   <link rel="stylesheet" href="big2go-gameplay-premium.css?v=5" />
 </head>
 <body>
@@ -103,9 +103,33 @@
         </div>
         <div class="mode-carousel" role="region" aria-label="Match mode carousel">
           <div class="player-options" role="group" aria-label="Number of players">
-            <button class="player-option selected" type="button" data-player-choice="4"><span>👥</span><strong>4P CLASSIC</strong><small>Full table</small><i>✓</i></button>
-            <button class="player-option" type="button" data-player-choice="3"><span>⚡</span><strong>3P FAST</strong><small>Quick</small><i>✓</i></button>
-            <button class="player-option" type="button" data-player-choice="2"><span>⚔️</span><strong>2P DUEL</strong><small>Head-to-head</small><i>✓</i></button>
+            <button class="player-option mode-card mode-classic selected" type="button" data-player-choice="4">
+              <span class="mode-icon" aria-hidden="true"><span class="mode-icon-mark mode-icon-players"><i></i><i></i><i></i><i></i></span></span>
+              <span class="mode-copy">
+                <strong>4P CLASSIC</strong>
+                <small class="mode-sub">Full Table</small>
+                <small class="mode-meta">4 Players</small>
+              </span>
+              <i class="mode-check" aria-hidden="true">✓</i>
+            </button>
+            <button class="player-option mode-card mode-fast" type="button" data-player-choice="3">
+              <span class="mode-icon" aria-hidden="true"><span class="mode-icon-mark mode-icon-bolt">⚡</span></span>
+              <span class="mode-copy">
+                <strong>3P FAST</strong>
+                <small class="mode-sub">Quick Battle</small>
+                <small class="mode-meta">Fast Match</small>
+              </span>
+              <i class="mode-check" aria-hidden="true">✓</i>
+            </button>
+            <button class="player-option mode-card mode-duel" type="button" data-player-choice="2">
+              <span class="mode-icon" aria-hidden="true"><span class="mode-icon-mark mode-icon-duel">⚔️</span></span>
+              <span class="mode-copy">
+                <strong>2P DUEL</strong>
+                <small class="mode-sub">Head to Head</small>
+                <small class="mode-meta">1 vs 1</small>
+              </span>
+              <i class="mode-check" aria-hidden="true">✓</i>
+            </button>
           </div>
         </div>
         <select id="player-count" class="sr-select" aria-label="Number of players">
