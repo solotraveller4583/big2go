@@ -1220,3 +1220,32 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
 #game-screen.gameplay-premium .opponent-row {
   overflow: visible !important;
 }
+
+/* Trick table — normal readable size for 2- and 3-card plays only */
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-tile,
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-tile {
+  width: clamp(60px, 15.5vw, 74px) !important;
+  height: clamp(84px, 21.5vw, 102px) !important;
+  min-width: clamp(60px, 15.5vw, 74px) !important;
+  flex: 0 0 clamp(60px, 15.5vw, 74px) !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-rank,
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-rank {
+  font-size: clamp(18px, 4.8vw, 22px) !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-suit-small,
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-suit-small {
+  font-size: clamp(13px, 3.4vw, 16px) !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-suit,
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-suit {
+  font-size: clamp(22px, 5.8vw, 28px) !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child),
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) {
+  overflow: visible !important;
+}
