@@ -1312,10 +1312,10 @@
     --v3-mobile-inset: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
     --v3-mobile-gap: clamp(4px, 0.75dvh, 7px);
     --v3-row-header: clamp(58px, 8dvh, 68px);
-    --v3-row-hero: minmax(168px, 24dvh);
+    --v3-row-hero: minmax(158px, 1.1fr);
     --v3-row-play: clamp(56px, 7.5dvh, 62px);
     --v3-row-actions: clamp(62px, 8.5dvh, 68px);
-    --v3-row-match: clamp(104px, 13.5dvh, 118px);
+    --v3-row-match: minmax(148px, 1fr);
 
     width: 100%;
     max-width: 100%;
@@ -1344,6 +1344,14 @@
       var(--v3-row-match)
       auto;
     align-content: stretch;
+  }
+
+  #home-screen.landing-v3 .player-panel.table-select {
+    align-self: stretch;
+  }
+
+  #home-screen.landing-v3 .landing-v3-footer {
+    align-self: end;
   }
 
   #home-screen.landing-v3:has(#room-recovery-card:not(.hidden)) {
@@ -1606,19 +1614,20 @@
   /* ── 5. Match Mode arena ── */
   #home-screen.landing-v3 .player-panel.table-select {
     position: relative;
-    display: grid;
-    grid-template-rows: auto auto;
-    gap: 5px;
-    height: auto;
-    max-height: var(--v3-row-match);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 8px;
+    height: 100%;
     min-height: 0;
+    max-height: none;
     align-self: stretch;
     margin-top: 0;
     margin-left: calc(-1 * var(--v3-mobile-inset));
     margin-right: calc(-1 * var(--v3-mobile-inset));
     width: calc(100% + var(--v3-mobile-inset) + var(--v3-mobile-inset));
-    padding: 6px 12px 8px;
-    border-radius: 18px 18px 0 0;
+    padding: 8px 12px max(10px, env(safe-area-inset-bottom));
+    border-radius: 20px 20px 0 0;
     border: 1px solid rgba(108, 63, 209, 0.35);
     border-bottom: 0;
     background:
@@ -1627,7 +1636,7 @@
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.08),
       0 -4px 24px rgba(108, 63, 209, 0.12);
-    overflow: hidden;
+    overflow: visible;
     isolation: isolate;
     z-index: 100 !important;
     pointer-events: auto !important;
@@ -1666,13 +1675,25 @@
   }
 
   #home-screen.landing-v3 .panel-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
     padding: 0 2px;
     flex-shrink: 0;
   }
 
+  #home-screen.landing-v3 .panel-title-row > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
   #home-screen.landing-v3 .panel-title-row small {
-    display: block;
-    margin-bottom: 2px;
+    display: inline;
+    margin-bottom: 0;
     font-size: 0.58rem;
     font-weight: 950;
     letter-spacing: 0.12em;
@@ -1682,7 +1703,7 @@
 
   #home-screen.landing-v3 .panel-title-row h2 {
     margin: 0;
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     font-weight: 1000;
     color: var(--v3-text);
   }
@@ -1690,17 +1711,17 @@
   #home-screen.landing-v3 .player-options {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(5px, 1.5vw, 7px);
+    gap: 8px;
     width: 100%;
     height: auto;
     min-height: 0;
-    max-height: none;
-    align-self: auto;
+    flex-shrink: 0;
   }
 
   #home-screen.landing-v3 .mode-carousel {
     display: block;
     flex: 0 0 auto;
+    width: 100%;
     min-height: 0;
     height: auto;
     padding: 0;
@@ -1709,21 +1730,45 @@
   }
 
   #home-screen.landing-v3 .player-option.mode-card {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    gap: 4px;
-    min-height: 0;
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 68px;
     height: auto;
-    max-height: 92px;
-    padding: 8px 6px 7px;
+    max-height: none;
+    padding: 8px 10px;
     border-radius: 14px;
+    text-align: left;
   }
 
   #home-screen.landing-v3 .mode-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 11px;
+  }
+
+  #home-screen.landing-v3 .mode-copy {
+    align-items: flex-start;
+    flex: 1;
+    min-width: 0;
+  }
+
+  #home-screen.landing-v3 .mode-copy strong {
+    font-size: clamp(0.58rem, 2.5vw, 0.66rem);
+    letter-spacing: 0.04em;
+    text-align: left;
+  }
+
+  #home-screen.landing-v3 .mode-copy .mode-sub {
+    display: block;
+    font-size: clamp(0.5rem, 2.1vw, 0.56rem);
+    text-align: left;
+  }
+
+  #home-screen.landing-v3 .mode-copy .mode-meta {
+    display: none;
   }
 
   #home-screen.landing-v3 .mode-icon-players {
@@ -1737,25 +1782,11 @@
   }
 
   #home-screen.landing-v3 .mode-icon-bolt {
-    font-size: clamp(1.25rem, 4.2vw, 1.45rem);
+    font-size: 1.25rem;
   }
 
   #home-screen.landing-v3 .mode-icon-duel {
-    font-size: clamp(1.15rem, 4vw, 1.35rem);
-  }
-
-  #home-screen.landing-v3 .mode-copy strong {
-    font-size: clamp(0.54rem, 2.4vw, 0.62rem);
-    letter-spacing: 0.04em;
-  }
-
-  #home-screen.landing-v3 .mode-copy .mode-sub {
-    display: block;
-    font-size: clamp(0.5rem, 2.15vw, 0.56rem);
-  }
-
-  #home-screen.landing-v3 .mode-copy .mode-meta {
-    display: none;
+    font-size: 1.15rem;
   }
 
   #home-screen.landing-v3 .player-option .mode-check {
@@ -1790,12 +1821,12 @@
     gap: 4px 10px;
     height: auto;
     min-height: 0;
-    max-height: none;
     margin: 0;
-    padding: 0 0 max(2px, env(safe-area-inset-bottom));
+    padding: 0 0 max(4px, env(safe-area-inset-bottom));
     font-size: 0.62rem;
     line-height: 1;
     color: var(--v3-text-muted);
+    background: linear-gradient(180deg, rgba(9, 8, 32, 0.99) 0%, rgba(7, 9, 29, 1) 100%);
   }
 }
 
@@ -1803,9 +1834,10 @@
   #home-screen.landing-v3 {
     --v3-mobile-gap: 4px;
     --v3-row-header: 56px;
-    --v3-row-hero: minmax(156px, 22dvh);
+    --v3-row-hero: minmax(142px, 1fr);
     --v3-row-play: 54px;
     --v3-row-actions: 60px;
+    --v3-row-match: minmax(132px, 1fr);
   }
 
   #home-screen.landing-v3 .hero-art {
