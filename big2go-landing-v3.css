@@ -417,8 +417,12 @@
   animation: v3LogoGlow 5s ease-in-out infinite;
 }
 
-#home-screen.landing-v3 .hero-stage h1 span {
+#home-screen.landing-v3 .hero-stage h1 span.logo-two {
   color: var(--v3-gold);
+}
+
+#home-screen.landing-v3 .hero-stage h1 span.logo-go {
+  color: var(--v3-gold-mid);
 }
 
 #home-screen.landing-v3 .hero-kicker {
@@ -1150,6 +1154,31 @@
 /* ── Mobile full-screen lobby (portrait phones) ── */
 
 @media (max-width: 639px) {
+  #home-screen.landing-v3 {
+    overflow: hidden !important;
+  }
+
+  #home-screen.landing-v3 .hero-stage {
+    align-content: stretch !important;
+  }
+
+  #home-screen.landing-v3 .flying-cards {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    z-index: 1 !important;
+  }
+
+  #home-screen.landing-v3 .hero-card {
+    z-index: 1 !important;
+  }
+
+  #home-screen.landing-v3 .hero-stage h1 {
+    z-index: 3 !important;
+  }
+
   html:has(#home-screen.landing-v3:not(.hidden)),
   body:has(#home-screen.landing-v3:not(.hidden)) {
     width: 100%;
@@ -1184,7 +1213,11 @@
 
   #home-screen.landing-v3 {
     --v3-mobile-inset: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
-    --v3-mobile-gap: clamp(4px, 0.75dvh, 8px);
+    --v3-mobile-gap: clamp(5px, 0.85dvh, 8px);
+    --v3-row-header: clamp(64px, 9dvh, 72px);
+    --v3-row-hero: clamp(210px, 28dvh, 230px);
+    --v3-row-play: clamp(58px, 8dvh, 64px);
+    --v3-row-actions: clamp(66px, 9dvh, 70px);
 
     width: 100%;
     max-width: 100%;
@@ -1205,7 +1238,13 @@
       "v3-actions"
       "v3-match"
       "v3-footer";
-    grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+    grid-template-rows:
+      var(--v3-row-header)
+      var(--v3-row-hero)
+      var(--v3-row-play)
+      var(--v3-row-actions)
+      minmax(0, 1fr)
+      auto;
     align-content: stretch;
   }
 
@@ -1230,13 +1269,17 @@
     min-height: 0;
   }
 
+  #home-screen.landing-v3::after {
+    opacity: 0.35;
+  }
+
   /* ── 1. Top status bar ── */
   #home-screen.landing-v3 .home-topbar.instant-topbar {
     align-self: stretch;
-    min-height: 0;
-    height: auto;
-    max-height: none;
-    padding: 5px 10px;
+    height: var(--v3-row-header);
+    min-height: var(--v3-row-header);
+    max-height: var(--v3-row-header);
+    padding: 6px 10px;
     gap: 8px;
     border-radius: 14px;
   }
@@ -1277,10 +1320,10 @@
   #home-screen.landing-v3 .hero-stage {
     position: relative;
     display: block;
-    height: clamp(210px, 27dvh, 255px);
-    min-height: clamp(210px, 27dvh, 255px);
-    max-height: clamp(210px, 27dvh, 255px);
-    margin-bottom: 6px;
+    height: var(--v3-row-hero);
+    min-height: var(--v3-row-hero);
+    max-height: var(--v3-row-hero);
+    margin-bottom: 0;
     padding: 0;
     overflow: visible;
   }
@@ -1288,26 +1331,26 @@
   #home-screen.landing-v3 .hero-radial-glow {
     position: absolute;
     left: 50%;
-    top: 58%;
+    top: 38%;
     transform: translate(-50%, -50%);
-    width: min(72vw, 260px);
-    height: min(38vw, 132px);
+    width: min(88vw, 320px);
+    height: min(46vw, 168px);
     inset: auto;
-    opacity: 0.88;
+    opacity: 1;
     background:
-      radial-gradient(circle, rgba(108, 63, 209, 0.72) 0%, rgba(108, 63, 209, 0.38) 28%, rgba(78, 43, 168, 0.14) 52%, transparent 72%);
+      radial-gradient(circle, rgba(108, 63, 209, 0.82) 0%, rgba(108, 63, 209, 0.48) 24%, rgba(78, 43, 168, 0.2) 50%, transparent 74%);
   }
 
   #home-screen.landing-v3 .hero-radial-glow::after {
-    left: 10%;
-    right: 10%;
-    bottom: 8%;
-    height: 36%;
-    background: radial-gradient(ellipse, rgba(255, 200, 61, 0.42) 0%, rgba(255, 159, 26, 0.1) 42%, transparent 72%);
+    left: 8%;
+    right: 8%;
+    bottom: 10%;
+    height: 42%;
+    background: radial-gradient(ellipse, rgba(255, 200, 61, 0.52) 0%, rgba(255, 159, 26, 0.16) 44%, transparent 74%);
   }
 
   #home-screen.landing-v3 .hero-particles {
-    opacity: 0.55;
+    opacity: 0.45;
   }
 
   #home-screen.landing-v3 .flying-cards {
@@ -1325,93 +1368,102 @@
     bottom: auto;
     height: auto;
     aspect-ratio: 66 / 88;
-    padding: 7px 8px;
-    border-radius: 14px;
+    padding: 8px 9px;
+    border-radius: 15px;
     animation: none;
     z-index: 1;
+    box-shadow:
+      0 12px 24px rgba(0, 0, 0, 0.36),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
   }
 
   #home-screen.landing-v3 .hero-card span {
-    font-size: clamp(1.3rem, 4.2vw, 1.75rem);
+    font-size: clamp(1.35rem, 4.4vw, 1.85rem);
   }
 
   #home-screen.landing-v3 .hero-card strong {
-    font-size: clamp(0.76rem, 2.3vw, 0.92rem);
+    font-size: clamp(0.8rem, 2.4vw, 0.96rem);
   }
 
   #home-screen.landing-v3 .card-a {
-    left: 8%;
-    top: 18px;
+    left: 10%;
+    top: 22px;
     right: auto;
-    width: clamp(68px, 17vw, 90px);
-    transform: rotate(-10deg);
+    width: clamp(70px, 17.5vw, 92px);
+    transform: rotate(-12deg);
     z-index: 1;
   }
 
   #home-screen.landing-v3 .card-b {
     left: 50%;
-    top: 4px;
+    top: 6px;
     right: auto;
-    width: clamp(72px, 18vw, 94px);
-    transform: translateX(-50%) rotate(0deg);
+    width: clamp(74px, 18.5vw, 96px);
+    transform: translateX(-50%) rotate(-2deg);
     z-index: 1;
   }
 
   #home-screen.landing-v3 .card-c {
-    right: 8%;
-    top: 18px;
+    right: 10%;
+    top: 22px;
     left: auto;
-    width: clamp(68px, 17vw, 90px);
-    transform: rotate(10deg);
+    width: clamp(70px, 17.5vw, 92px);
+    transform: rotate(12deg);
     z-index: 1;
   }
 
   #home-screen.landing-v3 .hero-brand {
     position: absolute;
     left: 50%;
-    top: 58%;
+    top: 62%;
     transform: translate(-50%, -50%);
-    z-index: 2;
-    width: clamp(230px, 58vw, 310px);
-    gap: clamp(3px, 0.5dvh, 5px);
+    z-index: 3;
+    width: clamp(240px, 62vw, 320px);
+    gap: clamp(4px, 0.55dvh, 6px);
     margin: 0;
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     width: 100%;
     max-width: 100%;
-    font-size: clamp(2.35rem, 11.8vw, 3rem);
+    font-size: clamp(2.65rem, 13vw, 3.35rem);
     margin: 0;
-    line-height: 0.92;
+    line-height: 0.9;
+    text-shadow:
+      0 0 36px rgba(108, 63, 209, 0.55),
+      0 2px 0 rgba(217, 120, 0, 0.35),
+      0 4px 14px rgba(0, 0, 0, 0.42);
   }
 
   #home-screen.landing-v3 .hero-kicker {
     position: relative;
     z-index: 3;
     margin: 0;
-    font-size: clamp(0.58rem, 2.3vw, 0.68rem);
-    letter-spacing: 0.11em;
+    font-size: clamp(0.58rem, 2.35vw, 0.68rem);
+    letter-spacing: 0.12em;
+    color: var(--v3-gold-mid);
   }
 
   /* ── 3. Play Now ── */
   #home-screen.landing-v3 .cta-zone {
     display: grid;
     place-items: center;
-    height: auto;
-    min-height: 0;
-    margin: 8px 0 0;
+    height: var(--v3-row-play);
+    min-height: var(--v3-row-play);
+    max-height: var(--v3-row-play);
+    margin: 0;
     padding: 0;
   }
 
   #home-screen.landing-v3 .play-now {
-    width: calc(100% - 24px);
+    width: calc(100% - 32px);
     max-width: none;
-    min-height: clamp(58px, 8dvh, 64px);
-    height: clamp(58px, 8dvh, 64px);
+    min-height: var(--v3-row-play);
+    height: var(--v3-row-play);
     max-height: 64px;
-    margin: 0 12px;
+    margin: 0 16px;
     padding: 0 16px 0 18px;
     border-radius: 18px;
     font-size: clamp(1.15rem, 4.8vw, 1.35rem);
@@ -1457,33 +1509,43 @@
   #home-screen.landing-v3 .quick-actions.instant-actions {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
-    height: auto;
-    min-height: 0;
+    height: var(--v3-row-actions);
+    min-height: var(--v3-row-actions);
+    max-height: var(--v3-row-actions);
     padding: 0;
     box-sizing: border-box;
   }
 
   #home-screen.landing-v3 .quick-actions .menu-card {
-    min-height: 68px;
-    height: 68px;
-    padding: 8px 4px;
-    gap: 4px;
+    min-height: var(--v3-row-actions);
+    height: var(--v3-row-actions);
+    max-height: 70px;
+    padding: 6px 4px 5px;
+    gap: 2px;
     border-radius: 14px;
+    border: 1px solid rgba(108, 63, 209, 0.42);
+    background: linear-gradient(180deg, rgba(28, 22, 78, 0.96) 0%, rgba(13, 16, 48, 0.98) 100%);
   }
 
   #home-screen.landing-v3 .quick-actions .menu-card span {
-    font-size: 1.18rem;
+    font-size: 1.2rem;
+    line-height: 1;
   }
 
   #home-screen.landing-v3 .quick-actions .menu-card strong {
-    font-size: clamp(0.56rem, 2.8vw, 0.64rem);
-    letter-spacing: 0.03em;
-    line-height: 1.15;
+    font-size: clamp(0.54rem, 2.5vw, 0.6rem);
+    letter-spacing: 0.04em;
+    line-height: 1.1;
     text-align: center;
   }
 
   #home-screen.landing-v3 .quick-actions .menu-card small {
-    display: none;
+    display: block;
+    font-size: clamp(0.46rem, 2vw, 0.52rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: rgba(255, 255, 255, 0.55);
+    text-align: center;
   }
 
   /* ── 5. Match Mode arena ── */
@@ -1591,9 +1653,9 @@
 
   #home-screen.landing-v3 .player-option.mode-card {
     gap: 3px;
-    min-height: clamp(96px, 26vw, 122px);
+    min-height: clamp(130px, 18dvh, 150px);
     height: auto;
-    padding: 7px 5px 6px;
+    padding: 8px 5px 7px;
     border-radius: 15px;
   }
 
@@ -1679,46 +1741,59 @@
 
 @media (max-width: 639px) and (max-height: 700px) {
   #home-screen.landing-v3 {
-    --v3-mobile-gap: clamp(3px, 0.55dvh, 6px);
-  }
-
-  #home-screen.landing-v3 .hero-stage {
-    height: clamp(196px, 25dvh, 228px);
-    min-height: clamp(196px, 25dvh, 228px);
-    max-height: clamp(196px, 25dvh, 228px);
+    --v3-mobile-gap: clamp(4px, 0.7dvh, 6px);
+    --v3-row-header: clamp(60px, 8.5dvh, 68px);
+    --v3-row-hero: clamp(196px, 26dvh, 218px);
+    --v3-row-play: 58px;
+    --v3-row-actions: 64px;
   }
 
   #home-screen.landing-v3 .hero-brand {
-    width: clamp(220px, 56vw, 290px);
+    width: clamp(220px, 58vw, 290px);
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
-    font-size: clamp(2.15rem, 11vw, 2.75rem);
+    font-size: clamp(2.4rem, 12vw, 3rem) !important;
+  }
+
+  #home-screen.landing-v3 .hero-kicker {
+    font-size: clamp(0.54rem, 2.2vw, 0.62rem) !important;
+    margin-top: 0 !important;
+  }
+
+  #home-screen.landing-v3 .flying-cards {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    z-index: 1 !important;
+  }
+
+  #home-screen.landing-v3 .hero-card {
+    position: absolute !important;
+    width: clamp(64px, 16vw, 84px) !important;
+    height: auto !important;
+    aspect-ratio: 66 / 88 !important;
+    padding: 7px 8px !important;
   }
 
   #home-screen.landing-v3 .card-a,
   #home-screen.landing-v3 .card-c {
-    width: clamp(62px, 16vw, 82px);
-    top: 14px;
+    top: 16px !important;
   }
 
   #home-screen.landing-v3 .card-b {
-    width: clamp(66px, 17vw, 86px);
-    top: 2px;
+    width: clamp(68px, 17vw, 88px) !important;
+    top: 4px !important;
   }
 
-  #home-screen.landing-v3 .play-now {
-    min-height: 58px;
-    height: 58px;
-  }
-
-  #home-screen.landing-v3 .quick-actions .menu-card {
-    min-height: 64px;
-    height: 64px;
+  #home-screen.landing-v3 .hero-card span {
+    font-size: clamp(1.25rem, 4vw, 1.65rem) !important;
   }
 
   #home-screen.landing-v3 .player-option.mode-card {
-    min-height: clamp(84px, 23vw, 100px);
+    min-height: clamp(118px, 17dvh, 136px);
     padding: 6px 4px 5px;
   }
 
