@@ -925,19 +925,62 @@
     const card = document.createElement('div');
     card.className = 'victory-card';
 
+    const isLiveRoom = Boolean(state.liveRoom?.code && state.liveRoom?.playerId);
+    const isRoomHost = Boolean(isLiveRoom && state.liveRoom.hostId === state.liveRoom.playerId);
+    const rivalCopy = !isLiveRoom ? window.Big2GoAICharacters?.getRivalVictoryCopy?.(winner, state) : null;
+
     const badge = document.createElement('div');
     badge.className = 'victory-badge';
-    badge.textContent = winner.isHuman ? 'Big2Go Champion' : 'Big2Go Match Over';
+    badge.textContent = rivalCopy
+      ? (winner.isHuman ? 'Victory' : 'Defeat')
+      : (winner.isHuman ? 'Big2Go Champion' : 'Big2Go Match Over');
 
     const title = document.createElement('h2');
     title.className = 'victory-title';
-    title.textContent = winner.isHuman ? '🎉 YOU WIN!' : `${winner.name} wins`;
+    title.textContent = rivalCopy
+      ? rivalCopy.title
+      : (winner.isHuman ? '🎉 YOU WIN!' : `${winner.name} wins`);
 
     const message = document.createElement('p');
     message.className = 'victory-message';
-    message.textContent = winner.isHuman
-      ? 'You emptied your hand first. The lanterns burst and the crowd cheers your name.'
-      : `${winner.name} emptied their hand first. Tap New Game to try again.`;
+    if (rivalCopy) {
+      message.hidden = true;
+    } else {
+      message.textContent = winner.isHuman
+        ? 'You emptied your hand first. The lanterns burst and the crowd cheers your name.'
+        : `${winner.name} emptied their hand first. Tap New Game to try again.`;
+    }
+
+    let rivalPanel = null;
+    if (rivalCopy) {
+      rivalPanel = document.createElement('div');
+      rivalPanel.className = `victory-rival victory-rival--${rivalCopy.character.id}`;
+
+      const rivalHead = document.createElement('div');
+      rivalHead.className = 'victory-rival-head';
+
+      const rivalAvatar = document.createElement('div');
+      rivalAvatar.className = 'victory-rival-avatar character-avatar';
+      rivalAvatar.setAttribute('aria-hidden', 'true');
+      window.Big2GoAICharacters?.renderAvatar(rivalAvatar, rivalCopy.character, {
+        className: 'character-avatar',
+        imgClassName: 'character-avatar-img'
+      });
+
+      const rivalSpeaker = document.createElement('strong');
+      rivalSpeaker.className = 'victory-rival-speaker';
+      rivalSpeaker.textContent = rivalCopy.speakerLabel;
+
+      rivalHead.appendChild(rivalAvatar);
+      rivalHead.appendChild(rivalSpeaker);
+
+      const rivalQuote = document.createElement('p');
+      rivalQuote.className = 'victory-rival-quote';
+      rivalQuote.textContent = `"${rivalCopy.quote}"`;
+
+      rivalPanel.appendChild(rivalHead);
+      rivalPanel.appendChild(rivalQuote);
+    }
 
     const stats = document.createElement('div');
     stats.className = 'victory-stats';
@@ -946,7 +989,7 @@
     const rewards = document.createElement('div');
     rewards.className = 'victory-rewards';
     rewards.innerHTML = winner.isHuman
-      ? `<div class="reward-line">🪙 +${coinPrize} virtual gold coins</div><div class="reward-line">✨ Arcade tokens only — no cash value</div><div class="reward-line">⭐ Daily free coins can be added next</div>`
+      ? `<div class="reward-line">🪙 +${coinPrize} virtual gold coins</div><div class="reward-line">✨ Arcade tokens only — no cash value</div>`
       : `<div class="reward-line">Good Game! -🪙 ${ENTRY_FEE_COINS}</div><div class="reward-line">These are entertainment coins only — rematch anytime</div>`;
 
     const actions = document.createElement('div');
@@ -954,9 +997,9 @@
 
     const newButton = document.createElement('button');
     newButton.className = 'primary';
-    const isLiveRoom = Boolean(state.liveRoom?.code && state.liveRoom?.playerId);
-    const isRoomHost = Boolean(isLiveRoom && state.liveRoom.hostId === state.liveRoom.playerId);
-    newButton.textContent = isLiveRoom ? (isRoomHost ? 'Start Room Rematch' : 'Waiting for Host') : 'New Game';
+    newButton.textContent = isLiveRoom
+      ? (isRoomHost ? 'Start Room Rematch' : 'Waiting for Host')
+      : (rivalCopy?.rematchLabel || 'New Game');
     newButton.disabled = Boolean(isLiveRoom && !isRoomHost);
     newButton.addEventListener('click', async () => {
       if (isLiveRoom) {
@@ -972,14 +1015,22 @@
 
     const shareButton = document.createElement('button');
     shareButton.className = 'secondary';
-    shareButton.textContent = 'Share Win';
-    shareButton.addEventListener('click', shareGame);
+    shareButton.textContent = winner.isHuman ? 'Share Win' : 'Back to Menu';
+    shareButton.addEventListener('click', () => {
+      if (winner.isHuman) {
+        shareGame();
+        return;
+      }
+      overlay.remove();
+      showHomeScreen();
+    });
 
     actions.appendChild(newButton);
     actions.appendChild(shareButton);
     card.appendChild(badge);
     card.appendChild(title);
-    card.appendChild(message);
+    if (!rivalCopy) card.appendChild(message);
+    if (rivalPanel) card.appendChild(rivalPanel);
     card.appendChild(stats);
     card.appendChild(rewards);
     card.appendChild(actions);

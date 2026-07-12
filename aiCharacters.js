@@ -33,6 +33,18 @@
         ai_win: ['Victory! 🎉', 'Champion 😎', 'GG 🔥'],
         ai_lose: ['Well played 👏', 'You win 😭', 'Rematch? 😤'],
         player_strong_play: ['Bold move 🤔', 'Interesting... 🧐', 'Show me more 🔥']
+      },
+      rival: {
+        defeatPlayer: [
+          'Better luck next time 😏',
+          'Too easy for me 🔥',
+          'Train harder and come back 💪'
+        ],
+        defeatedByPlayer: [
+          "Next time I won't lose 🔥",
+          'You got lucky this round 😤',
+          'Rematch — I want a rematch! 🐻'
+        ]
       }
     },
     {
@@ -63,6 +75,18 @@
         ai_win: ['We did it! 🎉', 'Happy win 😊', 'Great game 🌸'],
         ai_lose: ['Congrats! 👏', 'Well done 😊', 'You earned it 🎉'],
         player_strong_play: ['Interesting move 🤔', 'Nice play! 👏', 'Impressive 😮']
+      },
+      rival: {
+        defeatPlayer: [
+          'Good game — you played well 😊',
+          'Maybe next round? 🐰',
+          'I had fun anyway 🌸'
+        ],
+        defeatedByPlayer: [
+          'Wow, you are amazing 👏',
+          'I will practice more for next time 🐰',
+          'You totally deserved that win ✨'
+        ]
       }
     },
     {
@@ -93,6 +117,18 @@
         ai_win: ['Standing ovation 👏', 'Encore! 🎭', 'What a show 🎉'],
         ai_lose: ['You win this episode 📺', 'Fair play comedian 😄', 'Rematch soon? 🍿'],
         player_strong_play: ['Oh snap 😮', 'Big energy 🔥', 'Respect the bit 👏']
+      },
+      rival: {
+        defeatPlayer: [
+          'And the crowd goes wild 🎭',
+          'That was my best episode yet 🍿',
+          'Write that down — Sally wins 📺'
+        ],
+        defeatedByPlayer: [
+          'You stole the show this time 🎬',
+          'Fine, you got the punchline 😂',
+          'Encore rematch? I have new jokes 🍿'
+        ]
       }
     },
     {
@@ -124,6 +160,18 @@
         ai_win: ['Cookie wins! 🎉', 'Delicious victory 😎', 'Munch time 🔥'],
         ai_lose: ['You ate me up 😭', 'Crispy defeat 🍪', 'GG 😅'],
         player_strong_play: ['Spicy move 🌶️', 'Tasty play 😋', 'Oh wow 😮']
+      },
+      rival: {
+        defeatPlayer: [
+          'Calculated win — sweet 🍪',
+          'The odds favored me this round 📊',
+          'Crunch time complete 😎'
+        ],
+        defeatedByPlayer: [
+          'My strategy needs a patch 🤓',
+          'Well played — I underestimated you 🍪',
+          'Next match I am updating my playbook 🔥'
+        ]
       }
     }
   ];
@@ -171,6 +219,50 @@
     return TABLE_SLOTS[position] || 'center';
   }
 
+  function pickRivalLine(lines) {
+    if (!Array.isArray(lines) || !lines.length) return '';
+    return lines[Math.floor(Math.random() * lines.length)];
+  }
+
+  function resolveRivalPlayer(gameState, winner) {
+    if (!gameState?.players?.length || !winner) return null;
+    if (!winner.isHuman) return winner;
+
+    let rivalPlayer = null;
+    let fewestCards = Infinity;
+    gameState.players.forEach((player, index) => {
+      if (index === gameState.humanIndex || !player || player.isHuman) return;
+      const count = Array.isArray(player.hand) ? player.hand.length : Infinity;
+      if (count < fewestCards) {
+        fewestCards = count;
+        rivalPlayer = player;
+      }
+    });
+    return rivalPlayer || gameState.players.find((player, index) => index !== gameState.humanIndex && player && !player.isHuman) || null;
+  }
+
+  function getRivalVictoryCopy(winner, gameState) {
+    if (!gameState || gameState.liveRoom || !winner) return null;
+    const rivalPlayer = resolveRivalPlayer(gameState, winner);
+    const character = getForPlayer(rivalPlayer);
+    if (!character) return null;
+
+    const playerWon = Boolean(winner.isHuman);
+    const lines = playerWon ? character.rival?.defeatedByPlayer : character.rival?.defeatPlayer;
+    const quote = pickRivalLine(lines)
+      || pickRivalLine(character.reactions?.[playerWon ? 'ai_lose' : 'ai_win'])
+      || (playerWon ? 'Good game!' : 'Better luck next time!');
+
+    return {
+      character,
+      rivalPlayer,
+      title: playerWon ? `You defeated ${character.name}!` : `${character.name} defeated you!`,
+      speakerLabel: `${character.name} says:`,
+      quote,
+      rematchLabel: 'Rematch?'
+    };
+  }
+
   function renderAvatar(container, characterOrPlayer, options = {}) {
     if (!container) return false;
     const character = characterOrPlayer?.avatar
@@ -213,6 +305,7 @@
     getForPlayer,
     pickRandom,
     getTableSlot,
+    getRivalVictoryCopy,
     renderAvatar
   };
 })();

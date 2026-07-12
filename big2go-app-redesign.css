@@ -641,7 +641,7 @@ button:disabled { opacity: .42; filter: grayscale(.35); cursor: not-allowed; tra
   font-weight: 1000;
   background: linear-gradient(180deg, #fff5a8, #ffd24a);
 }
-.victory-title { margin: 12px 0 4px; font-size: 2.5rem; line-height: .9; }
+.victory-title { margin: 12px 0 4px; font-size: clamp(1.65rem, 7vw, 2.2rem); line-height: 1.05; }
 .victory-message { margin: 0 auto 16px; max-width: 300px; color: rgba(255,255,255,.78); }
 .victory-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
 .victory-stats span {
@@ -658,6 +658,52 @@ button:disabled { opacity: .42; filter: grayscale(.35); cursor: not-allowed; tra
 .reward-line { padding: 10px 12px; border-radius: 16px; background: rgba(255,255,255,.10); color: #fff; font-size: .82rem; font-weight: 800; }
 .victory-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
 .victory-actions button { min-height: 50px; border-radius: 17px; }
+.victory-rival {
+  margin: 12px 0 14px;
+  padding: 14px 14px 15px;
+  border-radius: 20px;
+  text-align: left;
+  border: 1px solid rgba(255, 200, 61, 0.42);
+  background: linear-gradient(180deg, rgba(255, 200, 61, 0.16), rgba(21, 16, 68, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.victory-rival-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.victory-rival-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  flex: 0 0 44px;
+  border: 2px solid rgba(255, 200, 61, 0.45);
+  background: rgba(7, 9, 29, 0.55);
+  font-size: 22px;
+}
+.victory-rival-avatar .character-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.victory-rival-speaker {
+  font-size: 0.92rem;
+  font-weight: 1000;
+  letter-spacing: 0.04em;
+  color: rgba(255, 236, 170, 0.95);
+}
+.victory-rival-quote {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
 .confetti-layer { position: fixed; inset: 0; pointer-events: none; z-index: 110; overflow: hidden; }
 .confetti-bit { position: absolute; left: var(--x); top: var(--y); width: 8px; height: 12px; border-radius: 3px; background: var(--c); animation: confetti-fall var(--d) ease-out forwards; }
 @keyframes confetti-fall { to { transform: translate(var(--dx), var(--dy)) rotate(620deg); opacity: 0; } }
