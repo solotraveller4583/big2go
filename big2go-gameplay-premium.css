@@ -821,7 +821,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     --gp-mobile-header: 68px;
     --gp-mobile-opponents: 78px;
     --gp-mobile-reactions: 44px;
-    --gp-mobile-hand: 210px;
+    --gp-mobile-hand: 150px;
     --gp-mobile-dock: 122px;
     --gp-table-max: min(36dvh, 100%);
     --gp-selected-lift: -8px;
@@ -858,7 +858,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
       40px
       minmax(220px, 1fr)
       var(--gp-mobile-reactions)
-      170px
+      150px
       var(--gp-mobile-dock) !important;
   }
 
@@ -940,23 +940,24 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     min-height: 0 !important;
   }
 
-  /* Hand — room for lifted selection without clipping */
+  /* Hand — compact panel; cards size unchanged */
   #game-screen.gameplay-premium .hand-card {
-    height: 100% !important;
+    height: auto !important;
     min-height: 0 !important;
     max-height: var(--gp-mobile-hand) !important;
-    padding: 2px 0 0 !important;
+    align-self: end !important;
+    padding: 0 !important;
     display: grid !important;
-    grid-template-rows: 32px minmax(110px, 1fr) !important;
-    gap: 0 !important;
+    grid-template-rows: 22px minmax(0, auto) !important;
+    gap: 2px !important;
     overflow-x: hidden !important;
     overflow-y: hidden !important;
   }
 
   #game-screen.gameplay-premium .hand-head {
-    height: 32px !important;
-    min-height: 32px !important;
-    max-height: 32px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    max-height: 22px !important;
     display: flex !important;
     align-items: center !important;
   }
@@ -966,12 +967,13 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
   }
 
   #game-screen.gameplay-premium #hand {
-    height: 100% !important;
-    min-height: 110px !important;
-    max-height: none !important;
-    padding: 16px var(--hand-pad-x, 10px) 6px !important;
+    height: auto !important;
+    min-height: calc(((100cqw + 12 * var(--card-peek)) / 13) * var(--card-aspect) + 10px) !important;
+    max-height: calc(((100cqw + 12 * var(--card-peek)) / 13) * var(--card-aspect) + 10px) !important;
+    padding: 4px 0 4px !important;
     overflow-x: hidden !important;
     overflow-y: hidden !important;
+    align-self: end !important;
   }
 
   #game-screen.gameplay-premium #hand .card-tile.selected {
@@ -1017,25 +1019,26 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     --gp-mobile-header: 60px;
     --gp-mobile-opponents: 68px;
     --gp-mobile-reactions: 40px;
-    --gp-mobile-hand: 190px;
+    --gp-mobile-hand: 142px;
     --gp-mobile-dock: 114px;
     --gp-table-max: min(30dvh, 100%);
     --gp-selected-lift: -8px;
   }
 
   #game-screen.gameplay-premium .hand-card {
-    grid-template-rows: 28px minmax(104px, 1fr) !important;
+    grid-template-rows: 20px minmax(0, auto) !important;
   }
 
   #game-screen.gameplay-premium .hand-head {
-    height: 28px !important;
-    min-height: 28px !important;
-    max-height: 28px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
   }
 
   #game-screen.gameplay-premium #hand {
-    min-height: 104px !important;
-    padding-top: 14px !important;
+    min-height: calc(((100cqw + 12 * var(--card-peek)) / 13) * var(--card-aspect) + 8px) !important;
+    max-height: calc(((100cqw + 12 * var(--card-peek)) / 13) * var(--card-aspect) + 8px) !important;
+    padding-top: 3px !important;
   }
 
   #game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel.hidden) {
@@ -1187,8 +1190,9 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
   #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand,
   #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel:not(.hidden)) #hand {
     --card-peek: 26px !important;
-    min-height: calc(((100cqw + 12 * var(--card-peek)) / 13) * var(--card-aspect) + 16px) !important;
-    padding: 10px 0 6px !important;
+    min-height: calc(((100cqw + 12 * var(--card-peek)) / 13) * var(--card-aspect) + 10px) !important;
+    max-height: calc(((100cqw + 12 * var(--card-peek)) / 13) * var(--card-aspect) + 10px) !important;
+    padding: 4px 0 4px !important;
   }
 
   #game-screen.gameplay-premium.b2g-match #hand .card-tile,
