@@ -209,8 +209,39 @@
 }
 
 #game-screen.gameplay-premium .ai-reaction-layer {
-  inset: 32px 8px 28px 8px;
-  z-index: 3;
+  top: 32px;
+  left: 8px;
+  right: 8px;
+  bottom: auto;
+  height: 50px;
+  z-index: 6;
+}
+
+@media (max-width: 639px) {
+  #game-screen.gameplay-premium .ai-reaction-layer {
+    top: 30px !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: auto !important;
+    height: 48px !important;
+  }
+
+  #game-screen.gameplay-premium .ai-table-reaction--left,
+  #game-screen.gameplay-premium .ai-table-reaction--center,
+  #game-screen.gameplay-premium .ai-table-reaction--right {
+    top: 0 !important;
+    bottom: auto !important;
+  }
+
+  #game-screen.gameplay-premium .ai-table-reaction--left { left: 0 !important; }
+  #game-screen.gameplay-premium .ai-table-reaction--center { left: 50% !important; }
+  #game-screen.gameplay-premium .ai-table-reaction--right { right: 0 !important; }
+}
+
+@media (max-width: 639px) {
+  .ai-table-reaction--left { left: 1%; bottom: 4%; }
+  .ai-table-reaction--center { bottom: 8%; }
+  .ai-table-reaction--right { right: 1%; bottom: 4%; }
 }
 
 @media (max-height: 760px) {
@@ -226,37 +257,31 @@
   }
 }
 
-@media (max-width: 639px) {
-  .ai-table-reaction--left { left: 1%; bottom: 4%; }
-  .ai-table-reaction--center { bottom: 8%; }
-  .ai-table-reaction--right { right: 1%; bottom: 4%; }
-}
-
 @media (max-height: 760px) {
-  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) {
+  #game-screen.b2g-match:not(.gameplay-premium):not(.hidden):has(.room-chat-panel.hidden) {
     gap: 5px !important;
     grid-template-rows: 42px 52px minmax(156px, 1fr) 30px minmax(88px, 94px) 70px !important;
   }
-  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) .table-arena {
+  #game-screen.b2g-match:not(.gameplay-premium):not(.hidden):has(.room-chat-panel.hidden) .table-arena {
     padding: 8px !important;
     min-height: 0 !important;
   }
-  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) #trick-play {
+  #game-screen.b2g-match:not(.gameplay-premium):not(.hidden):has(.room-chat-panel.hidden) #trick-play {
     min-height: 86px !important;
   }
-  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) .trick-help {
+  #game-screen.b2g-match:not(.gameplay-premium):not(.hidden):has(.room-chat-panel.hidden) .trick-help {
     padding: 5px 8px !important;
     font-size: 10px !important;
   }
-  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) .hand-card {
+  #game-screen.b2g-match:not(.gameplay-premium):not(.hidden):has(.room-chat-panel.hidden) .hand-card {
     min-height: 88px !important;
     padding: 6px !important;
   }
-  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) #hand {
+  #game-screen.b2g-match:not(.gameplay-premium):not(.hidden):has(.room-chat-panel.hidden) #hand {
     padding-top: 7px !important;
     padding-bottom: 7px !important;
   }
-  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) .action-dock {
+  #game-screen.b2g-match:not(.gameplay-premium):not(.hidden):has(.room-chat-panel.hidden) .action-dock {
     min-height: 88px !important;
     height: 88px !important;
     padding: 0 !important;
@@ -264,13 +289,13 @@
     gap: 8px !important;
     overflow: hidden !important;
   }
-  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) .action-dock button {
+  #game-screen.b2g-match:not(.gameplay-premium):not(.hidden):has(.room-chat-panel.hidden) .action-dock button {
     min-height: 0 !important;
     height: 36px !important;
     font-size: 13px !important;
     border-radius: 14px !important;
   }
-  #game-screen.b2g-match:not(.hidden):has(.room-chat-panel.hidden) .play-action {
+  #game-screen.b2g-match:not(.gameplay-premium):not(.hidden):has(.room-chat-panel.hidden) .play-action {
     min-height: 0 !important;
     height: 44px !important;
     font-size: 16px !important;
