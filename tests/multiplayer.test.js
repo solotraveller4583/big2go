@@ -276,6 +276,31 @@ test('HTTP room chat action and state endpoints sync chat without WebSocket', as
   }
 });
 
+test('private room reactions sync to every player state', () => {
+  const { room, playerId: hostId } = server.createRoom('Host');
+  const joined = server.joinRoom(room.code, 'Maya');
+
+  const result = server.applyRoomAction(room.code, joined.playerId, { type: 'room:reaction', emoji: '🔥' });
+
+  assert.equal(result.ok, true);
+  assert.ok(Array.isArray(result.reactions));
+  assert.equal(result.reactions.length, 1);
+  assert.equal(result.reactions[0].emoji, '🔥');
+  assert.equal(result.reactions[0].playerId, joined.playerId);
+
+  const hostView = server.privateRoomState(room, hostId);
+  assert.equal(hostView.reactions.length, 1);
+  assert.equal(hostView.reactions[0].name, 'Maya');
+});
+
+test('private room reactions reject invalid emoji', () => {
+  const { room, playerId: hostId } = server.createRoom('Host');
+
+  const result = server.applyRoomAction(room.code, hostId, { type: 'room:reaction', emoji: '<script>' });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'Invalid reaction');
+});
+
 test('private room voice state syncs mute and speaking indicators', () => {
   const { room, playerId: hostId } = server.createRoom('Host');
   const joined = server.joinRoom(room.code, 'Maya');

@@ -266,6 +266,65 @@ function sanitizeChatText(text) {
     .slice(0, 120);
 }
 
+const ALLOWED_REACTIONS = new Set(['😂', '👏', '🔥', '😮', '🎉', '💪', '😎', '🙌']);
+
+function sanitizeReaction(emoji) {
+  const text = String(emoji || '').trim();
+  return ALLOWED_REACTIONS.has(text) ? text : '';
+}
+
+function ensureReactionQueue(room) {
+  if (!room.reactionQueues) room.reactionQueues = new Map();
+  return room.reactionQueues;
+}
+
+function queueReaction(room, reaction) {
+  const queues = ensureReactionQueue(room);
+  for (const player of room.players) {
+    const list = queues.get(player.id) || [];
+    list.push(reaction);
+    queues.set(player.id, list.slice(-20));
+  }
+}
+
+function takeReactions(room, playerId) {
+  const queues = ensureReactionQueue(room);
+  const pending = queues.get(playerId) || [];
+  queues.set(playerId, []);
+  return pending;
+}
+
+function broadcastReaction(room, reaction) {
+  for (const client of room.clients) {
+    if (client.readyState === client.OPEN) {
+      client.send(JSON.stringify({ type: 'room:reaction', reaction }));
+    }
+  }
+}
+
+function addRoomReaction(room, playerId, emoji) {
+  const player = room.players.find(entry => entry.id === playerId);
+  if (!player || player.connected === false) return { ok: false, error: 'Player not in room' };
+  const reactionEmoji = sanitizeReaction(emoji);
+  if (!reactionEmoji) return { ok: false, error: 'Invalid reaction' };
+  const now = Date.now();
+  if (player.lastReactionAt && now - player.lastReactionAt < 700) {
+    return { ok: false, error: 'Please wait before sending another reaction' };
+  }
+  player.lastReactionAt = now;
+  const reaction = {
+    id: crypto.randomUUID(),
+    playerId,
+    name: player.name,
+    emoji: reactionEmoji,
+    at: now
+  };
+  queueReaction(room, reaction);
+  broadcastReaction(room, reaction);
+  room.updatedAt = now;
+  return { ok: true, reaction };
+}
+
 function publicChat(room) {
   return (room.chat || []).slice(-30).map(message => ({ ...message }));
 }
@@ -439,7 +498,7 @@ function activeSessionForPlayer(playerId) {
 
 function privateRoomState(room, playerId) {
   processRoomTimeouts(room);
-  const state = { room: publicRoom(room), game: publicGameState(room, playerId), chat: publicChat(room), voice: publicVoice(room), voiceSignals: takeVoiceSignals(room, playerId) };
+  const state = { room: publicRoom(room), game: publicGameState(room, playerId), chat: publicChat(room), voice: publicVoice(room), voiceSignals: takeVoiceSignals(room, playerId), reactions: takeReactions(room, playerId) };
   state.session = rememberActiveSession(room, playerId);
   return state;
 }
@@ -557,6 +616,9 @@ function applyRoomAction(code, playerId, action) {
       if (!result.ok) return result;
     } else if (action.type === 'room:chat') {
       const result = addRoomChatMessage(room, playerId, action.text);
+      if (!result.ok) return result;
+    } else if (action.type === 'room:reaction') {
+      const result = addRoomReaction(room, playerId, action.emoji);
       if (!result.ok) return result;
     } else if (action.type === 'voice:state') {
       const result = updateVoiceState(room, playerId, action.voice || action);
@@ -1009,7 +1071,7 @@ function createHttpServer() {
           relayVoiceSignal(room, playerId, targetId, signal);
           return;
         }
-        if (message.type === 'room:start' || message.type === 'room:leave' || message.type === 'room:rejoin' || message.type === 'room:chat' || message.type === 'voice:state' || message.type === 'game:play' || message.type === 'game:pass') {
+        if (message.type === 'room:start' || message.type === 'room:leave' || message.type === 'room:rejoin' || message.type === 'room:chat' || message.type === 'room:reaction' || message.type === 'voice:state' || message.type === 'game:play' || message.type === 'game:pass') {
           const result = applyRoomAction(code, playerId, message);
           if (!result.ok) socket.send(JSON.stringify({ type: 'room:error', error: result.error }));
         }
@@ -1063,6 +1125,8 @@ module.exports = {
   applyRoomPlay,
   applyRoomPass,
   applyRoomAction,
+  addRoomReaction,
+  sanitizeReaction,
   createHttpServer,
   dealCards,
   cardFromId,

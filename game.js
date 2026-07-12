@@ -43,6 +43,7 @@
     'straight-flush': ['Straight flush! Fireworks now!', 'That is a headline move.', 'Absolute festival chaos.']
   };
   const OPENING_LINE = '♦ 3 Holder Starts';
+  const ALLOWED_REACTIONS = new Set(['😂', '👏', '🔥', '😮', '🎉', '💪', '😎', '🙌']);
 
   const state = {
     settings: { players: 4, straightRule: DEFAULT_STRAIGHT_RULE },
@@ -73,6 +74,8 @@
     chat: [],
     chatExpanded: false,
     lastChatSentAt: 0,
+    lastReactionSentAt: 0,
+    seenReactionIds: new Set(),
     liveRoom: null,
     liveRoomPlayers: [],
     voice: {
@@ -866,13 +869,105 @@
     return prize;
   }
 
-  function showReaction(emoji) {
+  function normalizeReactionEmoji(emoji) {
+    const text = String(emoji || '').trim();
+    return ALLOWED_REACTIONS.has(text) ? text : '';
+  }
+
+  function displayReactionFloat(emoji) {
     const floater = document.createElement('div');
     floater.className = 'reaction-float';
     floater.textContent = emoji;
     document.body.appendChild(floater);
     setTimeout(() => floater.remove(), 1150);
+  }
+
+  function showReactionOnRow(row, emoji, name) {
+    if (!row || !emoji) return;
+    row.querySelector('.opponent-reaction-pop')?.remove();
+    const pop = document.createElement('div');
+    pop.className = 'opponent-reaction-pop';
+    pop.setAttribute('aria-label', `${name || 'Player'} reacted with ${emoji}`);
+    pop.textContent = emoji;
+    row.appendChild(pop);
+    requestAnimationFrame(() => pop.classList.add('show'));
+    setTimeout(() => {
+      pop.classList.remove('show');
+      setTimeout(() => pop.remove(), 280);
+    }, 1400);
+  }
+
+  function displayTableReactionBubble(reaction) {
+    let playerIndex = Number.isFinite(reaction?.playerIndex) ? reaction.playerIndex : null;
+    if (playerIndex == null && reaction?.playerId) {
+      playerIndex = state.players.findIndex(player => player.id === reaction.playerId);
+    }
+    if (playerIndex == null || playerIndex < 0) playerIndex = state.humanIndex;
+    const isSelf = playerIndex === state.humanIndex || reaction?.playerId === state.liveRoom?.playerId;
+    const player = state.players[playerIndex];
+    const name = isSelf ? 'You' : (reaction?.name || player?.name || 'Player');
+    const row = document.querySelector(`.opponent-row[data-player-index="${playerIndex}"]`);
+    if (row) {
+      showReactionOnRow(row, reaction.emoji, name);
+      return;
+    }
+    window.Big2GoAIReactions?.showPlayerEmojiBubble?.(playerIndex, name, reaction.emoji, state);
+  }
+
+  function rememberReaction(reaction) {
+    if (!reaction?.id || !reaction?.emoji) return false;
+    if (state.seenReactionIds.has(reaction.id)) return false;
+    state.seenReactionIds.add(reaction.id);
+    if (state.seenReactionIds.size > 120) {
+      state.seenReactionIds = new Set([...state.seenReactionIds].slice(-60));
+    }
+    return true;
+  }
+
+  function processReaction(reaction) {
+    if (!rememberReaction(reaction)) return;
+    displayReactionFloat(reaction.emoji);
+    displayTableReactionBubble(reaction);
     playUiSound('emoji');
+  }
+
+  function processReactions(reactions) {
+    if (!Array.isArray(reactions)) return;
+    reactions.forEach(processReaction);
+  }
+
+  function sendSoloPlayerReaction(emoji) {
+    processReaction({
+      id: `solo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      playerId: 'local-human',
+      name: 'You',
+      emoji,
+      playerIndex: state.humanIndex
+    });
+    window.Big2GoAIReactions?.onHumanEmojiReaction?.(emoji, state);
+  }
+
+  async function sendLiveRoomReaction(emoji) {
+    if (!state.liveRoom?.code) return;
+    const now = Date.now();
+    if (now - state.lastReactionSentAt < 700) return;
+    state.lastReactionSentAt = now;
+    const result = await sendLiveRoomMessage({ type: 'room:reaction', emoji });
+    if (result?.reactions) processReactions(result.reactions);
+  }
+
+  function sendPlayerReaction(emoji) {
+    const normalized = normalizeReactionEmoji(emoji);
+    if (!normalized) return;
+    if (state.liveRoom?.code) {
+      sendLiveRoomReaction(normalized);
+      return;
+    }
+    sendSoloPlayerReaction(normalized);
+  }
+
+  function showReaction(emoji) {
+    sendPlayerReaction(emoji);
   }
 
   function playShuffleSound() {
@@ -2630,6 +2725,7 @@
     }
     if (payload.game) applyLiveGame(payload.game, payload.room);
     if (payload.chat) applyChatPayload(payload.chat);
+    if (payload.reactions) processReactions(payload.reactions);
     if (payload.voice) applyVoicePayload(payload.voice);
     processVoiceSignals(payload.voiceSignals);
     return payload;
@@ -2716,6 +2812,7 @@
       }
       if (payload.game) applyLiveGame(payload.game, payload.room);
       if (payload.chat) applyChatPayload(payload.chat);
+      if (payload.reactions) processReactions(payload.reactions);
       if (payload.voice) applyVoicePayload(payload.voice);
       processVoiceSignals(payload.voiceSignals);
       return payload;
@@ -2894,8 +2991,12 @@
           }
           if (message.game) applyLiveGame(message.game, message.room);
           if (message.chat) applyChatPayload(message.chat);
+          if (message.reactions) processReactions(message.reactions);
           if (message.voice) applyVoicePayload(message.voice);
           processVoiceSignals(message.voiceSignals);
+        }
+        if (message.type === 'room:reaction') {
+          processReaction(message.reaction);
         }
         if (message.type === 'voice:signal') {
           handleVoiceSignal(message.from, message.signal).catch(() => {});
@@ -2959,6 +3060,7 @@
     renderRoomState(room);
     if (payload.game) applyLiveGame(payload.game, room);
     if (payload.chat) applyChatPayload(payload.chat);
+    if (payload.reactions) processReactions(payload.reactions);
     if (payload.voice) applyVoicePayload(payload.voice);
     processVoiceSignals(payload.voiceSignals);
     connectRoomSocket(room.code, playerId);
@@ -3336,7 +3438,7 @@
       renderChat();
     });
     document.querySelectorAll('[data-reaction]').forEach(button => {
-      button.addEventListener('click', () => showReaction(button.dataset.reaction || '👏'));
+      button.addEventListener('click', () => sendPlayerReaction(button.dataset.reaction || '👏'));
     });
     els.chatForm?.addEventListener('submit', event => {
       event.preventDefault();

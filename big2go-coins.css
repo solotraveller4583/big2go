@@ -96,6 +96,42 @@
 }
 @keyframes reactFloat { 0% { opacity:0; transform:translate(-50%, 10px) scale(.7); } 18% { opacity:1; transform:translate(-50%, -30px) scale(1.08); } 100% { opacity:0; transform:translate(-50%, -100px) scale(.85); } }
 
+.opponent-row {
+  position: relative;
+}
+
+.opponent-reaction-pop {
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  z-index: 4;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  line-height: 1;
+  border: 1px solid rgba(255, 200, 61, 0.55);
+  background: linear-gradient(180deg, rgba(255, 200, 61, 0.24), rgba(21, 16, 68, 0.94));
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  transform: scale(0.72);
+  transition: opacity 220ms ease, transform 320ms cubic-bezier(0.22, 1.18, 0.36, 1);
+  pointer-events: none;
+}
+
+.opponent-reaction-pop.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.player-reaction-emoji {
+  font-size: 22px;
+  line-height: 1.1;
+  text-align: center;
+}
+
 /* AI table reactions — center arena notifications (single player) */
 .ai-reaction-layer {
   position: absolute;

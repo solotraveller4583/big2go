@@ -113,6 +113,57 @@
     });
   }
 
+  function showPlayerEmojiBubble(playerIndex, name, emoji, gameState) {
+    const layer = ensureReactionLayer();
+    if (!layer || !emoji) return false;
+
+    const slot = 'center';
+    layer.querySelectorAll(`.ai-table-reaction--${slot}.player-reaction-bubble`).forEach(node => node.remove());
+
+    const bubble = document.createElement('div');
+    bubble.className = `ai-table-reaction ai-table-reaction--${slot} player-reaction-bubble`;
+    bubble.setAttribute('role', 'status');
+
+    const head = document.createElement('div');
+    head.className = 'ai-table-reaction-head';
+
+    const avatarEl = document.createElement('span');
+    avatarEl.className = 'ai-table-reaction-avatar';
+    avatarEl.textContent = String(name || 'You').charAt(0).toUpperCase();
+
+    const nameEl = document.createElement('strong');
+    nameEl.className = 'ai-table-reaction-name';
+    nameEl.textContent = name || 'You';
+
+    head.appendChild(avatarEl);
+    head.appendChild(nameEl);
+
+    const msg = document.createElement('p');
+    msg.className = 'ai-table-reaction-msg player-reaction-emoji';
+    msg.textContent = emoji;
+
+    bubble.appendChild(head);
+    bubble.appendChild(msg);
+    layer.appendChild(bubble);
+
+    requestAnimationFrame(() => bubble.classList.add('show'));
+    window.setTimeout(() => {
+      bubble.classList.remove('show');
+      window.setTimeout(() => bubble.remove(), 340);
+    }, BUBBLE_MS);
+    return true;
+  }
+
+  function onHumanEmojiReaction(emoji, gameState) {
+    if (!gameState || gameState.liveRoom || !emoji) return false;
+    const aiIndex = pickRandomAiIndex(gameState);
+    if (aiIndex == null) return false;
+    if (Math.random() > 0.72) return false;
+    const replies = ['👏', '😂', '🔥', '😮', '💪', '🙌', '😎', '🎉'];
+    const reply = replies[Math.floor(Math.random() * replies.length)];
+    return showAIReactionBubble(aiIndex, reply, gameState);
+  }
+
   function showAIReactionBubble(playerIndex, message, gameState) {
     const layer = ensureReactionLayer();
     if (!layer || !message) return false;
@@ -321,6 +372,8 @@
     canReactForEvent,
     triggerAIReaction,
     showAIReactionBubble,
+    showPlayerEmojiBubble,
+    onHumanEmojiReaction,
     resetAIReactions,
     onHumanTurnStart,
     clearHumanIdleTimer,
