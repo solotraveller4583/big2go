@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="big2go-coins.css?v=7" />
   <link rel="stylesheet" href="big2go-mobile-redesign.css?v=8" />
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=2" />
-  <link rel="stylesheet" href="big2go-landing-v3.css?v=17" />
+  <link rel="stylesheet" href="big2go-landing-v3.css?v=18" />
   <link rel="stylesheet" href="big2go-gameplay-premium.css?v=21" />
 </head>
 <body>
@@ -67,19 +67,19 @@
               <span class="hero-card-corner"><strong>3</strong><small>♦</small></span>
               <span class="hero-card-suit">♦</span>
             </div>
-            <div class="hero-card card-b">
-              <span class="hero-card-corner"><strong>A</strong><small>♥</small></span>
-              <span class="hero-card-suit">♥</span>
-            </div>
-            <div class="hero-card card-c">
+            <div class="hero-card card-b hero-card-boss">
               <span class="hero-card-corner"><strong>2</strong><small>♠</small></span>
               <span class="hero-card-suit">♠</span>
+            </div>
+            <div class="hero-card card-c">
+              <span class="hero-card-corner"><strong>A</strong><small>♥</small></span>
+              <span class="hero-card-suit">♥</span>
             </div>
           </div>
         </div>
         <div class="hero-brand">
           <h1>Big<span class="logo-accent">2Go</span></h1>
-          <p class="hero-kicker">Fast Big 2 Battles</p>
+          <p class="hero-kicker">Fast Big 2 battles</p>
         </div>
         <p class="hero-promise">Choose a table and start playing in one tap.</p>
       </section>
@@ -109,37 +109,31 @@
 
       <section class="player-panel table-select" aria-label="Choose players">
         <div class="panel-title-row">
-          <div>
-            <small>Choose Table</small>
-            <h2>Match Mode</h2>
-          </div>
+          <h2>Match Mode</h2>
         </div>
         <div class="mode-carousel" role="region" aria-label="Match mode carousel">
           <div class="player-options" role="group" aria-label="Number of players">
             <button class="player-option mode-card mode-classic selected" type="button" data-player-choice="4">
               <span class="mode-icon" aria-hidden="true"><span class="mode-icon-mark mode-icon-players"><i></i><i></i><i></i><i></i></span></span>
               <span class="mode-copy">
-                <strong>4P CLASSIC</strong>
-                <small class="mode-sub">Full Table</small>
-                <small class="mode-meta">4 Players</small>
+                <strong>4P Classic</strong>
+                <small class="mode-sub">Full table</small>
               </span>
               <i class="mode-check" aria-hidden="true">✓</i>
             </button>
             <button class="player-option mode-card mode-fast" type="button" data-player-choice="3">
               <span class="mode-icon" aria-hidden="true"><span class="mode-icon-mark mode-icon-bolt">⚡</span></span>
               <span class="mode-copy">
-                <strong>3P FAST</strong>
-                <small class="mode-sub">Quick Battle</small>
-                <small class="mode-meta">Fast Match</small>
+                <strong>3P Fast</strong>
+                <small class="mode-sub">Quick battle</small>
               </span>
               <i class="mode-check" aria-hidden="true">✓</i>
             </button>
             <button class="player-option mode-card mode-duel" type="button" data-player-choice="2">
               <span class="mode-icon" aria-hidden="true"><span class="mode-icon-mark mode-icon-duel">⚔️</span></span>
               <span class="mode-copy">
-                <strong>2P DUEL</strong>
-                <small class="mode-sub">Head to Head</small>
-                <small class="mode-meta">1 vs 1</small>
+                <strong>2P Duel</strong>
+                <small class="mode-sub">Head to head</small>
               </span>
               <i class="mode-check" aria-hidden="true">✓</i>
             </button>
@@ -150,13 +144,12 @@
           <option value="3">3 players — quicker showdown</option>
           <option value="2">2 players — head-to-head duel</option>
         </select>
+        <footer class="landing-v3-footer" aria-label="Big2Go information">
+          <span>Big2Go</span>
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Terms</a>
+        </footer>
       </section>
-
-      <footer class="landing-v3-footer" aria-label="Big2Go information">
-        <span>Big2Go</span>
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
-      </footer>
     </section>
 
     <section class="panel game-screen hidden b2g-match gameplay-premium" id="game-screen" aria-label="Big2Go table">

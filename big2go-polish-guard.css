@@ -1,33 +1,45 @@
-/* Final polish guard: preserve readability in short preview viewports. */
-#home-screen {
+/* Final polish guard: preserve readability in short preview viewports (legacy home only). */
+#home-screen:not(.landing-v3) {
   overflow-x: hidden !important;
   overflow-y: auto !important;
 }
-#home-screen .hero-stage h1 {
+
+#home-screen.landing-v3 {
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+}
+
+#home-screen:not(.landing-v3) .hero-stage h1 {
   position: relative !important;
   z-index: 5 !important;
 }
-#home-screen .flying-cards {
+
+#home-screen:not(.landing-v3) .flying-cards {
   z-index: 4 !important;
   margin-bottom: -6px !important;
 }
-#home-screen .hero-card {
+
+#home-screen:not(.landing-v3) .hero-card {
   z-index: 4 !important;
 }
+
 @media (max-height: 700px) {
-  #home-screen .hero-stage {
+  #home-screen:not(.landing-v3) .hero-stage {
     align-content: end !important;
   }
-  #home-screen .flying-cards {
+
+  #home-screen:not(.landing-v3) .flying-cards {
     height: 62px !important;
     margin-bottom: -8px !important;
   }
-  #home-screen .hero-card {
+
+  #home-screen:not(.landing-v3) .hero-card {
     width: 48px !important;
     height: 66px !important;
     padding: 6px !important;
   }
-  #home-screen .hero-card span { font-size: 1.45rem !important; }
-  #home-screen .hero-stage h1 { font-size: 3.65rem !important; }
-  #home-screen .hero-kicker { font-size: .66rem !important; margin-top: 2px !important; }
+
+  #home-screen:not(.landing-v3) .hero-card span { font-size: 1.45rem !important; }
+  #home-screen:not(.landing-v3) .hero-stage h1 { font-size: 3.65rem !important; }
+  #home-screen:not(.landing-v3) .hero-kicker { font-size: .66rem !important; margin-top: 2px !important; }
 }

@@ -492,10 +492,22 @@
 }
 
 #home-screen.landing-v3 .card-b {
-  transform: translateY(-6px);
-  z-index: 2;
-  width: clamp(66px, 17vw, 84px);
-  color: var(--v3-card-red);
+  transform: translateY(-8px);
+  z-index: 3;
+  width: clamp(72px, 19vw, 96px);
+  color: var(--v3-card-black);
+}
+
+#home-screen.landing-v3 .hero-card-boss {
+  border: 2px solid rgba(255, 200, 61, 0.82);
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.38),
+    0 0 28px rgba(255, 200, 61, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+#home-screen.landing-v3 .hero-card-boss .hero-card-suit {
+  filter: drop-shadow(0 2px 6px rgba(255, 200, 61, 0.35));
 }
 
 #home-screen.landing-v3 .card-c {
@@ -1044,8 +1056,8 @@
 }
 
 @keyframes v3CardFloatB {
-  0%, 100% { transform: translateX(-50%) rotate(0deg) translateY(0); }
-  50% { transform: translateX(-50%) rotate(0deg) translateY(-8px); }
+  0%, 100% { transform: translateY(-8px) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(0deg); }
 }
 
 @keyframes v3CardFloatC {
@@ -1149,21 +1161,27 @@
   #home-screen.landing-v3 {
     max-width: min(760px, 100%);
     margin-inline: auto;
-    overflow-y: auto !important;
-    gap: clamp(12px, 2dvh, 20px);
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden !important;
+    gap: clamp(10px, 1.6dvh, 16px);
     padding:
       max(12px, env(safe-area-inset-top))
       max(20px, env(safe-area-inset-right))
-      max(16px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-bottom))
       max(20px, env(safe-area-inset-left));
     grid-template-areas:
       "v3-topbar"
       "v3-hero"
       "v3-play"
       "v3-actions"
-      "v3-match"
-      "v3-footer";
-    grid-template-rows: auto auto auto auto auto auto;
+      "v3-match";
+    grid-template-rows:
+      auto
+      minmax(240px, 1.45fr)
+      auto
+      auto
+      minmax(0, 1fr);
   }
 
   #home-screen.landing-v3:has(#room-recovery-card:not(.hidden)) {
@@ -1173,9 +1191,8 @@
       "v3-play"
       "v3-recovery"
       "v3-actions"
-      "v3-match"
-      "v3-footer";
-    grid-template-rows: auto auto auto auto auto auto auto;
+      "v3-match";
+    grid-template-rows: auto minmax(200px, 1.2fr) auto auto auto minmax(0, 1fr);
   }
 
   #home-screen.landing-v3:has(#room-recovery-card:not(.hidden)) .landing-v3-footer {
@@ -1184,22 +1201,32 @@
 
   #home-screen.landing-v3.hero.casino-home.b2g-home {
     min-height: 100dvh;
-    max-height: none;
-    height: auto;
+    max-height: 100dvh;
+    height: 100dvh;
     border-radius: 0;
-    overflow-y: auto !important;
+    overflow: hidden !important;
   }
 
   #home-screen.landing-v3 .player-panel.table-select {
-    height: auto;
+    height: 100%;
     min-height: 0;
-    justify-content: flex-start;
+    justify-content: space-between;
   }
 
-  #home-screen.landing-v3 .landing-v3-footer {
-    align-self: auto;
-    margin-top: 0;
-    padding-top: 8px;
+  #home-screen.landing-v3 .player-panel.table-select .landing-v3-footer {
+    grid-area: unset;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 14px;
+    margin: 0;
+    padding: 8px 0 0;
+    font-size: 0.62rem;
+    line-height: 1;
+    color: var(--v3-text-muted);
+    background: transparent;
+    flex-shrink: 0;
   }
 
   #home-screen.landing-v3 .home-topbar.instant-topbar {
@@ -1208,14 +1235,29 @@
   }
 
   #home-screen.landing-v3 .hero-stage {
-    min-height: clamp(220px, 28dvh, 320px);
-    max-height: min(380px, 42dvh);
+    min-height: 0;
+    max-height: 100%;
+    height: 100%;
+  }
+
+  #home-screen.landing-v3 .hero-art,
+  #home-screen.landing-v3 .flying-cards {
+    height: clamp(140px, 22dvh, 200px);
+  }
+
+  #home-screen.landing-v3 .hero-card {
+    width: clamp(72px, 12vw, 96px);
+  }
+
+  #home-screen.landing-v3 .card-b,
+  #home-screen.landing-v3 .hero-card-boss {
+    width: clamp(96px, 16vw, 128px) !important;
   }
 
   #home-screen.landing-v3 .mode-carousel {
     scroll-padding-inline: 0;
     margin: 0;
-    overflow-x: visible;
+    overflow-x: hidden;
   }
 
   #home-screen.landing-v3 .quick-actions.instant-actions {
@@ -1246,70 +1288,62 @@
 
 @media (min-width: 640px) and (max-height: 720px) {
   #home-screen.landing-v3 {
-    gap: clamp(10px, 1.5dvh, 12px);
+    gap: clamp(8px, 1.2dvh, 12px);
   }
 
-  #home-screen.landing-v3 .hero-stage {
-    min-height: clamp(200px, 24dvh, 260px);
-    max-height: min(280px, 32dvh);
-  }
-
+  #home-screen.landing-v3 .hero-art,
   #home-screen.landing-v3 .flying-cards {
-    height: 88px;
-    margin-bottom: -22px;
+    height: clamp(120px, 18dvh, 160px);
   }
 
   #home-screen.landing-v3 .hero-card {
-    width: 58px;
-    height: 80px;
+    width: clamp(64px, 11vw, 84px);
+  }
+
+  #home-screen.landing-v3 .card-b,
+  #home-screen.landing-v3 .hero-card-boss {
+    width: clamp(88px, 14vw, 112px) !important;
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
-    font-size: clamp(2.4rem, 12vw, 3.4rem);
+    font-size: clamp(2.2rem, 8vw, 3rem);
   }
 
   #home-screen.landing-v3 .play-now {
-    min-height: 68px;
+    min-height: 64px;
   }
 
   #home-screen.landing-v3 .quick-actions .menu-card {
-    min-height: 76px;
+    min-height: 72px;
   }
 
   #home-screen.landing-v3 .player-option.mode-card {
     min-height: 0;
-    max-height: 96px;
+    max-height: 88px;
   }
 }
 
 @media (min-width: 640px) and (max-height: 700px) {
-  #home-screen.landing-v3 .hero-stage {
-    align-content: center !important;
-    min-height: 220px !important;
-  }
-
+  #home-screen.landing-v3 .hero-art,
   #home-screen.landing-v3 .flying-cards {
-    height: 88px !important;
-    margin-bottom: -22px !important;
+    height: clamp(108px, 16dvh, 140px) !important;
   }
 
   #home-screen.landing-v3 .hero-card {
-    width: 58px !important;
-    height: 80px !important;
-    padding: 0 !important;
+    width: clamp(60px, 10vw, 76px) !important;
   }
 
-  #home-screen.landing-v3 .hero-card-suit {
-    font-size: 1.55rem !important;
+  #home-screen.landing-v3 .card-b,
+  #home-screen.landing-v3 .hero-card-boss {
+    width: clamp(80px, 13vw, 104px) !important;
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
-    font-size: clamp(2.4rem, 12vw, 3.4rem) !important;
+    font-size: clamp(2rem, 7.5vw, 2.75rem) !important;
   }
 
   #home-screen.landing-v3 .hero-kicker {
-    font-size: clamp(0.64rem, 2.6vw, 0.78rem) !important;
-    margin-top: 6px !important;
+    font-size: clamp(0.6rem, 2.2vw, 0.72rem) !important;
   }
 }
 
@@ -1354,12 +1388,11 @@
 
   #home-screen.landing-v3 {
     --v3-mobile-inset: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
-    --v3-mobile-gap: clamp(4px, 0.75dvh, 7px);
-    --v3-row-header: clamp(58px, 8dvh, 68px);
-    --v3-row-hero: minmax(158px, 1.1fr);
-    --v3-row-play: clamp(56px, 7.5dvh, 62px);
-    --v3-row-actions: clamp(62px, 8.5dvh, 68px);
-    --v3-row-match: minmax(148px, 1fr);
+    --v3-mobile-gap: clamp(5px, 0.85dvh, 8px);
+    --v3-row-header: clamp(52px, 7dvh, 60px);
+    --v3-row-hero: minmax(220px, 1.55fr);
+    --v3-row-play: clamp(54px, 7.2dvh, 60px);
+    --v3-row-actions: clamp(60px, 8dvh, 66px);
 
     width: 100%;
     max-width: 100%;
@@ -1378,24 +1411,20 @@
       "v3-hero"
       "v3-play"
       "v3-actions"
-      "v3-match"
-      "v3-footer";
+      "v3-match";
     grid-template-rows:
       var(--v3-row-header)
       var(--v3-row-hero)
       var(--v3-row-play)
       var(--v3-row-actions)
-      var(--v3-row-match)
-      auto;
+      minmax(0, 1fr);
     align-content: stretch;
   }
 
   #home-screen.landing-v3 .player-panel.table-select {
     align-self: stretch;
-  }
-
-  #home-screen.landing-v3 .landing-v3-footer {
-    align-self: end;
+    justify-content: space-between;
+    padding: 8px 12px max(8px, env(safe-area-inset-bottom));
   }
 
   #home-screen.landing-v3:has(#room-recovery-card:not(.hidden)) {
@@ -1405,9 +1434,8 @@
       "v3-play"
       "v3-recovery"
       "v3-actions"
-      "v3-match"
-      "v3-footer";
-    grid-template-rows: auto auto auto auto auto auto auto;
+      "v3-match";
+    grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
   }
 
   #home-screen.landing-v3:has(#room-recovery-card:not(.hidden)) .landing-v3-footer {
@@ -1481,9 +1509,68 @@
     gap: clamp(2px, 0.35dvh, 4px);
   }
 
+  #home-screen.landing-v3 .live-pill small {
+    display: none;
+  }
+
   #home-screen.landing-v3 .hero-art {
-    width: min(100%, 320px);
-    height: clamp(82px, 11dvh, 96px);
+    width: min(100%, 360px);
+    height: clamp(128px, 24dvh, 168px);
+  }
+
+  #home-screen.landing-v3 .flying-cards {
+    height: clamp(128px, 24dvh, 168px);
+  }
+
+  #home-screen.landing-v3 .hero-card {
+    position: relative;
+    width: clamp(68px, 20vw, 84px);
+    border-radius: 15px;
+    animation: v3CardFloatA 5.2s ease-in-out infinite !important;
+  }
+
+  #home-screen.landing-v3 .hero-card-corner strong {
+    font-size: clamp(1.05rem, 4.2vw, 1.28rem);
+  }
+
+  #home-screen.landing-v3 .hero-card-corner small {
+    font-size: clamp(0.68rem, 2.7vw, 0.82rem);
+  }
+
+  #home-screen.landing-v3 .hero-card-suit {
+    font-size: clamp(1.65rem, 6.4vw, 2.15rem);
+  }
+
+  #home-screen.landing-v3 .card-a {
+    animation-name: v3CardFloatA !important;
+  }
+
+  #home-screen.landing-v3 .card-b,
+  #home-screen.landing-v3 .hero-card-boss {
+    width: clamp(92px, 28vw, 118px) !important;
+    animation-name: v3CardFloatB !important;
+    animation-duration: 5.8s !important;
+  }
+
+  #home-screen.landing-v3 .card-c {
+    animation-name: v3CardFloatC !important;
+  }
+
+  #home-screen.landing-v3 .hero-brand {
+    width: min(92vw, 340px);
+    gap: clamp(4px, 0.5dvh, 6px);
+  }
+
+  #home-screen.landing-v3 .hero-stage h1 {
+    font-size: clamp(2.35rem, 11.5vw, 3rem);
+    line-height: 0.9;
+  }
+
+  #home-screen.landing-v3 .hero-kicker {
+    font-size: clamp(0.62rem, 2.5vw, 0.72rem);
+    letter-spacing: 0.12em;
+    max-width: 18em;
+    line-height: 1.25;
   }
 
   #home-screen.landing-v3 .hero-art .hero-radial-glow {
@@ -1503,50 +1590,8 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    gap: clamp(2px, 1vw, 8px);
-    padding: 0 2px 1px;
-  }
-
-  #home-screen.landing-v3 .hero-card {
-    position: relative;
-    width: clamp(54px, 14vw, 70px);
-    padding: 0;
-    border-radius: 13px;
-  }
-
-  #home-screen.landing-v3 .hero-card-corner strong {
-    font-size: clamp(0.92rem, 3.6vw, 1.08rem);
-  }
-
-  #home-screen.landing-v3 .hero-card-corner small {
-    font-size: clamp(0.58rem, 2.3vw, 0.72rem);
-  }
-
-  #home-screen.landing-v3 .hero-card-suit {
-    font-size: clamp(1.35rem, 5.2vw, 1.75rem);
-  }
-
-  #home-screen.landing-v3 .card-b {
-    width: clamp(58px, 15vw, 74px);
-    transform: translateY(-4px);
-  }
-
-  #home-screen.landing-v3 .hero-brand {
-    width: min(90vw, 320px);
-    margin: 0;
-    gap: clamp(2px, 0.35dvh, 4px);
-  }
-
-  #home-screen.landing-v3 .hero-stage h1 {
-    font-size: clamp(2.55rem, 12.8vw, 3.2rem);
-    line-height: 0.88;
-  }
-
-  #home-screen.landing-v3 .hero-kicker {
-    margin: 0;
-    font-size: clamp(0.54rem, 2.15vw, 0.62rem);
-    letter-spacing: 0.14em;
-    color: var(--v3-gold);
+    gap: clamp(4px, 1.4vw, 10px);
+    padding: 0 4px 2px;
   }
 
   /* ── 3. Play Now ── */
@@ -1660,7 +1705,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: 8px;
     height: 100%;
     min-height: 0;
@@ -1720,36 +1765,20 @@
 
   #home-screen.landing-v3 .panel-title-row {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: center;
-    gap: 8px;
     padding: 0 2px;
     flex-shrink: 0;
   }
 
-  #home-screen.landing-v3 .panel-title-row > div {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  #home-screen.landing-v3 .panel-title-row small {
-    display: inline;
-    margin-bottom: 0;
-    font-size: 0.58rem;
-    font-weight: 950;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--v3-gold);
-  }
-
   #home-screen.landing-v3 .panel-title-row h2 {
     margin: 0;
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     font-weight: 1000;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--v3-text);
+    white-space: nowrap;
   }
 
   #home-screen.landing-v3 .player-options {
@@ -1800,15 +1829,23 @@
   }
 
   #home-screen.landing-v3 .mode-copy strong {
-    font-size: clamp(0.58rem, 2.5vw, 0.66rem);
-    letter-spacing: 0.04em;
+    font-size: clamp(0.62rem, 2.7vw, 0.7rem);
+    letter-spacing: 0.03em;
     text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   #home-screen.landing-v3 .mode-copy .mode-sub {
     display: block;
-    font-size: clamp(0.5rem, 2.1vw, 0.56rem);
+    font-size: clamp(0.52rem, 2.2vw, 0.58rem);
     text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   #home-screen.landing-v3 .mode-copy .mode-meta {
@@ -1855,99 +1892,84 @@
     pointer-events: none;
   }
 
-  /* ── 6. Footer ── */
-  #home-screen.landing-v3 .landing-v3-footer {
+  #home-screen.landing-v3 .player-panel.table-select .landing-v3-footer {
+    grid-area: unset;
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
-    align-self: end;
-    gap: 4px 10px;
-    height: auto;
-    min-height: 0;
+    gap: 6px 12px;
     margin: 0;
-    padding: 0 0 max(4px, env(safe-area-inset-bottom));
-    font-size: 0.62rem;
+    padding: 6px 0 0;
+    font-size: 0.58rem;
     line-height: 1;
     color: var(--v3-text-muted);
-    background: linear-gradient(180deg, rgba(9, 8, 32, 0.99) 0%, rgba(7, 9, 29, 1) 100%);
+    background: transparent;
+    flex-shrink: 0;
+  }
+
+  #home-screen.landing-v3 .player-panel.table-select .landing-v3-footer a {
+    color: var(--v3-text-muted);
+    white-space: nowrap;
   }
 }
 
 @media (max-width: 639px) and (max-height: 700px) {
   #home-screen.landing-v3 {
     --v3-mobile-gap: 4px;
-    --v3-row-header: 56px;
-    --v3-row-hero: minmax(142px, 1fr);
-    --v3-row-play: 54px;
-    --v3-row-actions: 60px;
-    --v3-row-match: minmax(132px, 1fr);
+    --v3-row-header: 52px;
+    --v3-row-hero: minmax(188px, 1.35fr);
+    --v3-row-play: 52px;
+    --v3-row-actions: 58px;
   }
 
-  #home-screen.landing-v3 .hero-art {
-    height: clamp(76px, 10dvh, 88px);
+  #home-screen.landing-v3 .hero-art,
+  #home-screen.landing-v3 .flying-cards {
+    height: clamp(108px, 18dvh, 132px);
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
-    font-size: clamp(2.35rem, 12vw, 2.85rem) !important;
+    font-size: clamp(2.1rem, 10.5vw, 2.65rem) !important;
   }
 
   #home-screen.landing-v3 .hero-kicker {
-    font-size: clamp(0.5rem, 2vw, 0.58rem) !important;
+    font-size: clamp(0.56rem, 2.2vw, 0.64rem) !important;
   }
 
   #home-screen.landing-v3 .hero-card {
-    width: clamp(54px, 14vw, 68px) !important;
-    animation: none !important;
-    pointer-events: none !important;
+    width: clamp(62px, 18vw, 76px) !important;
   }
 
-  #home-screen.landing-v3 .hero-card-corner strong {
-    font-size: clamp(0.95rem, 3.8vw, 1.15rem) !important;
+  #home-screen.landing-v3 .card-b,
+  #home-screen.landing-v3 .hero-card-boss {
+    width: clamp(84px, 24vw, 102px) !important;
   }
 
-  #home-screen.landing-v3 .hero-card-corner small {
-    font-size: clamp(0.62rem, 2.5vw, 0.78rem) !important;
-  }
-
-  #home-screen.landing-v3 .hero-card-suit {
-    font-size: clamp(1.45rem, 5.8vw, 1.95rem) !important;
-  }
-
-  #home-screen.landing-v3 .card-b {
-    width: clamp(58px, 15vw, 72px) !important;
+  #home-screen.landing-v3 .player-option.mode-card {
+    min-height: 62px;
+    padding: 7px 8px;
   }
 }
 
 /* Beat legacy cascade + polish layers on landing only */
 @media (max-width: 639px) {
-  #home-screen.landing-v3 > *:not(.arena-orb):not(.table-glow) {
-    z-index: 100 !important;
+  #home-screen.landing-v3 .play-now,
+  #home-screen.landing-v3 .menu-card,
+  #home-screen.landing-v3 .player-option,
+  #home-screen.landing-v3 .settings-pill,
+  #home-screen.landing-v3 .brand-pill,
+  #home-screen.landing-v3 .live-pill {
+    z-index: 101 !important;
+    pointer-events: auto !important;
   }
 
   #home-screen.landing-v3 .flying-cards,
   #home-screen.landing-v3 .hero-card {
-    z-index: 0 !important;
     pointer-events: none !important;
-    animation: none !important;
-  }
-
-  #home-screen.landing-v3 .play-now,
-  #home-screen.landing-v3 .menu-card,
-  #home-screen.landing-v3 .player-option,
-  #home-screen.landing-v3 .settings-pill {
-    z-index: 101 !important;
-    pointer-events: auto !important;
   }
 }
 
 @media (max-width: 390px), (max-height: 720px) {
-  #home-screen.landing-v3 .flying-cards,
-  #home-screen.landing-v3 .hero-card {
-    pointer-events: none !important;
-    animation: none !important;
-  }
-
   #home-screen.landing-v3 .quick-actions .menu-card small {
     display: block !important;
   }
