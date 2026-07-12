@@ -608,8 +608,10 @@
 #home-screen.landing-v3 .cta-zone {
   grid-area: v3-play;
   display: grid;
-  place-items: center;
+  place-items: stretch;
+  align-self: stretch;
   gap: 0;
+  width: 100%;
   margin-top: 0;
   padding: 0;
   position: relative;
@@ -620,30 +622,34 @@
 #home-screen.landing-v3 .play-now {
   position: relative;
   overflow: hidden;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: min(92vw, 90%);
-  max-width: 420px;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: none;
   min-height: 72px;
   height: clamp(68px, 10vw, 76px);
-  padding: 0 20px 0 24px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  font-size: clamp(1.35rem, 5.5vw, 1.65rem);
+  padding: 0 16px 0 22px;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 230, 120, 0.72);
+  font-size: clamp(1.42rem, 5.8vw, 1.78rem);
   font-weight: 1000;
-  letter-spacing: 0.04em;
-  color: #2a1200;
+  letter-spacing: 0.06em;
+  color: #1f0c00;
   background:
-    linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.38) 50%, transparent 62%),
-    linear-gradient(180deg, var(--v3-gold) 0%, var(--v3-gold-mid) 55%, var(--v3-gold-dark) 100%);
+    linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.48) 50%, transparent 62%),
+    linear-gradient(180deg, #ffe566 0%, #ffc83d 42%, #ff9f1a 76%, #e87800 100%);
   background-size: 220% 100%, 100% 100%;
   background-position: -120% 0, 0 0;
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.55),
-    0 8px 0 #8a4200,
-    0 14px 28px rgba(0, 0, 0, 0.32);
+    inset 0 3px 0 rgba(255, 255, 255, 0.68),
+    inset 0 -2px 0 rgba(168, 72, 0, 0.22),
+    0 0 22px rgba(255, 200, 61, 0.48),
+    0 0 8px rgba(255, 150, 30, 0.32),
+    0 8px 0 #7a3a00,
+    0 14px 28px rgba(0, 0, 0, 0.34);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);
   animation: v3PlayIdleGlow 5.5s ease-in-out infinite, v3PlaySweep 5.5s ease-in-out infinite;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
@@ -651,22 +657,29 @@
 #home-screen.landing-v3 .play-now span {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  margin-left: 4px;
+  width: 40px;
+  height: 40px;
+  margin-left: 0;
+  flex-shrink: 0;
   border-radius: 50%;
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   line-height: 1;
-  color: #2a1200;
-  background: rgba(255, 255, 255, 0.35);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  font-weight: 1000;
+  color: #1f0c00;
+  background: rgba(255, 255, 255, 0.44);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 0 14px rgba(255, 200, 61, 0.38);
 }
 
 #home-screen.landing-v3 .play-now:active {
-  transform: scale(0.97);
+  transform: scale(0.985);
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.45),
-    0 4px 0 #8a4200,
+    inset 0 2px 0 rgba(255, 255, 255, 0.52),
+    inset 0 -1px 0 rgba(168, 72, 0, 0.2),
+    0 0 16px rgba(255, 200, 61, 0.38),
+    0 4px 0 #7a3a00,
     0 8px 16px rgba(0, 0, 0, 0.28);
 }
 
@@ -1112,8 +1125,24 @@
 }
 
 @keyframes v3PlayIdleGlow {
-  0%, 100% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), 0 8px 0 #8a4200, 0 14px 28px rgba(0, 0, 0, 0.32); }
-  50% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), 0 8px 0 #8a4200, 0 14px 28px rgba(0, 0, 0, 0.32), 0 0 28px rgba(255, 200, 61, 0.28); }
+  0%, 100% {
+    box-shadow:
+      inset 0 3px 0 rgba(255, 255, 255, 0.68),
+      inset 0 -2px 0 rgba(168, 72, 0, 0.22),
+      0 0 22px rgba(255, 200, 61, 0.48),
+      0 0 8px rgba(255, 150, 30, 0.32),
+      0 8px 0 #7a3a00,
+      0 14px 28px rgba(0, 0, 0, 0.34);
+  }
+  50% {
+    box-shadow:
+      inset 0 3px 0 rgba(255, 255, 255, 0.76),
+      inset 0 -2px 0 rgba(168, 72, 0, 0.22),
+      0 0 38px rgba(255, 200, 61, 0.68),
+      0 0 16px rgba(255, 150, 30, 0.48),
+      0 8px 0 #7a3a00,
+      0 14px 28px rgba(0, 0, 0, 0.34);
+  }
 }
 
 @keyframes v3PlaySweep {
@@ -1634,7 +1663,9 @@
   /* ── 3. Play Now ── */
   #home-screen.landing-v3 .cta-zone {
     display: grid;
-    place-items: center;
+    place-items: stretch;
+    align-self: stretch;
+    width: 100%;
     height: var(--v3-row-play);
     min-height: var(--v3-row-play);
     max-height: var(--v3-row-play);
@@ -1643,29 +1674,36 @@
   }
 
   #home-screen.landing-v3 .play-now {
-    width: calc(100% - 32px);
+    width: 100%;
     max-width: none;
     min-height: var(--v3-row-play);
     height: var(--v3-row-play);
     max-height: 64px;
-    margin: 0 16px;
+    margin: 0;
     padding: 0 14px 0 18px;
     justify-content: space-between;
     border-radius: 18px;
-    font-size: clamp(1.15rem, 4.8vw, 1.35rem);
+    font-size: clamp(1.22rem, 5vw, 1.42rem);
+    letter-spacing: 0.07em;
     box-shadow:
-      inset 0 2px 0 rgba(255, 255, 255, 0.55),
-      0 6px 0 #8a4200,
-      0 10px 20px rgba(0, 0, 0, 0.28);
+      inset 0 3px 0 rgba(255, 255, 255, 0.68),
+      inset 0 -2px 0 rgba(168, 72, 0, 0.22),
+      0 0 20px rgba(255, 200, 61, 0.46),
+      0 6px 0 #7a3a00,
+      0 10px 20px rgba(0, 0, 0, 0.3);
   }
 
   #home-screen.landing-v3 .play-now span {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
     margin-left: 0;
     flex-shrink: 0;
-    font-size: 1.15rem;
-    background: rgba(42, 18, 0, 0.12);
+    font-size: 1.2rem;
+    background: rgba(255, 255, 255, 0.44);
+    border: 1px solid rgba(255, 255, 255, 0.58);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.72),
+      0 0 12px rgba(255, 200, 61, 0.36);
   }
 
   /* Room recovery (when visible) */
