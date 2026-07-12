@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Boba avatar">
+  <defs>
+    <linearGradient id="boba-cup" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f5d7b8"/>
+      <stop offset="100%" stop-color="#c98b52"/>
+    </linearGradient>
+    <linearGradient id="boba-tea" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8b5a3c"/>
+      <stop offset="100%" stop-color="#5c3317"/>
+    </linearGradient>
+  </defs>
+  <path d="M28 24h40l-4 56H32L28 24z" fill="url(#boba-cup)"/>
+  <path d="M32 30h32l-3 44H35L32 30z" fill="url(#boba-tea)"/>
+  <rect x="34" y="18" width="28" height="8" rx="4" fill="#f5efe6"/>
+  <circle cx="40" cy="58" r="4" fill="#2d1810"/>
+  <circle cx="52" cy="52" r="4" fill="#2d1810"/>
+  <circle cx="46" cy="66" r="3.5" fill="#2d1810"/>
+  <path d="M38 44c6 4 14 4 20 0" fill="none" stroke="#ffd8a8" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

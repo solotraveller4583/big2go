@@ -589,15 +589,15 @@
 #game-screen.gameplay-premium #trick-play .card-tile:nth-child(4) { transform: translateY(-2px) rotate(1deg) !important; }
 #game-screen.gameplay-premium #trick-play .card-tile:nth-child(5) { transform: translateY(2px) rotate(4deg) !important; }
 
-/* ── Reactions (compact 2×4 emoji grid) ── */
+/* ── Reactions (compact 3×4 emoji grid) ── */
 #game-screen.gameplay-premium .reaction-row {
   height: auto !important;
-  min-height: 58px !important;
+  min-height: 86px !important;
   max-height: none !important;
   margin: 0 !important;
   display: grid !important;
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
   gap: 4px !important;
   align-content: stretch !important;
 }
@@ -897,7 +897,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     --gp-mobile-gap: 5px;
     --gp-mobile-header: 64px;
     --gp-mobile-opponents: 72px;
-    --gp-mobile-reactions: 56px;
+    --gp-mobile-reactions: 84px;
     --gp-mobile-hand-lift: 14px;
     --gp-mobile-dock: 118px;
     --gp-table-max: none;
@@ -1078,7 +1078,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     height: 26px !important;
   }
 
-  /* Reactions — tight 2×4 grid, no dead row below */
+  /* Reactions — tight 3×4 grid, no dead row below */
   #game-screen.gameplay-premium .reaction-row {
     height: var(--gp-mobile-reactions) !important;
     min-height: var(--gp-mobile-reactions) !important;
@@ -1087,7 +1087,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     align-content: stretch !important;
     align-self: center !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
     grid-auto-rows: 0 !important;
     gap: 4px !important;
   }
@@ -1181,7 +1181,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     --gp-mobile-gap: 4px;
     --gp-mobile-header: 60px;
     --gp-mobile-opponents: 68px;
-    --gp-mobile-reactions: 60px;
+    --gp-mobile-reactions: 88px;
     --gp-mobile-hand-lift: 10px;
     --gp-mobile-dock: 114px;
     --gp-table-max: none;

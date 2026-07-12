@@ -48,7 +48,7 @@
     'straight-flush': ['Straight flush! Fireworks now!', 'That is a headline move.', 'Absolute festival chaos.']
   };
   const OPENING_LINE = '♦ 3 Holder Starts';
-  const ALLOWED_REACTIONS = new Set(['😂', '👏', '🔥', '😮', '🎉', '💪', '😎', '🙌']);
+  const ALLOWED_REACTIONS = new Set(['😂', '👏', '🔥', '😮', '🎉', '💪', '😎', '🙌', '🤔', '✨', '🥳', '😭']);
 
   const state = {
     settings: { players: 4, straightRule: DEFAULT_STRAIGHT_RULE },
@@ -2952,6 +2952,10 @@
     state.heat = Math.max(0, state.heat - 8);
     logState(`${state.players[playerIndex].name} passed. The table keeps moving.`);
     playUiSound('pass');
+    const passer = state.players[playerIndex];
+    if (!state.liveRoom && passer && !passer.isHuman) {
+      window.Big2GoAIReactions?.onAiPass(playerIndex, state);
+    }
     if (state.trick.passes >= state.players.length - 1) {
       const leader = state.trick.leader;
       if (!state.liveRoom) {

@@ -32,7 +32,9 @@
         ai_lose_round: ['Lucky break 😤', 'Nice one 😅', 'You got me 🤦'],
         ai_win: ['Victory! 🎉', 'Champion 😎', 'GG 🔥'],
         ai_lose: ['Well played 👏', 'You win 😭', 'Rematch? 😤'],
-        player_strong_play: ['Bold move 🤔', 'Interesting... 🧐', 'Show me more 🔥']
+        player_strong_play: ['Bold move 🤔', 'Interesting... 🧐', 'Show me more 🔥', 'Big swing 🐻', 'Oh? 👀'],
+        player_emoji: ['🔥 Love the vibe 🐻', '👏 Yes! 💪', '😂 Haha nice 😆', '😎 Cool energy', 'Let us go ⚡'],
+        ai_pass: ['Pass for now 😏', 'Skip 🐻', 'Not this trick 💤', 'Hmm... pass 🤔', 'Sit this out 😌']
       },
       rival: {
         defeatPlayer: [
@@ -88,7 +90,9 @@
         ai_lose_round: ['Good job! 👏', 'Wow 😮', 'So close 😅'],
         ai_win: ['We did it! 🎉', 'Happy win 😊', 'Great game 🌸'],
         ai_lose: ['Congrats! 👏', 'Well done 😊', 'You earned it 🎉'],
-        player_strong_play: ['Interesting move 🤔', 'Nice play! 👏', 'Impressive 😮']
+        player_strong_play: ['Interesting move 🤔', 'Nice play! 👏', 'Impressive 😮', 'So cute... I mean strong 🐰', 'Wow ✨'],
+        player_emoji: ['🌸 Love it 🐰', '✨ So fun!', '👏 Yay!', '😊 Hehe', '💫 Sparkly mood'],
+        ai_pass: ['I pass gently 😊', 'Skip this one 🐰', 'Not now 🌸', 'Pass~ 💫', 'Maybe next trick 🤔']
       },
       rival: {
         defeatPlayer: [
@@ -144,7 +148,9 @@
         ai_lose_round: ['Okay wow 😅', 'You got jokes too 😆', 'Plot twist! 🎬'],
         ai_win: ['Standing ovation 👏', 'Encore! 🎭', 'What a show 🎉'],
         ai_lose: ['You win this episode 📺', 'Fair play comedian 😄', 'Rematch soon? 🍿'],
-        player_strong_play: ['Oh snap 😮', 'Big energy 🔥', 'Respect the bit 👏']
+        player_strong_play: ['Oh snap 😮', 'Big energy 🔥', 'Respect the bit 👏', 'That is comedy gold 🎭', 'Main character energy ✨'],
+        player_emoji: ['😂 I felt that 🍿', '🎉 Encore!', '🔥 Hot take', '😮 Plot twist!', '👏 Standing ovation'],
+        ai_pass: ['Pass — dramatic pause 🎭', 'Skipping for effect 🍿', 'Not my scene 😂', 'Pass! 🎬', 'Cut! Next trick 📺']
       },
       rival: {
         defeatPlayer: [
@@ -201,7 +207,9 @@
         ai_lose_round: ['Oops 😅', 'Crumbled 😱', 'That hurt 🍪'],
         ai_win: ['Cookie wins! 🎉', 'Delicious victory 😎', 'Munch time 🔥'],
         ai_lose: ['You ate me up 😭', 'Crispy defeat 🍪', 'GG 😅'],
-        player_strong_play: ['Spicy move 🌶️', 'Tasty play 😋', 'Oh wow 😮']
+        player_strong_play: ['Spicy move 🌶️', 'Tasty play 😋', 'Oh wow 😮', 'Crunchy combo 🍪', 'Data says nice 📊'],
+        player_emoji: ['🍪 Sweet reaction', '😎 Approved', '🔥 Toasty mood', '👏 Crisp', '🤓 Logged that'],
+        ai_pass: ['Pass — recalculating 🤓', 'Skip turn 🍪', 'Not optimal 😅', 'Pass 📊', 'Saving cards 🍪']
       },
       rival: {
         defeatPlayer: [
@@ -228,6 +236,246 @@
       farewell: {
         humanWon: ['That loss goes in my learning log 📚', 'Well played — updating my playbook 🍪', 'Sharp reads this round 🤓'],
         humanLost: ['Probability favored me today 📊', 'Crunch time complete 🍪', 'Rematch after more data? 📈']
+      }
+    },
+    {
+      id: 'mochi',
+      name: 'Mochi',
+      personality: 'sweet',
+      playingStyle: 'friendly',
+      avatar: {
+        src: 'assets/characters/mochi.svg',
+        fallback: '🍡'
+      },
+      reactions: {
+        player_slow: [
+          'No rush, friend 🍡',
+          'Take a breath 😊',
+          'I am still here 💕',
+          'Soft pause is okay ✨',
+          'Thinking is cute too 🍡',
+          'Whenever you are ready 🌸'
+        ],
+        ai_strong_play: [
+          'Squishy power! 🍡',
+          'Try this combo ✨',
+          'Sweet move incoming 💕',
+          'Can you beat mochi? 😊',
+          'Bouncy play! 🎀'
+        ],
+        ai_win_round: ['Yay squish 🍡', 'Soft win ✨', 'So sweet 🎉', 'Mochi moment 💕'],
+        ai_lose_round: ['Whoa nice 👏', 'You popped that 😮', 'Impressive 🌸', 'Okay wow 😅'],
+        ai_win: ['Mochi wins! 🍡', 'Sweet victory ✨', 'Squish champion 💕'],
+        ai_lose: ['You win! 👏', 'Soft clap for you 😊', 'Beautiful game 🍡'],
+        player_strong_play: ['Pretty strong ✨', 'Nice and bold 👏', 'Love that play 💕', 'Sparkly move 🌸'],
+        player_emoji: ['🍡 Adorable!', '💕 Love the mood', '✨ So cute', '😊 Hehe yes', '🌸 Soft vibes'],
+        ai_pass: ['Soft pass 🍡', 'Skip gently 😊', 'Not this one 💕', 'Pass~ ✨', 'Maybe later 🌸']
+      },
+      rival: {
+        defeatPlayer: [
+          'Soft win for mochi 🍡',
+          'That round was sweet ✨',
+          'Come back for dessert rematch 💕',
+          'Squish victory! 🎀',
+          'You fought well though 👏',
+          'Mochi rolls on~ 🍡',
+          'Gentle domination 😊',
+          'Same table soon? 🌸'
+        ],
+        defeatedByPlayer: [
+          'You popped my mochi 😭',
+          'That was beautifully played ✨',
+          'I need more practice 🍡',
+          'You are too strong today 💪',
+          'Soft defeat... respect 👏',
+          'Rematch with extra sugar? 🍡',
+          'Okay you win this squish 🌸',
+          'I am cheering for you now 💕'
+        ]
+      },
+      farewell: {
+        humanWon: ['Sweet game — you earned it 🍡', 'Soft clap for the champ 👏', 'See you for dessert rematch ✨'],
+        humanLost: ['Gentle win for me 🍡', 'That was fun 💕', 'Want another round? 🌸']
+      }
+    },
+    {
+      id: 'panda',
+      name: 'Panda',
+      personality: 'calm',
+      playingStyle: 'smart',
+      avatar: {
+        src: 'assets/characters/panda.svg',
+        fallback: '🐼'
+      },
+      reactions: {
+        player_slow: [
+          'Zen mode... 🐼',
+          'No hurry ☁️',
+          'Take your time 🌿',
+          'Still bamboo calm 🎋',
+          'I wait peacefully 😌',
+          'Slow is smooth 🐼'
+        ],
+        ai_strong_play: [
+          'Calculated play 🐼',
+          'Balanced move ☁️',
+          'Try this read 📊',
+          'Steady hand 🎋',
+          'Your turn 😌'
+        ],
+        ai_win_round: ['Clean trick 🐼', 'Balanced win ☁️', 'Smooth 😌', 'As planned 📊'],
+        ai_lose_round: ['Sharp play 👏', 'Good read 😮', 'Respect 🐼', 'Well done 🌿'],
+        ai_win: ['Panda wins 🐼', 'Calm champion ☁️', 'Peace and victory 🎋'],
+        ai_lose: ['Well played 👏', 'You earned it 🐼', 'Good game 😌'],
+        player_strong_play: ['Strong read 🤔', 'Interesting line 👏', 'Bold but smart 📊', 'Nice tempo 🐼'],
+        player_emoji: ['🐼 Chill mood', '👏 Respect', '😌 Zen approved', '☁️ Calm energy', '🎋 Bamboo boost'],
+        ai_pass: ['Peaceful pass 🐼', 'Skip ☁️', 'Not now 😌', 'Pass — zen 🎋', 'Hold cards 🐼']
+      },
+      rival: {
+        defeatPlayer: [
+          'Calm win for panda 🐼',
+          'The table needed balance ☁️',
+          'Study the trick flow 📊',
+          'Bamboo patience pays 🎋',
+          'Return when centered 😌',
+          'Smooth finish 🐼',
+          'That read was clean 📊',
+          'Zen victory ☁️'
+        ],
+        defeatedByPlayer: [
+          'You broke my calm 😤',
+          'Impressive focus 👏',
+          'I misplayed one turn 🐼',
+          'Rematch after meditation? ☁️',
+          'Your reads were sharper 📊',
+          'Panda respects that win 🎋',
+          'I will train more 😌',
+          'Well earned champion 🐼'
+        ]
+      },
+      farewell: {
+        humanWon: ['Strong mind, strong win 🐼', 'Respect your focus 👏', 'Until next calm battle ☁️'],
+        humanLost: ['Balance favored me today 🐼', 'Good game 😌', 'Same bamboo table soon? 🎋']
+      }
+    },
+    {
+      id: 'boba',
+      name: 'Boba',
+      personality: 'playful',
+      playingStyle: 'funny',
+      avatar: {
+        src: 'assets/characters/boba.svg',
+        fallback: '🧋'
+      },
+      reactions: {
+        player_slow: [
+          'My pearls are waiting 🧋',
+          'Stir stir... still thinking? 😜',
+          'Tea getting cold ☕',
+          'Hello? 🧋👀',
+          'Sip while you decide 😏',
+          'Boba patience running low 😂'
+        ],
+        ai_strong_play: [
+          'Chewy combo! 🧋',
+          'Slurp this play 😎',
+          'Bubble power 💥',
+          'Try beating boba 🔥',
+          'Fresh pour incoming ✨'
+        ],
+        ai_win_round: ['Slurp win 🧋', 'Chewy! 😎', 'Bubble burst 🎉', 'Tasty trick ✨'],
+        ai_lose_round: ['You popped me 😅', 'Spicy counter 🌶️', 'Okay wow 😮', 'Fair sip 👏'],
+        ai_win: ['Boba wins! 🧋', 'Full cup victory 😎', 'Cheers 🔥'],
+        ai_lose: ['You drank my win 😭', 'Well played 🧋', 'Rematch? 😤'],
+        player_strong_play: ['Spicy hand 🌶️', 'Big sip energy 🔥', 'That hits 👏', 'Bubble trouble 😮'],
+        player_emoji: ['🧋 Chewy mood!', '😂 Slurp', '🔥 Spicy vibes', '😎 Cool pour', '🎉 Party cup'],
+        ai_pass: ['Pass — sipping 🧋', 'Skip this round 😜', 'Not thirsty yet ☕', 'Pass~ 💨', 'Hold my pearls 🧋']
+      },
+      rival: {
+        defeatPlayer: [
+          'Bottoms up — I win 🧋',
+          'Chewy victory lap 😎',
+          'That round had extra pearls ✨',
+          'Come back with stronger tea 🔥',
+          'Boba always bounces back 🧋',
+          'Sip on that defeat 😏',
+          'Bubble champion again 🎉',
+          'Order a rematch to go 🧋'
+        ],
+        defeatedByPlayer: [
+          'You spilled my strategy 😭',
+          'That play was extra sweet 👏',
+          'I need a refill rematch 🧋',
+          'You cracked the cup this time 🔥',
+          'Okay main character 😤',
+          'Bubble burst... respect ✨',
+          'Next round I am extra ice 😎',
+          'Chewy defeat tastes bitter 🧋'
+        ]
+      },
+      farewell: {
+        humanWon: ['You earned the last sip 🧋', 'Sweet win — respect 👏', 'Same shop next round? ✨'],
+        humanLost: ['Cup runneth over with victory 🧋', 'Fun pour 😎', 'Rematch on the house? 🔥']
+      }
+    },
+    {
+      id: 'pip',
+      name: 'Pip',
+      personality: 'energetic',
+      playingStyle: 'aggressive',
+      avatar: {
+        src: 'assets/characters/pip.svg',
+        fallback: '🐥'
+      },
+      reactions: {
+        player_slow: [
+          'Peep peep hurry! 🐥',
+          'My wings are ready ⚡',
+          'Too slow! 😤',
+          'Chirp chirp — your turn ⏰',
+          'I am bouncing here 🐥',
+          'Go go go! 🔥'
+        ],
+        ai_strong_play: [
+          'Peck attack! 🐥',
+          'Fast combo ⚡',
+          'Beat this chirp 🔥',
+          'Tiny but mighty 💪',
+          'Zoom play! 🐥'
+        ],
+        ai_win_round: ['Peep win 🐥', 'Zoom! ⚡', 'Too fast 🔥', 'Chirp champion 🎉'],
+        ai_lose_round: ['You got me 😤', 'Lucky peck 😅', 'Wow 😮', 'Strong! 👏'],
+        ai_win: ['Pip wins! 🐥', 'Champion chirp 🎉', 'Fastest beak ⚡'],
+        ai_lose: ['You win 😭', 'Good peck 👏', 'Rematch! 🐥'],
+        player_strong_play: ['Big peck energy 🔥', 'Whoa 😮', 'Fast hands 👏', 'Strong chick 💪'],
+        player_emoji: ['🐥 Peep peep!', '🔥 Hype!', '⚡ Fast mood', '💪 Power!', '🎉 Party chirp'],
+        ai_pass: ['Pass — recharging ⚡', 'Skip 🐥', 'Not now 😤', 'Peep pass 💨', 'Holding pecks 🐥']
+      },
+      rival: {
+        defeatPlayer: [
+          'Too fast for you 🐥',
+          'Peck peck victory ⚡',
+          'Train your wings 💪',
+          'Chirp chirp champion 🎉',
+          'That table was mine 🔥',
+          'Come back faster 😏',
+          'Tiny legend wins again 🐥',
+          'Zoom zoom defeat ⚡'
+        ],
+        defeatedByPlayer: [
+          'You outran my pecks 😤',
+          'Fine — rematch now 🐥',
+          'That win was fast 🔥',
+          'I was one chirp late ⚡',
+          'Respect the comeback 👏',
+          'Next round I hatch a plan 🐥',
+          'You clipped my wings today 😭',
+          'Peep... okay you win 💪'
+        ]
+      },
+      farewell: {
+        humanWon: ['Fast win — respect 🐥', 'You pecked perfectly 👏', 'Rematch at full speed ⚡'],
+        humanLost: ['Pip zooms away with the win 🐥', 'Chirp chirp 🔥', 'Race you again? ⚡']
       }
     }
   ];

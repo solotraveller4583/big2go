@@ -266,7 +266,7 @@ function sanitizeChatText(text) {
     .slice(0, 120);
 }
 
-const ALLOWED_REACTIONS = new Set(['😂', '👏', '🔥', '😮', '🎉', '💪', '😎', '🙌']);
+const ALLOWED_REACTIONS = new Set(['😂', '👏', '🔥', '😮', '🎉', '💪', '😎', '🙌', '🤔', '✨', '🥳', '😭']);
 
 function sanitizeReaction(emoji) {
   const text = String(emoji || '').trim();

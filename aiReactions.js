@@ -2,23 +2,27 @@
 
 (function () {
   const GENERIC_LINES = {
-    player_slow: ['⏰ Hurry up', '👀 Watching', '🤔 Thinking', '⌛ Waiting'],
-    ai_strong_play: ['🔥 Good play', '😎 Cool', '😈 Challenge', '💪 Strong'],
-    ai_lose_round: ['😭', '😱', '😅', '🤦'],
-    ai_win_round: ['🎉', '😎', '🔥'],
-    ai_win: ['🎉', '😎', '🔥'],
-    ai_lose: ['😭', '😱', '😅', '🤦'],
-    player_strong_play: ['🔥 Good play', '😮 Wow', '👏 Nice']
+    player_slow: ['⏰ Hurry up', '👀 Watching', '🤔 Thinking', '⌛ Waiting', '😴 Still there?', '👋 Hello?', '💭 Hmm...'],
+    ai_strong_play: ['🔥 Good play', '😎 Cool', '😈 Challenge', '💪 Strong', '✨ Nice combo', '🃏 Beat that'],
+    ai_lose_round: ['😭', '😱', '😅', '🤦', '😮 Wow', '👏 Nice', '🫠 Oof'],
+    ai_win_round: ['🎉', '😎', '🔥', '💪', '✨', '🙌'],
+    ai_win: ['🎉', '😎', '🔥', '🏆', '💪', '🥳'],
+    ai_lose: ['😭', '😱', '😅', '🤦', '👏 GG', '😤 Rematch'],
+    player_strong_play: ['🔥 Good play', '😮 Wow', '👏 Nice', '💯', '✨', '🤯'],
+    player_emoji: ['👏', '😂', '🔥', '😮', '💪', '🙌', '😎', '🎉', '✨', '🥳'],
+    ai_pass: ['Pass 😌', 'Skip 💤', 'Not now 🤔', '🫥', 'Hmm...']
   };
 
   const EVENT_PROB = {
-    player_slow: 0.88,
-    ai_strong_play: 0.3,
-    ai_lose_round: 0.4,
-    ai_win_round: 0.5,
-    ai_win: 0.5,
-    ai_lose: 0.4,
-    player_strong_play: 0.3
+    player_slow: 0.9,
+    ai_strong_play: 0.38,
+    ai_lose_round: 0.48,
+    ai_win_round: 0.58,
+    ai_win: 0.55,
+    ai_lose: 0.48,
+    player_strong_play: 0.38,
+    player_emoji: 0.82,
+    ai_pass: 0.28
   };
 
   const COOLDOWN_MS = 5000;
@@ -26,7 +30,7 @@
   const IDLE_FIRST_MAX_MS = 5000;
   const IDLE_REPEAT_MIN_MS = 5000;
   const IDLE_REPEAT_MAX_MS = 8000;
-  const MAX_EVENT_REACTIONS_PER_ROUND = 5;
+  const MAX_EVENT_REACTIONS_PER_ROUND = 8;
   const BUBBLE_MS = 3200;
 
   const reactionState = {
@@ -158,10 +162,15 @@
     if (!gameState || gameState.liveRoom || !emoji) return false;
     const aiIndex = pickRandomAiIndex(gameState);
     if (aiIndex == null) return false;
-    if (Math.random() > 0.72) return false;
-    const replies = ['👏', '😂', '🔥', '😮', '💪', '🙌', '😎', '🎉'];
-    const reply = replies[Math.floor(Math.random() * replies.length)];
-    return showAIReactionBubble(aiIndex, reply, gameState);
+    if (Math.random() > 0.88) return false;
+    const usePersonality = Math.random() > 0.35;
+    const replies = ['👏', '😂', '🔥', '😮', '💪', '🙌', '😎', '🎉', '✨', '🥳', '🤔', '💯', '❤️', '🫡'];
+    const reply = usePersonality
+      ? choosePersonalityLine(gameState, aiIndex, 'player_emoji')
+      : replies[Math.floor(Math.random() * replies.length)];
+    if (!showAIReactionBubble(aiIndex, reply, gameState)) return false;
+    reactionState.lastReactAt = Date.now();
+    return true;
   }
 
   function showAIReactionBubble(playerIndex, message, gameState) {
@@ -353,6 +362,10 @@
     return triggerAIReaction(leaderIndex, 'ai_win_round', gameState);
   }
 
+  function onAiPass(playerIndex, gameState) {
+    return triggerAIReaction(playerIndex, 'ai_pass', gameState);
+  }
+
   function onVictory(winner, gameState) {
     clearHumanIdleTimer(true);
     if (!gameState || gameState.liveRoom || !winner) return false;
@@ -380,6 +393,7 @@
     onAiPlayComplete,
     onPlayerPlayComplete,
     onTrickWon,
+    onAiPass,
     onVictory,
     isStrongPlay,
     pickRandomAiIndex,
