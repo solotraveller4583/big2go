@@ -2709,22 +2709,32 @@
     return payload;
   }
 
+  const ROOM_CODE_RE = /^[A-HJ-NP-Z2-9]{5}$/;
+
+  function normalizeRoomCode(raw) {
+    if (raw == null || typeof raw === 'object') return '';
+    return String(raw).trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+  }
+
+  function isValidRoomCode(raw) {
+    const code = normalizeRoomCode(raw);
+    return ROOM_CODE_RE.test(code);
+  }
+
   function buildRoomInviteUrl(code) {
+    const normalized = normalizeRoomCode(code);
+    if (!ROOM_CODE_RE.test(normalized)) return window.location.origin + window.location.pathname;
     const url = new URL(window.location.href);
     url.search = '';
     url.hash = '';
-    url.searchParams.set('room', normalizeRoomCode(code));
+    url.searchParams.set('room', normalized);
     return url.toString();
-  }
-
-  function normalizeRoomCode(raw) {
-    return String(raw || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
   }
 
   function parseRoomInviteFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const code = normalizeRoomCode(params.get('room') || params.get('join') || '');
-    return /^[A-HJ-NP-Z2-9]{5}$/.test(code) ? code : null;
+    return isValidRoomCode(code) ? code : null;
   }
 
   function clearRoomInviteFromUrl() {
@@ -2737,10 +2747,17 @@
   }
 
   function handleRoomInviteLink() {
+    const params = new URLSearchParams(window.location.search);
+    const rawInvite = params.get('room') || params.get('join') || '';
     const code = parseRoomInviteFromUrl();
-    if (!code) return;
-    clearRoomInviteFromUrl();
+    if (rawInvite) clearRoomInviteFromUrl();
     if (state.liveRoom?.code) return;
+    if (rawInvite && !code) {
+      showPrivateRoom();
+      setTimeout(() => setRoomStatus('That invite link looks invalid. Ask your friend for a new link or enter their room code.', 'error'), 0);
+      return;
+    }
+    if (!code) return;
     state.pendingRoomInvite = code;
     showPrivateRoom(code);
   }
@@ -2749,8 +2766,8 @@
     const joinButton = controls.joinButton;
     const input = controls.input;
     const normalizedCode = normalizeRoomCode(code);
-    if (!normalizedCode) {
-      setRoomStatus('Enter your friend’s room code first.', 'error');
+    if (!isValidRoomCode(normalizedCode)) {
+      setRoomStatus('Enter a valid 5-character room code from your friend.', 'error');
       return false;
     }
     if (joinButton) joinButton.disabled = true;
@@ -2802,6 +2819,12 @@
       if (event.key !== 'Enter') return;
       const code = String(input?.value || inviteCode || '').trim();
       if (!code) return;
+      event.preventDefault();
+      joinButton?.click();
+    });
+
+    input?.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
       event.preventDefault();
       joinButton?.click();
     });
@@ -2872,8 +2895,7 @@
   }
 
   function showPrivateRoom(inviteCode = null) {
-    if (inviteCode) state.pendingRoomInvite = normalizeRoomCode(inviteCode);
-    else state.pendingRoomInvite = null;
+    state.pendingRoomInvite = isValidRoomCode(inviteCode) ? normalizeRoomCode(inviteCode) : null;
 
     const invited = Boolean(state.pendingRoomInvite);
     const introCopy = invited
@@ -2890,8 +2912,8 @@
           <span>Room Code</span>
           <strong id="room-code-display">${invited ? state.pendingRoomInvite : '-----'}</strong>
         </div>
-        <div class="room-actions">
-          <button type="button" class="primary" id="room-create-button"${invited ? ' hidden' : ''}>Create Room</button>
+        <div class="room-actions"${invited ? ' hidden' : ''}>
+          <button type="button" class="primary" id="room-create-button">Create Room</button>
           <button type="button" class="secondary" id="room-copy-button" disabled>Copy Code</button>
           <button type="button" class="secondary" id="room-share-button" disabled>Share Link</button>
         </div>
@@ -3020,7 +3042,7 @@
       if (!restoreGame()) newGame();
     });
     els.rules.addEventListener('click', () => showHelp('How to Play', RULES_HTML));
-    els.privateRoom?.addEventListener('click', showPrivateRoom);
+    els.privateRoom?.addEventListener('click', () => showPrivateRoom());
     els.roomRejoin?.addEventListener('click', rejoinSavedRoom);
     els.roomExitSession?.addEventListener('click', exitSavedRoom);
     els.share.addEventListener('click', shareGame);
