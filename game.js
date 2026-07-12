@@ -3,6 +3,7 @@
 
   const SAVE_KEY = 'big2go-save-v1';
   const COIN_KEY = 'big2go-virtual-coins-v1';
+  const AI_COINS_KEY = 'big2go-ai-coins-v1';
   const SOUND_SETTINGS_KEY = 'big2go-sound-settings-v1';
   const STARTING_COINS = 100;
   const ENTRY_FEE_COINS = 10;
@@ -454,7 +455,7 @@
       playingStyle: character.playingStyle,
       isHuman: false,
       finished: false,
-      coins: STARTING_COINS,
+      coins: getAiCoinBalance(character.id),
       hand: []
     };
   }
@@ -557,13 +558,14 @@
         sound: state.sound,
         soundVolume: state.soundVolume,
         voiceVolume: state.voiceVolume,
-        players: state.players.map(player => ({
+        players: state.players.map((player, index) => ({
           name: player.name,
           characterId: player.characterId || null,
           personality: player.personality || null,
           playingStyle: player.playingStyle || null,
           isHuman: player.isHuman,
           finished: player.finished,
+          coins: player.isHuman ? state.coins.balance : playerCoins(player, index),
           hand: player.hand.map(card => card.id)
         })),
         logs: state.logs.slice(0, 8)
@@ -621,8 +623,16 @@
         playingStyle: player.playingStyle || null,
         isHuman: Boolean(player.isHuman),
         finished: Boolean(player.finished),
+        coins: Number.isFinite(player.coins)
+          ? player.coins
+          : (player.characterId ? getAiCoinBalance(player.characterId) : STARTING_COINS),
         hand: (player.hand || []).map(cardFromId).filter(Boolean)
       }));
+      state.players.forEach((player) => {
+        if (!player.isHuman && player.characterId && Number.isFinite(player.coins)) {
+          setAiCoinBalance(player.characterId, player.coins);
+        }
+      });
       state.logs = Array.isArray(saved.logs) ? saved.logs.slice(0, 8) : [];
       state.selected = new Set();
       state.gameOver = false;
@@ -689,6 +699,82 @@
 
   function saveCoinBalance() {
     try { localStorage.setItem(COIN_KEY, JSON.stringify({ balance: state.coins.balance, updatedAt: Date.now() })); } catch (_) {}
+  }
+
+  function loadAiCoinLedger() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(AI_COINS_KEY) || 'null');
+      return raw && typeof raw === 'object' ? raw : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function saveAiCoinLedger(ledger) {
+    try { localStorage.setItem(AI_COINS_KEY, JSON.stringify(ledger)); } catch (_) {}
+  }
+
+  function getAiCoinBalance(characterId) {
+    if (!characterId) return STARTING_COINS;
+    const ledger = loadAiCoinLedger();
+    const value = ledger[characterId];
+    return Number.isFinite(value) ? Math.max(0, Math.round(value)) : STARTING_COINS;
+  }
+
+  function setAiCoinBalance(characterId, amount) {
+    if (!characterId) return;
+    const ledger = loadAiCoinLedger();
+    ledger[characterId] = Math.max(0, Math.round(Number(amount) || 0));
+    saveAiCoinLedger(ledger);
+  }
+
+  function shuffleCharacters(list) {
+    const copy = [...list];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  function assembleSoloAiCast(count) {
+    const needed = Math.max(0, count - 1);
+    const pool = window.Big2GoAICharacters?.pool || [];
+    if (!needed || !pool.length) return [];
+
+    const cast = [];
+    const used = new Set();
+    const joinLogs = [];
+    const affordable = shuffleCharacters(pool.filter(character => getAiCoinBalance(character.id) >= ENTRY_FEE_COINS));
+
+    affordable.forEach((character) => {
+      if (cast.length >= needed) return;
+      used.add(character.id);
+      cast.push(character);
+    });
+
+    while (cast.length < needed) {
+      const replacements = shuffleCharacters(pool.filter(character => !used.has(character.id)));
+      if (!replacements.length) break;
+      const character = replacements[0];
+      setAiCoinBalance(character.id, STARTING_COINS);
+      joinLogs.push(`${character.name} joins the table with 🪙 ${STARTING_COINS} coins.`);
+      used.add(character.id);
+      cast.push(character);
+    }
+
+    state.aiJoinLogs = joinLogs;
+    return cast;
+  }
+
+  function collectAiEntryFees() {
+    state.players.forEach((player) => {
+      if (player.isHuman || !player.characterId) return;
+      const balance = getAiCoinBalance(player.characterId);
+      const after = Math.max(0, balance - ENTRY_FEE_COINS);
+      setAiCoinBalance(player.characterId, after);
+      player.coins = after;
+    });
   }
 
   function renderCoinHud() {
@@ -765,6 +851,12 @@
       setCoinBalance(state.coins.balance + prize);
       animateCoins('win', Math.max(ENTRY_FEE_COINS, prize));
       showCoinPop(`+🪙 ${prize}`);
+    } else if (winner?.characterId) {
+      const nextBalance = getAiCoinBalance(winner.characterId) + prize;
+      setAiCoinBalance(winner.characterId, nextBalance);
+      winner.coins = nextBalance;
+      animateCoins('entry', ENTRY_FEE_COINS);
+      showCoinPop(`Good Game! -🪙 ${ENTRY_FEE_COINS}`);
     } else {
       animateCoins('entry', ENTRY_FEE_COINS);
       showCoinPop(`Good Game! -🪙 ${ENTRY_FEE_COINS}`);
@@ -1033,7 +1125,7 @@
 
     const stats = document.createElement('div');
     stats.className = 'victory-stats';
-    stats.innerHTML = `<span>${winner.isHuman ? '+' : '-'}🪙 ${winner.isHuman ? coinPrize : ENTRY_FEE_COINS}</span><span>${state.sparks} sparks</span><span>${state.players.length} players</span>`;
+    stats.innerHTML = `<span>+🪙 ${coinPrize}</span><span>${state.sparks} sparks</span><span>${state.players.length} players</span>`;
 
     const rewards = document.createElement('div');
     rewards.className = 'victory-rewards';
@@ -1130,8 +1222,8 @@
     }, 0);
   }
 
-  function createPlayers(count) {
-    const aiCast = window.Big2GoAICharacters?.pickRandom(Math.max(0, count - 1)) || [];
+  function createPlayers(count, aiCast = null) {
+    const cast = aiCast || window.Big2GoAICharacters?.pickRandom(Math.max(0, count - 1)) || [];
     state.players = [];
     for (let i = 0; i < count; i += 1) {
       if (i === 0) {
@@ -1144,7 +1236,7 @@
         });
         continue;
       }
-      const character = aiCast[i - 1];
+      const character = cast[i - 1];
       state.players.push(character ? buildAiPlayer(character) : {
         name: `AI ${i}`,
         isHuman: false,
@@ -1163,14 +1255,18 @@
     stopRoomPolling();
     cancelAiTimer();
     document.querySelector('#victory-overlay')?.remove();
-    createPlayers(count);
+    const aiCast = assembleSoloAiCast(count);
+    createPlayers(count, aiCast);
     if (!paySinglePlayerEntry(count)) return;
+    collectAiEntryFees();
     const hands = dealCards(count);
     state.players.forEach((player, index) => {
       player.hand = hands[index];
       player.finished = false;
-      player.coins = index === 0 ? state.coins.balance : STARTING_COINS - ENTRY_FEE_COINS;
+      if (player.isHuman) player.coins = state.coins.balance;
     });
+    (state.aiJoinLogs || []).forEach(message => logState(message));
+    state.aiJoinLogs = [];
     state.humanIndex = 0;
     state.startingPlayer = findStartingPlayer();
     state.currentPlayer = state.startingPlayer;
