@@ -2709,7 +2709,78 @@
     return payload;
   }
 
+  function buildRoomInviteUrl(code) {
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.hash = '';
+    url.searchParams.set('room', normalizeRoomCode(code));
+    return url.toString();
+  }
+
+  function normalizeRoomCode(raw) {
+    return String(raw || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+  }
+
+  function parseRoomInviteFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const code = normalizeRoomCode(params.get('room') || params.get('join') || '');
+    return /^[A-HJ-NP-Z2-9]{5}$/.test(code) ? code : null;
+  }
+
+  function clearRoomInviteFromUrl() {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('room') && !url.searchParams.has('join')) return;
+    url.searchParams.delete('room');
+    url.searchParams.delete('join');
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState({}, '', next);
+  }
+
+  function handleRoomInviteLink() {
+    const code = parseRoomInviteFromUrl();
+    if (!code) return;
+    clearRoomInviteFromUrl();
+    if (state.liveRoom?.code) return;
+    state.pendingRoomInvite = code;
+    showPrivateRoom(code);
+  }
+
+  async function joinRoomFromModal(code, name, controls = {}) {
+    const joinButton = controls.joinButton;
+    const input = controls.input;
+    const normalizedCode = normalizeRoomCode(code);
+    if (!normalizedCode) {
+      setRoomStatus('Enter your friend’s room code first.', 'error');
+      return false;
+    }
+    if (joinButton) joinButton.disabled = true;
+    setRoomStatus('Joining room…', 'waiting');
+    try {
+      const payload = await joinBackendRoom(normalizedCode, name);
+      state.liveRoom = {
+        code: payload.room.code,
+        playerId: payload.playerId,
+        playerIndex: Math.max(0, payload.room.playerCount - 1),
+        hostId: payload.room.hostId
+      };
+      state.pendingRoomInvite = null;
+      saveRoomSession(payload.room, payload.game, payload.session);
+      renderRoomState(payload.room);
+      connectRoomSocket(payload.room.code, payload.playerId);
+      startRoomPolling();
+      const shareButton = document.querySelector('#room-share-button');
+      if (shareButton) shareButton.disabled = false;
+      input?.removeAttribute('readonly');
+      playUiSound('start');
+      return true;
+    } catch (error) {
+      if (joinButton) joinButton.disabled = false;
+      setRoomStatus(error.message || 'Could not join that room.', 'error');
+      return false;
+    }
+  }
   function attachRoomModalEvents() {
+    const inviteCode = state.pendingRoomInvite || null;
     const createButton = document.querySelector('#room-create-button');
     const joinButton = document.querySelector('#room-join-button');
     const copyButton = document.querySelector('#room-copy-button');
@@ -2719,6 +2790,21 @@
     const nameInput = document.querySelector('#room-name-input');
 
     const playerName = () => String(nameInput?.value || '').replace(/\s+/g, ' ').trim().slice(0, 18) || 'Player';
+
+    if (inviteCode && input) {
+      input.value = inviteCode;
+      input.setAttribute('readonly', 'readonly');
+      setRoomStatus(`You were invited to room ${inviteCode}. Enter your name and tap Join.`, 'ready');
+      nameInput?.focus();
+    }
+
+    nameInput?.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      const code = String(input?.value || inviteCode || '').trim();
+      if (!code) return;
+      event.preventDefault();
+      joinButton?.click();
+    });
 
     createButton?.addEventListener('click', async () => {
       createButton.disabled = true;
@@ -2739,26 +2825,8 @@
     });
 
     joinButton?.addEventListener('click', async () => {
-      const code = String(input?.value || '').trim().toUpperCase();
-      if (!code) {
-        setRoomStatus('Enter your friend’s room code first.', 'error');
-        return;
-      }
-      joinButton.disabled = true;
-      setRoomStatus('Joining room…', 'waiting');
-      try {
-        const payload = await joinBackendRoom(code, playerName());
-        state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: Math.max(0, payload.room.playerCount - 1), hostId: payload.room.hostId };
-        saveRoomSession(payload.room, payload.game, payload.session);
-        renderRoomState(payload.room);
-        connectRoomSocket(payload.room.code, payload.playerId);
-        startRoomPolling();
-        if (shareButton) shareButton.disabled = false;
-        playUiSound('start');
-      } catch (error) {
-        joinButton.disabled = false;
-        setRoomStatus(error.message || 'Could not join that room.', 'error');
-      }
+      const code = String(input?.value || inviteCode || '').trim();
+      await joinRoomFromModal(code, playerName(), { joinButton, input });
     });
 
     startButton?.addEventListener('click', async () => {
@@ -2783,44 +2851,61 @@
     shareButton?.addEventListener('click', async () => {
       const code = document.querySelector('#room-code-display')?.textContent?.trim();
       if (!code || code === '-----') return;
-      const text = `Join my Big2Go private room. Code: ${code}`;
+      const inviteUrl = buildRoomInviteUrl(code);
+      const text = `Join my Big2Go private room (${code}). Tap the link, enter your name, and tap Join.`;
       try {
-        if (navigator.share) await navigator.share({ title: 'Big2Go Room Code', text });
-        else await navigator.clipboard.writeText(code);
-        setRoomStatus('Room code shared/copied. Friend only needs to enter the code.', 'ready');
+        if (navigator.share) {
+          await navigator.share({ title: 'Join my Big2Go room', text, url: inviteUrl });
+        } else {
+          await navigator.clipboard.writeText(`${text}\n${inviteUrl}`);
+        }
+        setRoomStatus('Invite link shared. Friends can tap it to join automatically.', 'ready');
       } catch (_) {
-        setRoomStatus(`Share this code: ${code}`, 'ready');
+        try {
+          await navigator.clipboard.writeText(inviteUrl);
+          setRoomStatus('Invite link copied. Send it to your friend.', 'ready');
+        } catch (copyError) {
+          setRoomStatus(`Share this link: ${inviteUrl}`, 'ready');
+        }
       }
     });
   }
 
-  function showPrivateRoom() {
+  function showPrivateRoom(inviteCode = null) {
+    if (inviteCode) state.pendingRoomInvite = normalizeRoomCode(inviteCode);
+    else state.pendingRoomInvite = null;
+
+    const invited = Boolean(state.pendingRoomInvite);
+    const introCopy = invited
+      ? `You were invited to room <strong>${state.pendingRoomInvite}</strong>. Enter your name below and tap <strong>Join</strong>.`
+      : 'Create a room, send the invite link, then start as soon as 1 friend joins.';
+
     showHelp('Private Room', `
-      <div class="room-modal room-simple">
-        <p class="room-copy">Create a room, send the code, then start as soon as 1 friend joins.</p>
-        <div class="room-role-pill" id="room-role">Create or join a room</div>
+      <div class="room-modal room-simple${invited ? ' room-invite-mode' : ''}">
+        <p class="room-copy">${introCopy}</p>
+        <div class="room-role-pill" id="room-role">${invited ? 'Friend Invite' : 'Create or join a room'}</div>
         <label class="room-join-label" for="room-name-input">Your name</label>
         <input class="room-name-input" id="room-name-input" maxlength="18" autocomplete="nickname" placeholder="Your name" aria-label="Your player name" />
         <div class="room-code-card">
           <span>Room Code</span>
-          <strong id="room-code-display">-----</strong>
+          <strong id="room-code-display">${invited ? state.pendingRoomInvite : '-----'}</strong>
         </div>
         <div class="room-actions">
-          <button type="button" class="primary" id="room-create-button">Create Room</button>
+          <button type="button" class="primary" id="room-create-button"${invited ? ' hidden' : ''}>Create Room</button>
           <button type="button" class="secondary" id="room-copy-button" disabled>Copy Code</button>
-          <button type="button" class="secondary" id="room-share-button" disabled>Share</button>
+          <button type="button" class="secondary" id="room-share-button" disabled>Share Link</button>
         </div>
         <label class="room-join-label" for="room-code-input">Friend code</label>
         <div class="room-join-row">
-          <input id="room-code-input" maxlength="5" inputmode="text" autocomplete="off" placeholder="ABCDE" aria-label="Enter room code" />
-          <button type="button" class="secondary" id="room-join-button">Join</button>
+          <input id="room-code-input" maxlength="5" inputmode="text" autocomplete="off" placeholder="ABCDE" aria-label="Enter room code" value="${invited ? state.pendingRoomInvite : ''}"${invited ? ' readonly' : ''} />
+          <button type="button" class="primary" id="room-join-button">${invited ? 'Join Room' : 'Join'}</button>
         </div>
         <div class="room-live-row">
           <span>Players joined</span>
           <strong id="room-player-count">0</strong>
         </div>
         <button type="button" class="primary room-start" id="room-start-button" disabled>Start Game</button>
-        <p id="room-status" class="room-status" data-tone="neutral">Create a room or enter your friend’s code.</p>
+        <p id="room-status" class="room-status" data-tone="neutral">${invited ? 'Enter your name, then tap Join Room.' : 'Create a room or enter your friend’s code.'}</p>
         <ul id="room-player-list" class="room-player-list"></ul>
       </div>`);
     setTimeout(attachRoomModalEvents, 0);
@@ -3137,7 +3222,11 @@
     renderLogs();
     showHomeScreen();
     renderRoomRecovery();
-    verifySavedRoomSession().catch(() => {});
+    verifySavedRoomSession()
+      .catch(() => {})
+      .finally(() => {
+        if (!state.liveRoom?.code) handleRoomInviteLink();
+      });
     if (localStorage.getItem(SAVE_KEY)) els.continue.classList.remove('hidden');
   }
 
