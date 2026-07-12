@@ -658,6 +658,7 @@ button:disabled { opacity: .42; filter: grayscale(.35); cursor: not-allowed; tra
 .reward-line { padding: 10px 12px; border-radius: 16px; background: rgba(255,255,255,.10); color: #fff; font-size: .82rem; font-weight: 800; }
 .victory-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
 .victory-actions button { min-height: 50px; border-radius: 17px; }
+.victory-actions--quad button { min-height: 46px; font-size: 0.84rem; }
 .victory-rival {
   margin: 12px 0 14px;
   padding: 14px 14px 15px;

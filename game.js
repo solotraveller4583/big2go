@@ -1198,6 +1198,73 @@
     });
   }
 
+  function persistPlayerWallet() {
+    if (state.liveRoom?.code) return getWalletDisplayBalance();
+    persistCoinBalance(state.coins.balance);
+    return state.coins.balance;
+  }
+
+  function resetFinishedMatchState() {
+    state.coins.prizePool = 0;
+    state.coins.entryPaid = false;
+    state.coins.paidOut = false;
+    state.gameOver = false;
+    state.players = [];
+    state.selected = new Set();
+    state.logs = [];
+    clearSelection();
+  }
+
+  function exitGame(options = {}) {
+    const { confirmLeave = true, fromVictory = false } = options;
+
+    if (state.liveRoom?.code) {
+      if (confirmLeave && !fromVictory) {
+        const leave = window.confirm('Exit game?\n\nYour room session stays saved. Your solo coin wallet stays safe.\n\nPress OK to leave, or Cancel to stay.');
+        if (!leave) return;
+      }
+      saveRoomSession();
+      leaveCurrentRoom();
+      cancelAiTimer();
+      state.busy = false;
+      document.querySelector('#victory-overlay')?.remove();
+      showHomeScreen();
+      updateContinueButton();
+      renderCoinHud();
+      renderRoomRecovery();
+      return;
+    }
+
+    const inProgress = !state.gameOver && state.players.length > 0 && !fromVictory;
+    if (confirmLeave && inProgress) {
+      const leave = window.confirm(
+        'Exit game?\n\nYour coins are saved and this match can be continued from the home screen.\n\nPress OK to exit, or Cancel to keep playing.'
+      );
+      if (!leave) return;
+    }
+
+    cancelAiTimer();
+    state.busy = false;
+    document.querySelector('#victory-overlay')?.remove();
+
+    const savedCoins = persistPlayerWallet();
+    if (fromVictory || state.gameOver) {
+      resetFinishedMatchState();
+      clearSave();
+      showCoinPop(`Coins saved: 🪙 ${savedCoins}`);
+    } else if (inProgress) {
+      saveGame();
+    }
+
+    showHomeScreen();
+    updateContinueButton();
+    renderCoinHud();
+  }
+
+  function endGame() {
+    exitGame({ fromVictory: true, confirmLeave: false });
+  }
+
   function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0) {
     const existing = document.querySelector('#victory-overlay');
     if (existing) existing.remove();
@@ -1304,12 +1371,24 @@
         shareGame();
         return;
       }
-      overlay.remove();
-      showHomeScreen();
+      endGame();
     });
 
+    const endButton = document.createElement('button');
+    endButton.className = 'secondary';
+    endButton.textContent = 'End Game';
+    endButton.addEventListener('click', () => endGame());
+
+    const exitButton = document.createElement('button');
+    exitButton.className = 'secondary';
+    exitButton.textContent = 'Exit Game';
+    exitButton.addEventListener('click', () => exitGame({ fromVictory: true, confirmLeave: false }));
+
+    actions.classList.add('victory-actions--quad');
     actions.appendChild(newButton);
     actions.appendChild(shareButton);
+    actions.appendChild(endButton);
+    actions.appendChild(exitButton);
     card.appendChild(badge);
     card.appendChild(title);
     if (!rivalCopy) card.appendChild(message);
@@ -1329,6 +1408,7 @@
     clearSelection();
     clearSave();
     const coinPrize = state.liveRoom ? (state.coins.prizePool || 0) : paySinglePlayerPrize(winner);
+    if (!state.liveRoom?.code) saveCoinBalance();
     renderConfetti(winner.isHuman ? 56 : 42);
     playUiSound(winner.isHuman ? 'win' : 'pass');
     window.Big2GoAIReactions?.onVictory(winner, state);
@@ -3524,20 +3604,7 @@
     document.querySelector('#leaderboard-button')?.addEventListener('click', () => showHelp('Leaderboard', '<ul><li><strong>You</strong> are the table challenger.</li><li>Win by clearing every card first.</li><li>Online ranking can be added after launch.</li></ul>'));
     document.querySelector('#bonus-button')?.addEventListener('click', () => showHelp('Daily Bonus', '<ul><li>Come back and play a fresh Big2Go table.</li><li>Daily rewards can be connected later.</li></ul>'));
     document.querySelector('#achievements-button')?.addEventListener('click', () => showHelp('Goals', '<ul><li>Win with singles, pairs, and 5-card combos.</li><li>Try to beat the AI with fewer passes.</li></ul>'));
-    els.back.addEventListener('click', () => {
-      if (state.liveRoom?.code) {
-        const leave = window.confirm('Leave game?\n\nYour current game progress will be saved.\n\nPress Cancel to stay, or OK to leave the room.');
-        if (!leave) return;
-        saveRoomSession();
-        leaveCurrentRoom();
-        setTimeout(renderRoomRecovery, 0);
-      }
-      cancelAiTimer();
-      state.busy = false;
-      showHomeScreen();
-      updateContinueButton();
-      renderRoomRecovery();
-    });
+    els.back.addEventListener('click', () => exitGame());
     els.sound.addEventListener('click', () => {
       state.sound = !state.sound;
       els.sound.textContent = state.sound ? '🔊' : '🔇';
