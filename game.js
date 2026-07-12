@@ -597,6 +597,7 @@
   }
 
   function finalizeFinishedMatch() {
+    document.querySelector('#victory-overlay')?.remove();
     cancelAiTimer();
     state.busy = false;
     persistPlayerWallet();
@@ -606,7 +607,6 @@
     }
     clearSave();
     resetFinishedMatchState();
-    document.querySelector('#victory-overlay')?.remove();
   }
 
   function goBackToHomeFromVictory() {
@@ -1545,7 +1545,6 @@
     state.players = [];
     state.selected = new Set();
     state.logs = [];
-    clearSelection();
   }
 
   function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0) {
@@ -1658,11 +1657,13 @@
     });
 
     const endButton = document.createElement('button');
+    endButton.type = 'button';
     endButton.className = 'secondary';
     endButton.textContent = '🏠 Back to Home';
     endButton.addEventListener('click', () => goBackToHomeFromVictory());
 
     const exitButton = document.createElement('button');
+    exitButton.type = 'button';
     exitButton.className = 'secondary';
     exitButton.textContent = '🚪 Exit Game';
     exitButton.addEventListener('click', () => showGameResultStoryFromVictory());
@@ -1883,6 +1884,10 @@
   function updateStatus() {
     const human = getHumanPlayer();
     const current = state.players[state.currentPlayer];
+    if (!human || !current) {
+      renderCoinHud();
+      return;
+    }
     const requirement = state.trick.play
       ? `Beat ${describePlay(state.trick.play)}`
       : (state.firstTrick ? 'Opening hand' : 'You lead');
@@ -2628,6 +2633,11 @@
   function renderHand() {
     els.hand.innerHTML = '';
     const human = getHumanPlayer();
+    if (!human) {
+      els.selectedCount.textContent = '0 selected';
+      document.querySelector('.hand-head h2')?.setAttribute('data-count', '0');
+      return;
+    }
     const shouldAnimateDeal = !state.dealAnimationShown;
     sortedHumanHand(human.hand).forEach((card, index) => {
       const tile = renderCardTile(card, true);
@@ -2652,6 +2662,10 @@
   }
 
   function render() {
+    if (!state.players.length) {
+      renderCoinHud();
+      return;
+    }
     renderOpponents();
     renderTrick();
     renderHand();
