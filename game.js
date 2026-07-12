@@ -3,6 +3,7 @@
 
   const SAVE_KEY = 'big2go-save-v1';
   const COIN_KEY = 'big2go-virtual-coins-v1';
+  const COIN_PEAK_KEY = 'big2go-virtual-coins-peak-v1';
   const AI_COINS_KEY = 'big2go-ai-coins-v1';
   const SOUND_SETTINGS_KEY = 'big2go-sound-settings-v1';
   const STARTING_COINS = 100;
@@ -576,6 +577,7 @@
         logs: state.logs.slice(0, 8)
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+      if (!state.liveRoom?.code) saveCoinBalance();
       updateContinueButton();
     } catch (_) {
       // ignore storage failures
@@ -617,6 +619,11 @@
       state.sparks = Number(saved.sparks) || 0;
       state.heat = Number(saved.heat) || 0;
       state.coins = { ...state.coins, ...(saved.coins || {}), balance: loadCoinBalance() };
+      const savedBalance = Number(saved.coins?.balance);
+      if (Number.isFinite(savedBalance) && savedBalance > state.coins.balance) {
+        state.coins.balance = savedBalance;
+        saveCoinBalance();
+      }
       state.sound = saved.sound !== false;
       state.soundVolume = Number.isFinite(Number(saved.soundVolume)) ? Number(saved.soundVolume) : state.soundVolume;
       state.voiceVolume = Number.isFinite(Number(saved.voiceVolume)) ? Number(saved.voiceVolume) : state.voiceVolume;
@@ -693,17 +700,54 @@
     if (amount >= 2) renderConfetti(8 + amount * 4);
   }
 
-  function loadCoinBalance() {
+  function readStoredCoinBalance(key, fallback = STARTING_COINS) {
     try {
-      const saved = Number(JSON.parse(localStorage.getItem(COIN_KEY) || 'null')?.balance);
-      return Number.isFinite(saved) ? Math.max(0, saved) : STARTING_COINS;
+      const saved = Number(JSON.parse(localStorage.getItem(key) || 'null')?.balance);
+      return Number.isFinite(saved) ? Math.max(0, saved) : fallback;
     } catch (_) {
-      return STARTING_COINS;
+      return fallback;
     }
   }
 
+  function loadCoinBalance() {
+    const saved = readStoredCoinBalance(COIN_KEY);
+    const peak = readStoredCoinBalance(COIN_PEAK_KEY, saved);
+    const balance = Math.max(saved, peak);
+    if (balance > saved) {
+      try {
+        localStorage.setItem(COIN_KEY, JSON.stringify({ balance, updatedAt: Date.now(), repairedFromPeak: true }));
+      } catch (_) {}
+    }
+    return balance;
+  }
+
+  function persistCoinBalance(balance) {
+    const value = Math.max(0, Math.round(Number(balance) || 0));
+    const peak = readStoredCoinBalance(COIN_PEAK_KEY, value);
+    const nextPeak = Math.max(value, peak);
+    try {
+      localStorage.setItem(COIN_KEY, JSON.stringify({ balance: value, updatedAt: Date.now() }));
+      localStorage.setItem(COIN_PEAK_KEY, JSON.stringify({ balance: nextPeak, updatedAt: Date.now() }));
+    } catch (_) {}
+  }
+
   function saveCoinBalance() {
-    try { localStorage.setItem(COIN_KEY, JSON.stringify({ balance: state.coins.balance, updatedAt: Date.now() })); } catch (_) {}
+    if (state.liveRoom?.code) return;
+    persistCoinBalance(state.coins.balance);
+  }
+
+  function getWalletDisplayBalance() {
+    if (state.liveRoom?.code) {
+      const human = getHumanPlayer();
+      if (human && Number.isFinite(human.coins)) return human.coins;
+    }
+    return state.coins.balance;
+  }
+
+  function syncLiveRoomCoinBalance(value) {
+    const human = getHumanPlayer();
+    if (human) human.coins = Math.max(0, Number(value) || 0);
+    renderCoinHud();
   }
 
   function loadAiCoinLedger() {
@@ -783,14 +827,15 @@
   }
 
   function renderCoinHud() {
-    if (els.coinBalance) els.coinBalance.textContent = String(Math.max(0, Math.round(state.coins.balance || 0)));
+    const displayBalance = getWalletDisplayBalance();
+    if (els.coinBalance) els.coinBalance.textContent = String(Math.max(0, Math.round(displayBalance || 0)));
     if (els.prizePoolValue) els.prizePoolValue.textContent = String(Math.max(0, Math.round(state.coins.prizePool || 0)));
   }
 
   function setCoinBalance(value) {
     state.coins.balance = Math.max(0, Number(value) || 0);
     const human = getHumanPlayer();
-    if (human) human.coins = state.coins.balance;
+    if (human && !state.liveRoom?.code) human.coins = state.coins.balance;
     saveCoinBalance();
     renderCoinHud();
   }
@@ -2791,6 +2836,7 @@
     state.liveRoomPlayers = [];
     document.body.classList.remove('live-room-active');
     updateVoicePanel();
+    renderCoinHud();
   }
 
   async function sendLiveRoomMessage(message) {
@@ -2871,8 +2917,8 @@
     state.coins.prizePool = game.prizePool || 0;
     const ownRoomPlayer = room?.players?.find?.(player => player.id === game.playerId);
     const ownGamePlayer = game.players?.find?.(player => player.id === game.playerId);
-    if (Number.isFinite(ownGamePlayer?.coins)) setCoinBalance(ownGamePlayer.coins);
-    else if (Number.isFinite(ownRoomPlayer?.coins)) setCoinBalance(ownRoomPlayer.coins);
+    if (Number.isFinite(ownGamePlayer?.coins)) syncLiveRoomCoinBalance(ownGamePlayer.coins);
+    else if (Number.isFinite(ownRoomPlayer?.coins)) syncLiveRoomCoinBalance(ownRoomPlayer.coins);
     if (!state.gameOver && !game.gameOver && game.currentPlayer === game.playerIndex && state.coins.lastTurn !== `${game.round}:${game.currentPlayer}`) {
       state.coins.lastTurn = `${game.round}:${game.currentPlayer}`;
       playUiSound('turn');
@@ -3620,6 +3666,9 @@
     bindEvents();
     installReconnectTestMode();
     registerServiceWorker();
+    window.addEventListener('pagehide', () => {
+      if (!state.liveRoom?.code) saveCoinBalance();
+    });
     updateContinueButton();
     updatePlayerChoiceUI();
     els.helpText.innerHTML = RULES_HTML;
