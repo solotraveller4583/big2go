@@ -5,8 +5,12 @@
   const COIN_KEY = 'big2go-virtual-coins-v1';
   const COIN_PEAK_KEY = 'big2go-virtual-coins-peak-v1';
   const AI_COINS_KEY = 'big2go-ai-coins-v1';
+  const PLAYER_PROFILE_KEY = 'big2go-player-profile-v1';
+  const AI_PROFILE_KEY = 'big2go-ai-profile-v1';
   const SOUND_SETTINGS_KEY = 'big2go-sound-settings-v1';
   const STARTING_COINS = 100;
+  const STARTING_LEVEL = 1;
+  const WINS_PER_LEVEL = 20;
   const ENTRY_FEE_COINS = 10;
   const ROOM_SESSION_KEY = 'big2go-room-session-v1';
   const RULES_HTML = `
@@ -137,6 +141,8 @@
     privateRoom: document.querySelector('#private-room-button'),
     rules: document.querySelector('#rules-button'),
     share: document.querySelector('#share-button'),
+    profileButton: document.querySelector('#profile-button'),
+    playerLevelLabel: document.querySelector('#player-level-label'),
     back: document.querySelector('#back-button'),
     sound: document.querySelector('#sound-button'),
     play: document.querySelector('#play-button'),
@@ -490,6 +496,7 @@
     els.home?.classList.remove('hidden');
     updateContinueButton();
     renderCoinHud();
+    renderPlayerProfileHud();
     renderRoomRecovery();
     window.scrollTo(0, 0);
   }
@@ -519,6 +526,7 @@
         cardsLeft: Array.isArray(player.hand) ? player.hand.length : 0,
         coins: playerCoins(player, index),
         characterId: player.characterId || null,
+        level: getProfileLevelForPlayer(player),
         won: index === winnerIndex
       })),
       farewells: window.Big2GoAICharacters?.getSessionFarewells?.(state, winner) || []
@@ -533,9 +541,11 @@
         : `${story.winnerName} won this round`;
     }
     if (els.resultStoryStats) {
+      const humanProfile = loadPlayerProfile();
+      const humanProgress = getProfileProgress(humanProfile.totalWins);
       els.resultStoryStats.innerHTML = `
-        <div class="result-story-stat"><small>Round</small><strong>${story.round}</strong></div>
-        <div class="result-story-stat"><small>Sparks</small><strong>${story.sparks}</strong></div>
+        <div class="result-story-stat"><small>Your Level</small><strong>Lv ${humanProfile.level}</strong></div>
+        <div class="result-story-stat"><small>Level Progress</small><strong>${humanProgress.current} / ${humanProgress.target}</strong></div>
         <div class="result-story-stat"><small>Your Coins</small><strong>🪙 ${story.coinsBalance}</strong></div>
         <div class="result-story-stat result-story-stat--wide"><small>Best Combo</small><strong>${story.bestCombo}</strong></div>`;
     }
@@ -558,7 +568,7 @@
         copy.className = 'result-story-player-copy';
         const status = player.won ? 'Winner' : (player.finished || player.cardsLeft === 0 ? 'Out' : `${player.cardsLeft} cards left`);
         copy.innerHTML = `
-          <strong>${player.name}</strong>
+          <strong>${player.name} · Lv ${player.level || STARTING_LEVEL}</strong>
           <span>${status}</span>
           <small>🪙 ${player.coins}</small>`;
         const badge = document.createElement('span');
@@ -950,6 +960,141 @@
     const ledger = loadAiCoinLedger();
     ledger[characterId] = Math.max(0, Math.round(Number(amount) || 0));
     saveAiCoinLedger(ledger);
+  }
+
+  function defaultProfileRecord() {
+    return { level: STARTING_LEVEL, totalWins: 0 };
+  }
+
+  function computeProfileLevel(totalWins) {
+    return Math.floor(Math.max(0, Number(totalWins) || 0) / WINS_PER_LEVEL) + STARTING_LEVEL;
+  }
+
+  function getProfileProgress(totalWins) {
+    const wins = Math.max(0, Number(totalWins) || 0);
+    return { current: wins % WINS_PER_LEVEL, target: WINS_PER_LEVEL };
+  }
+
+  function loadPlayerProfile() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(PLAYER_PROFILE_KEY) || 'null');
+      const profile = raw && typeof raw === 'object' ? raw : defaultProfileRecord();
+      profile.totalWins = Math.max(0, Number(profile.totalWins) || 0);
+      profile.level = computeProfileLevel(profile.totalWins);
+      return profile;
+    } catch (_) {
+      return defaultProfileRecord();
+    }
+  }
+
+  function savePlayerProfile(profile) {
+    try {
+      localStorage.setItem(PLAYER_PROFILE_KEY, JSON.stringify({
+        level: computeProfileLevel(profile.totalWins),
+        totalWins: Math.max(0, Number(profile.totalWins) || 0),
+        updatedAt: Date.now()
+      }));
+    } catch (_) {}
+  }
+
+  function loadAiProfileLedger() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(AI_PROFILE_KEY) || 'null');
+      return raw && typeof raw === 'object' ? raw : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function saveAiProfileLedger(ledger) {
+    try { localStorage.setItem(AI_PROFILE_KEY, JSON.stringify(ledger)); } catch (_) {}
+  }
+
+  function loadAiProfile(characterId) {
+    if (!characterId) return defaultProfileRecord();
+    const ledger = loadAiProfileLedger();
+    const raw = ledger[characterId];
+    const profile = raw && typeof raw === 'object' ? raw : defaultProfileRecord();
+    profile.totalWins = Math.max(0, Number(profile.totalWins) || 0);
+    profile.level = computeProfileLevel(profile.totalWins);
+    return profile;
+  }
+
+  function saveAiProfile(characterId, profile) {
+    if (!characterId) return;
+    const ledger = loadAiProfileLedger();
+    ledger[characterId] = {
+      level: computeProfileLevel(profile.totalWins),
+      totalWins: Math.max(0, Number(profile.totalWins) || 0),
+      updatedAt: Date.now()
+    };
+    saveAiProfileLedger(ledger);
+  }
+
+  function getProfileLevelForPlayer(player) {
+    if (!player) return STARTING_LEVEL;
+    if (player.isHuman) return loadPlayerProfile().level;
+    if (player.characterId) return loadAiProfile(player.characterId).level;
+    return STARTING_LEVEL;
+  }
+
+  function recordProfileWin(winner) {
+    if (!winner || state.liveRoom?.code) return null;
+    if (winner.isHuman) {
+      const profile = loadPlayerProfile();
+      const previousLevel = profile.level;
+      profile.totalWins += 1;
+      profile.level = computeProfileLevel(profile.totalWins);
+      savePlayerProfile(profile);
+      renderPlayerProfileHud();
+      return profile.level > previousLevel
+        ? { kind: 'human', level: profile.level, name: 'You' }
+        : null;
+    }
+    if (winner.characterId) {
+      const profile = loadAiProfile(winner.characterId);
+      const previousLevel = profile.level;
+      profile.totalWins += 1;
+      profile.level = computeProfileLevel(profile.totalWins);
+      saveAiProfile(winner.characterId, profile);
+      return profile.level > previousLevel
+        ? { kind: 'ai', level: profile.level, name: winner.name, characterId: winner.characterId }
+        : null;
+    }
+    return null;
+  }
+
+  function renderPlayerProfileHud() {
+    const profile = loadPlayerProfile();
+    if (els.playerLevelLabel) {
+      els.playerLevelLabel.textContent = `Lv ${profile.level}`;
+    }
+  }
+
+  function buildPlayerProfileHtml() {
+    const profile = loadPlayerProfile();
+    const progress = getProfileProgress(profile.totalWins);
+    const rivals = (window.Big2GoAICharacters?.pool || []).map(character => {
+      const rivalProfile = loadAiProfile(character.id);
+      const rivalProgress = getProfileProgress(rivalProfile.totalWins);
+      return `
+        <div class="modal-row profile-rival-row">
+          <strong>${character.name}</strong>
+          <span>Lv ${rivalProfile.level} · ${rivalProfile.totalWins} wins · ${rivalProgress.current}/${rivalProgress.target}</span>
+        </div>`;
+    }).join('');
+    return `
+      <div class="profile-modal">
+        <div class="modal-row"><strong>You</strong><span>Level ${profile.level}</span></div>
+        <div class="modal-row"><strong>Total Wins</strong><span>${profile.totalWins}</span></div>
+        <div class="modal-row"><strong>Next Level</strong><span>${progress.current} / ${progress.target} wins</span></div>
+        <p class="profile-note">Every ${WINS_PER_LEVEL} wins levels you up.</p>
+        ${rivals ? `<div class="profile-rivals"><h3>Rival Levels</h3>${rivals}</div>` : ''}
+      </div>`;
+  }
+
+  function showPlayerProfilePanel() {
+    showHelp('Player Profile', buildPlayerProfileHtml());
   }
 
   function shuffleCharacters(list) {
@@ -1547,7 +1692,7 @@
     state.logs = [];
   }
 
-  function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0) {
+  function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0, levelUp = null) {
     const existing = document.querySelector('#victory-overlay');
     if (existing) existing.remove();
     const overlay = document.createElement('div');
@@ -1624,6 +1769,15 @@
       ? `<div class="reward-line">🪙 +${coinPrize} virtual gold coins</div><div class="reward-line">✨ Arcade tokens only — no cash value</div>`
       : `<div class="reward-line">Good Game! -🪙 ${ENTRY_FEE_COINS}</div><div class="reward-line">These are entertainment coins only — rematch anytime</div>`;
 
+    let levelUpPanel = null;
+    if (levelUp) {
+      levelUpPanel = document.createElement('div');
+      levelUpPanel.className = 'victory-level-up';
+      levelUpPanel.textContent = levelUp.kind === 'human'
+        ? `⬆️ Level Up! You reached Level ${levelUp.level}`
+        : `⬆️ ${levelUp.name} reached Level ${levelUp.level}`;
+    }
+
     const actions = document.createElement('div');
     actions.className = 'victory-actions';
 
@@ -1679,6 +1833,7 @@
     if (rivalPanel) card.appendChild(rivalPanel);
     card.appendChild(stats);
     card.appendChild(rewards);
+    if (levelUpPanel) card.appendChild(levelUpPanel);
     card.appendChild(actions);
     overlay.appendChild(card);
     document.body.appendChild(overlay);
@@ -1693,12 +1848,13 @@
     clearSave();
     const coinPrize = state.liveRoom ? (state.coins.prizePool || 0) : paySinglePlayerPrize(winner);
     recordSessionMatchResult(winner, coinPrize);
+    const levelUp = recordProfileWin(winner);
     state.lastMatchStory = captureMatchStory(winner, coinPrize);
     if (!state.liveRoom?.code) saveCoinBalance();
     renderConfetti(winner.isHuman ? 56 : 42);
     playUiSound(winner.isHuman ? 'win' : 'pass');
     window.Big2GoAIReactions?.onVictory(winner, state);
-    showVictoryCelebration(winner, coinPrize);
+    showVictoryCelebration(winner, coinPrize, levelUp);
     render();
   }
 
@@ -1921,7 +2077,10 @@
       stack.className = 'opponent-stack';
       const name = document.createElement('div');
       name.className = 'opponent-name';
-      name.textContent = isSelf ? 'You' : player.name;
+      const playerLevel = !state.liveRoom?.code ? getProfileLevelForPlayer(player) : null;
+      name.textContent = playerLevel
+        ? `${isSelf ? 'You' : player.name} · Lv ${playerLevel}`
+        : (isSelf ? 'You' : player.name);
       const stats = document.createElement('div');
       stats.className = 'opponent-stats';
       const coins = document.createElement('span');
@@ -3886,7 +4045,7 @@
     document.querySelectorAll('[data-chat-quick]').forEach(button => {
       button.addEventListener('click', () => sendRoomChat(button.dataset.chatQuick || button.textContent || ''));
     });
-    document.querySelector('#profile-button')?.addEventListener('click', () => showHelp('Player Profile', '<div class="profile-modal"><div class="modal-row"><strong>Guest Pro</strong><span>Level 8</span></div><div class="modal-row"><strong>League</strong><span>Bronze III</span></div><div class="modal-row"><strong>Best Streak</strong><span>3 wins</span></div><div class="modal-row"><strong>Card Back</strong><span>Neon Starter</span></div></div>'));
+    document.querySelector('#profile-button')?.addEventListener('click', showPlayerProfilePanel);
     document.querySelectorAll('[data-home-tab]').forEach(button => {
       button.addEventListener('click', () => {
         document.querySelectorAll('[data-home-tab]').forEach(tab => tab.classList.toggle('active', tab === button));
@@ -3895,7 +4054,7 @@
           play: ['Play', '<p>Choose your table and tap <strong>PLAY NOW</strong> to start a fast Big Two match.</p>'],
           rank: ['Rank Ladder', '<div class="rank-modal"><div class="modal-row"><strong>Bronze III</strong><span>145 / 250 RP</span></div><div class="modal-row"><strong>Next Rank</strong><span>Bronze II</span></div><div class="modal-row"><strong>Reward</strong><span>Gold Trim Card Back</span></div></div>'],
           rewards: ['Rewards', '<div class="reward-modal"><div class="modal-row"><strong>Daily Chest</strong><span>Ready</span></div><div class="modal-row"><strong>Win Chest</strong><span>2 / 5 wins</span></div><div class="modal-row"><strong>Today\'s Goal</strong><span>Win 1 match</span></div></div>'],
-          profile: ['Profile', '<div class="profile-modal"><div class="modal-row"><strong>Guest Pro</strong><span>Level 8</span></div><div class="modal-row"><strong>League</strong><span>Bronze III</span></div><div class="modal-row"><strong>Collection</strong><span>3 card backs</span></div></div>']
+          profile: ['Profile', buildPlayerProfileHtml()]
         }[tab] || ['Big2Go', '<p>Play fast Big Two battles and climb the table.</p>'];
         showHelp(copy[0], copy[1]);
       });
@@ -4066,6 +4225,7 @@
     els.heatValue.textContent = '0%';
     els.heatFill.style.width = '0%';
     renderLogs();
+    renderPlayerProfileHud();
     showHomeScreen();
     renderRoomRecovery();
     verifySavedRoomSession()

@@ -37,7 +37,7 @@
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=3" />
   <link rel="stylesheet" href="big2go-session-complete.css?v=1" />
   <link rel="stylesheet" href="big2go-result-story.css?v=1" />
-  <link rel="stylesheet" href="big2go-landing-v3.css?v=20" />
+  <link rel="stylesheet" href="big2go-landing-v3.css?v=21" />
   <link rel="stylesheet" href="big2go-gameplay-premium.css?v=24" />
 </head>
 <body>
@@ -48,10 +48,13 @@
       <div class="table-glow" aria-hidden="true"></div>
 
       <header class="home-topbar instant-topbar">
-        <div class="brand-pill" aria-label="Big2Go">
+        <button class="brand-pill profile-pill" id="profile-button" type="button" aria-label="Player profile">
           <span class="profile-avatar">B2</span>
-          <strong>Big2Go</strong>
-        </div>
+          <span class="profile-copy">
+            <strong>Big2Go</strong>
+            <small id="player-level-label">Lv 1</small>
+          </span>
+        </button>
         <div class="online-pill live-pill" aria-label="Private rooms available">
           <span class="room-status-dot" aria-hidden="true"></span>
           <strong>ROOM</strong>
@@ -354,6 +357,6 @@
 
   <script src="aiCharacters.js?v=4" defer></script>
   <script src="aiReactions.js?v=5" defer></script>
-  <script src="game.js?v=75" defer></script>
+  <script src="game.js?v=76" defer></script>
 </body>
 </html>

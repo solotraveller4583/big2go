@@ -187,6 +187,33 @@
   color: var(--v3-text);
 }
 
+#home-screen.landing-v3 .brand-pill.profile-pill {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+#home-screen.landing-v3 .profile-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+#home-screen.landing-v3 .profile-copy strong {
+  font-size: 0.92rem;
+  line-height: 1.05;
+}
+
+#home-screen.landing-v3 .profile-copy small,
+#home-screen.landing-v3 #player-level-label {
+  color: #ffe68f;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
 #home-screen.landing-v3 .profile-avatar {
   display: grid;
   place-items: center;

@@ -659,6 +659,48 @@ button:disabled { opacity: .42; filter: grayscale(.35); cursor: not-allowed; tra
 .victory-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
 .victory-actions button { min-height: 50px; border-radius: 17px; }
 .victory-actions--quad button { min-height: 46px; font-size: 0.84rem; }
+.victory-level-up {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 900;
+  text-align: center;
+  border: 1px solid rgba(255, 216, 74, 0.45);
+  background: linear-gradient(180deg, rgba(255, 216, 74, 0.24), rgba(255, 138, 0, 0.16));
+  animation: victoryLevelPulse 900ms ease-in-out infinite alternate;
+}
+@keyframes victoryLevelPulse {
+  from { box-shadow: 0 0 0 rgba(255, 216, 74, 0.1); transform: scale(1); }
+  to { box-shadow: 0 0 18px rgba(255, 216, 74, 0.28); transform: scale(1.01); }
+}
+.help-copy .profile-note {
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-align: left;
+}
+.help-copy .profile-rivals {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: left;
+}
+.help-copy .profile-rivals h3 {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 236, 170, 0.88);
+}
+.help-copy .profile-rival-row span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.72);
+}
 .victory-rival {
   margin: 12px 0 14px;
   padding: 14px 14px 15px;
