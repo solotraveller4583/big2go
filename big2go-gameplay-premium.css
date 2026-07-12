@@ -305,6 +305,73 @@
   color: var(--gp-gold-mid) !important;
 }
 
+#game-screen.gameplay-premium .last-card-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  margin-top: 3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9px !important;
+  font-weight: 1000 !important;
+  letter-spacing: 0.1em;
+  line-height: 1 !important;
+  text-transform: uppercase;
+  color: #1a0800 !important;
+  background: linear-gradient(180deg, #ffe566 0%, #ff9f1a 100%);
+  border: 1px solid rgba(255, 230, 120, 0.92);
+  box-shadow:
+    0 0 10px rgba(255, 200, 61, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  animation: gpLastCardPulse 1.35s ease-in-out infinite;
+}
+
+#game-screen.gameplay-premium .last-card-badge--you {
+  margin-top: 0;
+  margin-left: auto;
+  padding: 3px 9px;
+  font-size: 10px !important;
+}
+
+#game-screen.gameplay-premium .opponent-row.last-card {
+  border-color: rgba(255, 200, 61, 0.72) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 200, 61, 0.24),
+    0 0 16px rgba(255, 200, 61, 0.22) !important;
+}
+
+#game-screen.gameplay-premium .hand-card.last-card {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 200, 61, 0.28),
+    0 0 18px rgba(255, 200, 61, 0.16) !important;
+}
+
+#game-screen.gameplay-premium .hand-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 0 4px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+@keyframes gpLastCardPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 10px rgba(255, 200, 61, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow:
+      0 0 16px rgba(255, 200, 61, 0.78),
+      inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  }
+}
+
 /* ── Table arena (Snap-style play zone) ── */
 #game-screen.gameplay-premium .table-arena {
   position: relative !important;
@@ -554,12 +621,6 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 -8px 24px rgba(0, 0, 0, 0.28) !important;
   overflow-x: hidden !important;
   overflow-y: hidden !important;
-}
-
-#game-screen.gameplay-premium .hand-head {
-  padding: 0 4px !important;
-  background: transparent !important;
-  border: 0 !important;
 }
 
 #game-screen.gameplay-premium .hand-head h2 {

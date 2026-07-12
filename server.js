@@ -727,6 +727,7 @@ function applyRoomPlay(code, playerId, cardIds) {
   room.game.firstTrick = false;
   room.game.round += 1;
   room.game.logs.unshift(`${player.name} played ${play.cards.map(card => card.short).join(' ')}.`);
+  if (player.hand.length === 1) room.game.logs.unshift(`⚠️ ${player.name} is on their LAST CARD!`);
   if (!finishIfNeeded(room, player)) room.game.currentPlayer = nextActivePlayer(room.game, player.index);
   room.updatedAt = Date.now();
   rememberRoomSessions(room);

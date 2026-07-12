@@ -627,6 +627,9 @@
       state.selected = new Set();
       state.gameOver = false;
       state.busy = false;
+      state.lastCardNotified = new Set();
+      state.lastHandCounts = {};
+      seedLastCardNotifiedFromHands();
       els.playerCount.value = String(state.settings.players || 4);
       els.sound.textContent = state.sound ? '🔊' : '🔇';
       showGameScreen();
@@ -1183,6 +1186,9 @@
     state.busy = false;
     state.dealAnimationShown = false;
     state.lastShuffleKey = `solo:${state.round}:${Date.now()}`;
+    state.lastCardNotified = new Set();
+    state.lastHandCounts = {};
+    seedLastCardNotifiedFromHands();
     els.sound.textContent = '🔊';
     showGameScreen();
     updateHeat(10, 'The opening player can lead any valid Big Two hand.');
@@ -1201,6 +1207,63 @@
 
   function cardsLeft(player) {
     return player.hand.length;
+  }
+
+  function playerLastCardKey(player, index) {
+    return player?.id || String(index);
+  }
+
+  function seedLastCardNotifiedFromHands() {
+    state.lastCardNotified = new Set();
+    state.players.forEach((player, index) => {
+      if (!player.finished && player.hand.length === 1) {
+        state.lastCardNotified.add(playerLastCardKey(player, index));
+      }
+    });
+  }
+
+  function announceLastCard(playerIndex) {
+    const player = state.players[playerIndex];
+    if (!player || player.finished || player.hand.length !== 1) return;
+    state.lastCardNotified = state.lastCardNotified || new Set();
+    const key = playerLastCardKey(player, playerIndex);
+    if (state.lastCardNotified.has(key)) return;
+    state.lastCardNotified.add(key);
+    const note = player.isHuman
+      ? 'You are on your LAST CARD — be careful!'
+      : `${player.name} is on their LAST CARD!`;
+    logState(`⚠️ ${note}`);
+    updateHeat(12, player.isHuman ? 'Last card — finish strong!' : `${player.name} has 1 card left — watch out!`);
+    playUiSound('turn');
+  }
+
+  function syncLiveLastCardFromGame(game) {
+    if (!game?.players?.length) return;
+    state.lastHandCounts = state.lastHandCounts || {};
+    state.lastCardNotified = state.lastCardNotified || new Set();
+    game.players.forEach((player, index) => {
+      const count = index === game.playerIndex
+        ? (game.hand?.length || 0)
+        : (Number(player.handCount) || 0);
+      const key = player.id || String(index);
+      const prev = state.lastHandCounts[key];
+      if (count === 1 && prev !== 1 && !player.finished) {
+        state.lastCardNotified.add(key);
+        const label = index === game.playerIndex ? 'You' : player.name;
+        updateHeat(12, `${label} ${index === game.playerIndex ? 'have' : 'has'} 1 card left — watch out!`);
+        playUiSound('turn');
+      }
+      state.lastHandCounts[key] = count;
+    });
+  }
+
+  function renderLastCardBadge(container, label, extraClass = '') {
+    const badge = document.createElement('span');
+    badge.className = `last-card-badge${extraClass ? ` ${extraClass}` : ''}`;
+    badge.textContent = label;
+    badge.setAttribute('aria-label', 'One card left');
+    container.appendChild(badge);
+    return badge;
   }
 
   function selectionFeedback() {
@@ -1236,8 +1299,10 @@
     state.players.forEach((player, index) => {
       const isSelf = index === state.humanIndex;
       if (isSelf && !state.liveRoom?.code) return;
+      const handCount = player.hand.length;
+      const isLastCard = !player.finished && handCount === 1;
       const row = document.createElement('div');
-      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
+      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}${isLastCard ? ' last-card' : ''}`;
       row.dataset.playerIndex = String(index);
       if (player.characterId) row.dataset.characterId = player.characterId;
       const avatar = document.createElement('div');
@@ -1264,6 +1329,7 @@
       stats.appendChild(cards);
       stack.appendChild(name);
       stack.appendChild(stats);
+      if (isLastCard) renderLastCardBadge(stack, '1 LEFT');
       row.appendChild(avatar);
       row.appendChild(stack);
       row.appendChild(online);
@@ -1753,6 +1819,15 @@
     if (shouldAnimateDeal) state.dealAnimationShown = true;
     els.selectedCount.textContent = `${state.selected.size} selected`;
     document.querySelector('.hand-head h2')?.setAttribute('data-count', String(human.hand.length));
+    const handCard = document.querySelector('.hand-card');
+    const handHead = document.querySelector('.hand-head');
+    handHead?.querySelector('.last-card-badge--you')?.remove();
+    if (!state.gameOver && human.hand.length === 1) {
+      handCard?.classList.add('last-card');
+      if (handHead) renderLastCardBadge(handHead, 'LAST CARD', 'last-card-badge--you');
+    } else {
+      handCard?.classList.remove('last-card');
+    }
   }
 
   function render() {
@@ -1868,7 +1943,8 @@
     } else {
       sparkle(1);
     }
-    if (player.hand.length <= 2) updateHeat(7, `${player.name} is down to ${player.hand.length} cards.`);
+    if (player.hand.length === 2) updateHeat(7, `${player.name} is down to 2 cards.`);
+    if (player.hand.length === 1) announceLastCard(playerIndex);
     if (finishIfNeeded(playerIndex)) return;
     if (!state.liveRoom && !player.isHuman) {
       window.Big2GoAIReactions?.onAiPlayComplete(playerIndex, play, state);
@@ -2389,6 +2465,7 @@
     state.selected = new Set([...state.selected].filter(id => getHumanPlayer()?.hand.some(card => card.id === id)));
     state.gameOver = Boolean(game.gameOver);
     state.busy = false;
+    syncLiveLastCardFromGame(game);
     els.playerCount.value = String(game.players.length);
     showGameScreen();
     if (state.liveRoom?.code) setTimeout(promptVoicePermission, 350);
@@ -2716,7 +2793,8 @@
         sparkle(1);
       }
       clearSelection();
-      if (getHumanPlayer().hand.length <= 2) updateHeat(8, `You are down to ${getHumanPlayer().hand.length} cards.`);
+      if (getHumanPlayer().hand.length === 2) updateHeat(8, 'You are down to 2 cards.');
+      if (getHumanPlayer().hand.length === 1) announceLastCard(state.humanIndex);
       if (finishIfNeeded(state.humanIndex)) {
         state.busy = false;
         return;
