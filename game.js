@@ -248,7 +248,7 @@
 
   function saveSoundSettings() {
     try { localStorage.setItem(SOUND_SETTINGS_KEY, JSON.stringify({ soundVolume: state.soundVolume, voiceVolume: state.voiceVolume })); } catch (_) {}
-    if (audio.master) audio.master.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * 0.16;
+    if (audio.master) audio.master.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * 0.24;
     state.voice.peers?.forEach(entry => { if (entry.audio) entry.audio.volume = state.voiceVolume; });
   }
 
@@ -775,7 +775,24 @@
     floater.textContent = emoji;
     document.body.appendChild(floater);
     setTimeout(() => floater.remove(), 1150);
-    playUiSound('tap');
+    playUiSound('emoji');
+  }
+
+  function playShuffleSound() {
+    if (!state.sound) return;
+    unlockAudio().then(ctx => {
+      if (!ctx) return;
+      for (let i = 0; i < 11; i += 1) {
+        playNoise(
+          0.024 + Math.random() * 0.014,
+          0.016 + Math.random() * 0.01,
+          i * 0.028,
+          2600 - i * 110 + Math.random() * 80
+        );
+      }
+      playTone(220, 0.07, 'triangle', 0.022, 0.32);
+      playTone(329.63, 0.09, 'sine', 0.018, 0.38);
+    });
   }
 
   function getAudioContext() {
@@ -784,7 +801,7 @@
     if (!audio.context) {
       audio.context = new Ctor();
       audio.master = audio.context.createGain();
-      audio.master.gain.value = Math.max(0, Math.min(1, state.soundVolume || .72)) * 0.16;
+      audio.master.gain.value = Math.max(0, Math.min(1, state.soundVolume || .72)) * 0.24;
       audio.master.connect(audio.context.destination);
     }
     return audio.context;
@@ -851,22 +868,48 @@
     unlockAudio().then(ctx => {
       if (!ctx) return;
       const sequences = {
+        shuffle: [
+          { noise: true, d: .028, w: 0, g: .024, ff: 2800 },
+          { noise: true, d: .026, w: .024, g: .022, ff: 2500 },
+          { noise: true, d: .024, w: .048, g: .021, ff: 2300 },
+          { noise: true, d: .026, w: .072, g: .023, ff: 2100 },
+          { noise: true, d: .024, w: .096, g: .02, ff: 1900 },
+          { f: 220, d: .07, w: .28, type: 'triangle', g: .02 },
+          { f: 329.63, d: .09, w: .34, type: 'sine', g: .018 }
+        ],
+        click: [
+          { noise: true, d: .014, w: 0, g: .012, ff: 3400 },
+          { f: 680, d: .028, w: 0, type: 'square', g: .024 },
+          { f: 920, d: .034, w: .016, type: 'sine', g: .02 }
+        ],
+        tap: [
+          { noise: true, d: .014, w: 0, g: .012, ff: 3400 },
+          { f: 680, d: .028, w: 0, type: 'square', g: .024 },
+          { f: 920, d: .034, w: .016, type: 'sine', g: .02 }
+        ],
+        cardPlace: [
+          { noise: true, d: .045, w: 0, g: .038, ff: 1900 },
+          { f: 196, d: .055, w: .008, type: 'triangle', g: .042 },
+          { f: 392, d: .07, w: .03, type: 'sine', g: .032 },
+          { noise: true, d: .03, w: .045, g: .014, ff: 820 }
+        ],
+        play: [
+          { noise: true, d: .045, w: 0, g: .038, ff: 1900 },
+          { f: 196, d: .055, w: .008, type: 'triangle', g: .042 },
+          { f: 392, d: .07, w: .03, type: 'sine', g: .032 },
+          { noise: true, d: .03, w: .045, g: .014, ff: 820 }
+        ],
+        emoji: [
+          { f: 587.33, d: .05, w: 0, type: 'sine', g: .03 },
+          { f: 880, d: .07, w: .04, type: 'triangle', g: .034 },
+          { f: 1174.66, d: .09, w: .09, type: 'sine', g: .028 },
+          { noise: true, d: .022, w: .02, g: .012, ff: 4200 }
+        ],
         start: [
           { f: 196, d: .07, w: 0, type: 'triangle', g: .032 },
           { f: 261.63, d: .08, w: .06, type: 'triangle', g: .034 },
           { f: 329.63, d: .09, w: .12, type: 'sine', g: .035 },
           { chord: [392, 523.25, 659.25], d: .18, w: .2, type: 'triangle', g: .018 }
-        ],
-        tap: [
-          { f: 720, d: .035, w: 0, type: 'square', g: .018 },
-          { f: 960, d: .04, w: .035, type: 'sine', g: .018 }
-        ],
-        play: [
-          { noise: true, d: .07, w: 0, g: .03, ff: 2100 },
-          { f: 392, d: .07, w: .02, type: 'triangle', g: .045 },
-          { f: 587.33, d: .08, w: .08, type: 'triangle', g: .046 },
-          { f: 783.99, d: .14, w: .15, type: 'sine', g: .048 },
-          { chord: [523.25, 659.25, 783.99], d: .16, w: .22, type: 'triangle', g: .016 }
         ],
         pass: [
           { noise: true, d: .05, w: 0, g: .014, ff: 650 },
@@ -879,34 +922,37 @@
           { noise: true, d: .05, w: .03, g: .012, ff: 420 }
         ],
         ai: [
-          { f: 329.63, d: .045, w: 0, type: 'triangle', g: .02 },
-          { f: 440, d: .05, w: .05, type: 'triangle', g: .02 },
-          { noise: true, d: .035, w: .02, g: .01, ff: 1400 }
+          { noise: true, d: .038, w: 0, g: .028, ff: 1700 },
+          { f: 311.13, d: .05, w: .012, type: 'triangle', g: .028 },
+          { f: 466.16, d: .06, w: .04, type: 'sine', g: .024 }
         ],
         coin: [
-          { f: 880, d: .045, w: 0, type: 'triangle', g: .026 },
-          { f: 1174.66, d: .06, w: .045, type: 'sine', g: .024 },
-          { noise: true, d: .035, w: .02, g: .01, ff: 3200 }
+          { noise: true, d: .02, w: 0, g: .014, ff: 3800 },
+          { f: 988, d: .05, w: .01, type: 'triangle', g: .032 },
+          { f: 1318.51, d: .07, w: .045, type: 'sine', g: .03 },
+          { f: 1567.98, d: .08, w: .1, type: 'triangle', g: .022 }
         ],
         coinWin: [
-          { f: 659.25, d: .08, w: 0, type: 'triangle', g: .048 },
-          { f: 880, d: .09, w: .08, type: 'triangle', g: .05 },
-          { f: 1318.51, d: .13, w: .18, type: 'sine', g: .03 },
-          { noise: true, d: .12, w: .02, g: .018, ff: 4200 }
+          { noise: true, d: .03, w: 0, g: .018, ff: 4200 },
+          { f: 784, d: .07, w: .02, type: 'triangle', g: .046 },
+          { f: 988, d: .08, w: .08, type: 'triangle', g: .048 },
+          { f: 1318.51, d: .11, w: .16, type: 'sine', g: .034 },
+          { chord: [988, 1174.66, 1567.98], d: .2, w: .24, type: 'sine', g: .016 }
         ],
         turn: [
           { f: 523.25, d: .06, w: 0, type: 'sine', g: .022 },
           { f: 784, d: .08, w: .07, type: 'triangle', g: .022 }
         ],
         win: [
-          { noise: true, d: .14, w: 0, g: .024, ff: 2600 },
-          { f: 523.25, d: .12, w: .02, type: 'triangle', g: .034 },
-          { f: 659.25, d: .12, w: .13, type: 'triangle', g: .034 },
-          { f: 783.99, d: .16, w: .25, type: 'triangle', g: .036 },
-          { chord: [659.25, 783.99, 1046.5], d: .32, w: .42, type: 'sine', g: .018 }
+          { noise: true, d: .1, w: 0, g: .028, ff: 2800 },
+          { f: 523.25, d: .12, w: .02, type: 'triangle', g: .038 },
+          { f: 659.25, d: .12, w: .12, type: 'triangle', g: .038 },
+          { f: 783.99, d: .14, w: .22, type: 'triangle', g: .04 },
+          { f: 1046.5, d: .16, w: .34, type: 'sine', g: .032 },
+          { chord: [659.25, 783.99, 1046.5, 1318.51], d: .36, w: .48, type: 'sine', g: .02 }
         ]
       };
-      const plan = sequences[kind] || sequences.tap;
+      const plan = sequences[kind] || sequences.click;
       plan.forEach(step => {
         if (step.noise) playNoise(step.d, step.g, step.w, step.ff);
         else if (step.chord) playChord(step.chord, step.d, step.type, step.g, step.w);
@@ -1107,6 +1153,7 @@
   }
 
   function newGame() {
+    unlockAudio();
     const count = Number(els.playerCount.value) || 4;
     disableVoiceChat();
     state.liveRoom = null;
@@ -1135,6 +1182,7 @@
     state.gameOver = false;
     state.busy = false;
     state.dealAnimationShown = false;
+    state.lastShuffleKey = `solo:${state.round}:${Date.now()}`;
     els.sound.textContent = '🔊';
     showGameScreen();
     updateHeat(10, 'The opening player can lead any valid Big Two hand.');
@@ -1142,6 +1190,7 @@
     window.Big2GoAIReactions?.resetAIReactions(state.round);
     render();
     saveGame();
+    playShuffleSound();
     playUiSound('start');
     scheduleAiTurn();
   }
@@ -1749,7 +1798,7 @@
     if (!canHumanAct()) return;
     if (state.selected.has(cardId)) state.selected.delete(cardId);
     else state.selected.add(cardId);
-    playUiSound('tap');
+    playUiSound('click');
     render();
   }
 
@@ -1812,7 +1861,7 @@
       single: 6, pair: 9, triple: 12, straight: 16, flush: 18, 'full-house': 24, 'four-kind': 30, 'straight-flush': 38
     }[play.kind] || 6;
     updateHeat(Math.min(heatBoost, 40), comment);
-    playUiSound(player.isHuman ? 'play' : 'ai');
+    playUiSound(player.isHuman ? 'cardPlace' : 'ai');
     if (play.count === 5) {
       sparkle(2);
       renderConfetti(14 + heatBoost / 2);
@@ -1979,6 +2028,7 @@
   }
 
   function chooseHint() {
+    playUiSound('click');
     const hand = getHumanPlayer().hand;
     const chosen = pickAIMove(hand);
     if (!chosen) {
@@ -2017,6 +2067,7 @@
   }
 
   function sortHumanHand() {
+    playUiSound('click');
     const human = getHumanPlayer();
     nextSortMode();
     human.hand = sortedHumanHand(human.hand);
@@ -2328,6 +2379,12 @@
     if (!state.gameOver && !game.gameOver && game.currentPlayer === game.playerIndex && state.coins.lastTurn !== `${game.round}:${game.currentPlayer}`) {
       state.coins.lastTurn = `${game.round}:${game.currentPlayer}`;
       playUiSound('turn');
+    }
+    const shuffleKey = `${room?.code || 'room'}:${game.round}:${game.startingPlayer}`;
+    if (game.round === 1 && game.firstTrick && !game.trick?.play && shuffleKey !== state.lastShuffleKey) {
+      state.lastShuffleKey = shuffleKey;
+      state.dealAnimationShown = false;
+      playShuffleSound();
     }
     state.selected = new Set([...state.selected].filter(id => getHumanPlayer()?.hand.some(card => card.id === id)));
     state.gameOver = Boolean(game.gameOver);
@@ -2647,7 +2704,7 @@
       const comment = playComment(play);
       logState(`You played ${describePlay(play)}. ${comment}`);
       advanceTurnAfterPlay(state.humanIndex, play);
-      playUiSound('play');
+      playUiSound('cardPlace');
       const heatBoost = {
         single: 6, pair: 9, triple: 12, straight: 16, flush: 18, 'full-house': 24, 'four-kind': 30, 'straight-flush': 38
       }[play.kind] || 6;
@@ -2700,6 +2757,7 @@
   function bindEvents() {
     els.start.addEventListener('click', newGame);
     els.continue.addEventListener('click', () => {
+      unlockAudio();
       if (!restoreGame()) newGame();
     });
     els.rules.addEventListener('click', () => showHelp('How to Play', RULES_HTML));
@@ -2769,7 +2827,7 @@
     els.sound.addEventListener('click', () => {
       state.sound = !state.sound;
       els.sound.textContent = state.sound ? '🔊' : '🔇';
-      playUiSound('tap');
+      playUiSound('click');
       saveGame();
     });
     els.play.addEventListener('click', playSelectedCards);
@@ -2792,7 +2850,7 @@
         els.playerCount.value = button.dataset.playerChoice || '4';
         updatePlayerChoiceUI();
         updateContinueButton();
-        playUiSound('tap');
+        playUiSound('click');
       });
     });
     window.addEventListener('beforeunload', () => saveRoomSession());
