@@ -52,9 +52,19 @@
 
 #game-screen.gameplay-premium .match-hud,
 #game-screen.gameplay-premium .momentum-card,
-#game-screen.gameplay-premium .match-log,
-#game-screen.gameplay-premium .remote-audio {
+#game-screen.gameplay-premium .match-log {
   display: none !important;
+}
+
+/* Keep remote voice audio in the DOM for playback — display:none breaks iOS WebRTC audio. */
+#game-screen.gameplay-premium .remote-audio {
+  position: fixed !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  clip: rect(0 0 0 0) !important;
 }
 
 /* ── Top bar ── */
