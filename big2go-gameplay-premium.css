@@ -217,6 +217,7 @@
   border-radius: 50% !important;
   display: grid !important;
   place-items: center !important;
+  overflow: hidden !important;
   font-size: 14px !important;
   font-weight: 1000 !important;
   color: var(--gp-gold) !important;
@@ -225,6 +226,27 @@
     inset 0 2px 0 rgba(255, 255, 255, 0.22),
     0 4px 10px rgba(0, 0, 0, 0.28) !important;
   border: 2px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+#game-screen.gameplay-premium .opponent-avatar .opponent-avatar-img,
+#game-screen.gameplay-premium .opponent-avatar .character-avatar-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  border-radius: inherit !important;
+}
+
+.ai-table-reaction-avatar.character-avatar {
+  overflow: hidden;
+}
+
+.ai-table-reaction-avatar .character-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: inherit;
 }
 
 #game-screen.gameplay-premium .opponent-stack {

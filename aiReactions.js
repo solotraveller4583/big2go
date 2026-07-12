@@ -1,83 +1,6 @@
 /* Big2Go — single-player AI emoji reactions (presentation only) */
 
 (function () {
-  const AI_AVATAR = {
-    Brownie: '🐻',
-    Bunny: '🐰',
-    Cookie: '🍪'
-  };
-
-  const AI_SLOT = {
-    Brownie: 'left',
-    Bunny: 'center',
-    Cookie: 'right'
-  };
-
-  const PERSONALITY_LINES = {
-    Brownie: {
-      player_slow: [
-        'Hurry up! 😆',
-        'Your turn already! ⏰',
-        "I'm waiting... 👀",
-        'Come on, show me your move 🔥',
-        'Thinking too long? 😂',
-        "Let's go! ⚡"
-      ],
-      ai_strong_play: [
-        'How about this? 🔥',
-        'Beat that! 😈',
-        'Strong hand 💪',
-        'Your move now 😎'
-      ],
-      ai_win_round: ['Told you 😎', 'Mine! 🎉', 'Too easy 🔥'],
-      ai_lose_round: ['Lucky break 😤', 'Nice one 😅', 'You got me 🤦'],
-      ai_win: ['Victory! 🎉', 'Champion 😎', 'GG 🔥'],
-      ai_lose: ['Well played 👏', 'You win 😭', 'Rematch? 😤'],
-      player_strong_play: ['Bold move 🤔', 'Interesting... 🧐', 'Show me more 🔥']
-    },
-    Bunny: {
-      player_slow: [
-        'Take your time 😊',
-        'I am ready 🐰',
-        'No rush! 💫',
-        'Still here with you 🌸',
-        'Thinking hard? 🤔'
-      ],
-      ai_strong_play: [
-        'Hope you like this 😊',
-        'Can you beat this? 😏',
-        'Nice combo coming! ✨',
-        'Your turn friend 🐰'
-      ],
-      ai_win_round: ['Yay! 🎉', 'Got it 😊', 'Lucky bunny 🐰'],
-      ai_lose_round: ['Good job! 👏', 'Wow 😮', 'So close 😅'],
-      ai_win: ['We did it! 🎉', 'Happy win 😊', 'Great game 🌸'],
-      ai_lose: ['Congrats! 👏', 'Well done 😊', 'You earned it 🎉'],
-      player_strong_play: ['Interesting move 🤔', 'Nice play! 👏', 'Impressive 😮']
-    },
-    Cookie: {
-      player_slow: [
-        'Waiting here 🍪',
-        "Don't keep us waiting 😜",
-        'My cards are ready 😎',
-        'Tick tock... ⏰',
-        'Still snacking 🍪',
-        'Hello? 👀'
-      ],
-      ai_strong_play: [
-        'Fresh play! 🍪',
-        'Try this 😜',
-        'Cookie power 💪',
-        'Crunch time 🔥'
-      ],
-      ai_win_round: ['Nom nom win 🍪', 'Sweet! 🎉', 'Gotcha 😎'],
-      ai_lose_round: ['Oops 😅', 'Crumbled 😱', 'That hurt 🍪'],
-      ai_win: ['Cookie wins! 🎉', 'Delicious victory 😎', 'Munch time 🔥'],
-      ai_lose: ['You ate me up 😭', 'Crispy defeat 🍪', 'GG 😅'],
-      player_strong_play: ['Spicy move 🌶️', 'Tasty play 😋', 'Oh wow 😮']
-    }
-  };
-
   const GENERIC_LINES = {
     player_slow: ['⏰ Hurry up', '👀 Watching', '🤔 Thinking', '⌛ Waiting'],
     ai_strong_play: ['🔥 Good play', '😎 Cool', '😈 Challenge', '💪 Strong'],
@@ -115,6 +38,10 @@
     lastIdleAi: null
   };
 
+  function charactersApi() {
+    return window.Big2GoAICharacters || null;
+  }
+
   function randomBetween(min, max) {
     return min + Math.floor(Math.random() * (max - min + 1));
   }
@@ -150,8 +77,14 @@
     return gameState?.players?.[playerIndex]?.name || 'AI';
   }
 
-  function choosePersonalityLine(name, event) {
-    const pool = PERSONALITY_LINES[name]?.[event] || GENERIC_LINES[event] || GENERIC_LINES.player_slow;
+  function getCharacter(gameState, playerIndex) {
+    const player = gameState?.players?.[playerIndex];
+    return charactersApi()?.getForPlayer(player) || null;
+  }
+
+  function choosePersonalityLine(gameState, playerIndex, event) {
+    const character = getCharacter(gameState, playerIndex);
+    const pool = character?.reactions?.[event] || GENERIC_LINES[event] || GENERIC_LINES.player_slow;
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
@@ -185,21 +118,25 @@
     if (!layer || !message) return false;
 
     const name = getPlayerName(gameState, playerIndex);
-    const slot = AI_SLOT[name] || 'center';
-    const avatar = AI_AVATAR[name] || name.charAt(0).toUpperCase();
+    const character = getCharacter(gameState, playerIndex);
+    const slot = charactersApi()?.getTableSlot(gameState, playerIndex) || 'center';
+    const characterId = character?.id || name.toLowerCase();
 
     layer.querySelectorAll(`.ai-table-reaction--${slot}`).forEach(node => node.remove());
 
     const bubble = document.createElement('div');
-    bubble.className = `ai-table-reaction ai-table-reaction--${slot} ai-table-reaction--${name.toLowerCase()}`;
+    bubble.className = `ai-table-reaction ai-table-reaction--${slot} ai-table-reaction--${characterId}`;
     bubble.setAttribute('role', 'status');
 
     const head = document.createElement('div');
     head.className = 'ai-table-reaction-head';
 
     const avatarEl = document.createElement('span');
-    avatarEl.className = 'ai-table-reaction-avatar';
-    avatarEl.textContent = avatar;
+    avatarEl.className = 'ai-table-reaction-avatar character-avatar';
+    charactersApi()?.renderAvatar(avatarEl, character || { name, avatar: { fallback: name.charAt(0).toUpperCase() } }, {
+      className: 'character-avatar',
+      imgClassName: 'character-avatar-img'
+    });
 
     const nameEl = document.createElement('strong');
     nameEl.className = 'ai-table-reaction-name';
@@ -248,10 +185,7 @@
       });
     if (!indices.length) return null;
 
-    const personalityFirst = indices.filter(index => {
-      const name = getPlayerName(gameState, index);
-      return PERSONALITY_LINES[name];
-    });
+    const personalityFirst = indices.filter(index => getCharacter(gameState, index));
     const pool = personalityFirst.length ? personalityFirst : indices;
 
     if (reactionState.lastIdleAi != null && pool.length > 1) {
@@ -283,8 +217,7 @@
     const probability = options.probability ?? EVENT_PROB[event] ?? 0.25;
     if (Math.random() > probability) return false;
 
-    const name = getPlayerName(gameState, playerIndex);
-    const message = choosePersonalityLine(name, event);
+    const message = choosePersonalityLine(gameState, playerIndex, event);
     if (!showAIReactionBubble(playerIndex, message, gameState)) return false;
 
     reactionState.lastReactAt = Date.now();

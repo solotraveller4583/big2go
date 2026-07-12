@@ -25,7 +25,6 @@
     { key: 'H', symbol: '♥', name: 'hearts', color: 'red' },
     { key: 'S', symbol: '♠', name: 'spades', color: 'black' }
   ];
-  const AI_NAMES = ['Brownie', 'Bunny', 'Cookie', 'Mochi', 'Panda', 'Milo', 'Coco', 'Luna', 'Toto', 'Sunny'];
   const FIVE_KIND_ORDER = { 'straight': 1, 'flush': 2, 'full-house': 3, 'four-kind': 4, 'straight-flush': 5 };
   const STRAIGHT_RULES = Object.freeze({
     TRADITIONAL: 'traditional',
@@ -447,15 +446,67 @@
     els.game.classList.remove('hidden');
   }
 
+  function buildAiPlayer(character) {
+    return {
+      name: character.name,
+      characterId: character.id,
+      personality: character.personality,
+      playingStyle: character.playingStyle,
+      isHuman: false,
+      finished: false,
+      coins: STARTING_COINS,
+      hand: []
+    };
+  }
+
+  function hydrateAiPlayer(player) {
+    if (!player || player.isHuman) return player;
+    const character = window.Big2GoAICharacters?.getById(player.characterId)
+      || window.Big2GoAICharacters?.getByName(player.name);
+    if (!character) return player;
+    return {
+      ...player,
+      name: character.name,
+      characterId: character.id,
+      personality: character.personality,
+      playingStyle: character.playingStyle
+    };
+  }
+
+  function renderOpponentAvatar(container, player) {
+    if (!container) return;
+    if (player.isHuman) {
+      container.textContent = 'Y';
+      return;
+    }
+    if (window.Big2GoAICharacters?.renderAvatar(container, player, {
+      className: 'character-avatar',
+      imgClassName: 'opponent-avatar-img'
+    })) return;
+    container.textContent = (player.name?.charAt(0) || 'P').toUpperCase();
+  }
+
   function setPlayers(count) {
     state.settings.players = count;
+    const aiCast = window.Big2GoAICharacters?.pickRandom(Math.max(0, count - 1)) || [];
     state.players = [];
-    for (let i = 0; i < count; i++) {
-      state.players.push({
-        name: i === 0 ? 'You' : AI_NAMES[i - 1] || AI_NAMES[i % AI_NAMES.length],
-        isHuman: i === 0,
+    for (let i = 0; i < count; i += 1) {
+      if (i === 0) {
+        state.players.push({
+          name: 'You',
+          isHuman: true,
+          finished: false,
+          coins: state.coins.balance,
+          hand: []
+        });
+        continue;
+      }
+      const character = aiCast[i - 1];
+      state.players.push(character ? buildAiPlayer(character) : {
+        name: `AI ${i}`,
+        isHuman: false,
         finished: false,
-        coins: i === 0 ? state.coins.balance : STARTING_COINS,
+        coins: STARTING_COINS,
         hand: []
       });
     }
@@ -508,6 +559,9 @@
         voiceVolume: state.voiceVolume,
         players: state.players.map(player => ({
           name: player.name,
+          characterId: player.characterId || null,
+          personality: player.personality || null,
+          playingStyle: player.playingStyle || null,
           isHuman: player.isHuman,
           finished: player.finished,
           hand: player.hand.map(card => card.id)
@@ -560,8 +614,11 @@
       state.soundVolume = Number.isFinite(Number(saved.soundVolume)) ? Number(saved.soundVolume) : state.soundVolume;
       state.voiceVolume = Number.isFinite(Number(saved.voiceVolume)) ? Number(saved.voiceVolume) : state.voiceVolume;
       saveSoundSettings();
-      state.players = saved.players.map((player, index) => ({
-        name: player.name || (index === 0 ? 'You' : AI_NAMES[index - 1] || AI_NAMES[index % AI_NAMES.length]),
+      state.players = saved.players.map((player, index) => hydrateAiPlayer({
+        name: player.name || (index === 0 ? 'You' : `AI ${index}`),
+        characterId: player.characterId || null,
+        personality: player.personality || null,
+        playingStyle: player.playingStyle || null,
         isHuman: Boolean(player.isHuman),
         finished: Boolean(player.finished),
         hand: (player.hand || []).map(cardFromId).filter(Boolean)
@@ -974,13 +1031,25 @@
   }
 
   function createPlayers(count) {
+    const aiCast = window.Big2GoAICharacters?.pickRandom(Math.max(0, count - 1)) || [];
     state.players = [];
-    for (let i = 0; i < count; i++) {
-      state.players.push({
-        name: i === 0 ? 'You' : AI_NAMES[i - 1] || AI_NAMES[i % AI_NAMES.length],
-        isHuman: i === 0,
+    for (let i = 0; i < count; i += 1) {
+      if (i === 0) {
+        state.players.push({
+          name: 'You',
+          isHuman: true,
+          finished: false,
+          coins: state.coins.balance,
+          hand: []
+        });
+        continue;
+      }
+      const character = aiCast[i - 1];
+      state.players.push(character ? buildAiPlayer(character) : {
+        name: `AI ${i}`,
+        isHuman: false,
         finished: false,
-        coins: i === 0 ? state.coins.balance : STARTING_COINS,
+        coins: STARTING_COINS,
         hand: []
       });
     }
@@ -1070,10 +1139,11 @@
       const row = document.createElement('div');
       row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}`;
       row.dataset.playerIndex = String(index);
+      if (player.characterId) row.dataset.characterId = player.characterId;
       const avatar = document.createElement('div');
       avatar.className = 'opponent-avatar';
       avatar.setAttribute('aria-hidden', 'true');
-      avatar.textContent = (isSelf ? 'Y' : (player.name?.charAt(0) || 'P')).toUpperCase();
+      renderOpponentAvatar(avatar, player);
       const stack = document.createElement('div');
       stack.className = 'opponent-stack';
       const name = document.createElement('div');
@@ -1782,43 +1852,79 @@
     return candidates.filter(play => playBeats(play, state.trick));
   }
 
-  function pickAIMove(hand) {
-    const candidates = legalCandidates(hand);
-    if (!candidates.length) return null;
-    const leadMode = !state.trick.play;
-    const handSize = hand.length;
+  function pickBigLead(candidates) {
+    return candidates.slice().sort((a, b) => {
+      const aKind = FIVE_KIND_ORDER[a.kind] || a.cards.length;
+      const bKind = FIVE_KIND_ORDER[b.kind] || b.cards.length;
+      if (aKind !== bKind) return bKind - aKind;
+      if (a.cards.length !== b.cards.length) return b.cards.length - a.cards.length;
+      return compareScores(b.score, a.score);
+    })[0];
+  }
 
-    if (leadMode) {
-      const moodRoll = Math.random();
-      if (handSize <= 5 || moodRoll > 0.78) {
-        return candidates.slice().sort((a, b) => {
-          const aKind = FIVE_KIND_ORDER[a.kind] || a.cards.length;
-          const bKind = FIVE_KIND_ORDER[b.kind] || b.cards.length;
-          if (aKind !== bKind) return bKind - aKind;
-          if (a.cards.length !== b.cards.length) return b.cards.length - a.cards.length;
-          return compareScores(b.score, a.score);
-        })[0];
-      }
+  function pickSmallLead(candidates) {
+    return candidates.slice().sort((a, b) => {
+      const aWeight = a.cards.length * 100 + (FIVE_KIND_ORDER[a.kind] || 0) * 10 + a.score[1];
+      const bWeight = b.cards.length * 100 + (FIVE_KIND_ORDER[b.kind] || 0) * 10 + b.score[1];
+      if (aWeight !== bWeight) return aWeight - bWeight;
+      return compareScores(a.score, b.score);
+    })[0];
+  }
 
-      return candidates.slice().sort((a, b) => {
-        const aWeight = a.cards.length * 100 + (FIVE_KIND_ORDER[a.kind] || 0) * 10 + a.score[1];
-        const bWeight = b.cards.length * 100 + (FIVE_KIND_ORDER[b.kind] || 0) * 10 + b.score[1];
-        if (aWeight !== bWeight) return aWeight - bWeight;
-        return compareScores(a.score, b.score);
-      })[0];
-    }
-
+  function pickBeatMove(candidates, handSize, playingStyle) {
     const sorted = candidates.slice().sort((a, b) => {
       const aKind = FIVE_KIND_ORDER[a.kind] || a.cards.length;
       const bKind = FIVE_KIND_ORDER[b.kind] || b.cards.length;
-      const aSizeBias = handSize <= 5 ? -a.cards.length * 3 : a.cards.length * 2;
-      const bSizeBias = handSize <= 5 ? -b.cards.length * 3 : b.cards.length * 2;
+      let aSizeBias;
+      let bSizeBias;
+
+      if (playingStyle === 'aggressive' || (playingStyle === 'funny' && Math.random() < 0.35)) {
+        aSizeBias = handSize <= 5 ? -a.cards.length * 4 : a.cards.length;
+        bSizeBias = handSize <= 5 ? -b.cards.length * 4 : b.cards.length;
+      } else if (playingStyle === 'smart' || playingStyle === 'friendly') {
+        aSizeBias = a.cards.length * 3 + aKind;
+        bSizeBias = b.cards.length * 3 + bKind;
+      } else {
+        aSizeBias = handSize <= 5 ? -a.cards.length * 3 : a.cards.length * 2;
+        bSizeBias = handSize <= 5 ? -b.cards.length * 3 : b.cards.length * 2;
+      }
+
       const aScore = aKind * 100 + aSizeBias + a.score[1];
       const bScore = bKind * 100 + bSizeBias + b.score[1];
       if (aScore !== bScore) return aScore - bScore;
       return compareScores(a.score, b.score);
     });
     return sorted[0];
+  }
+
+  function pickAIMove(hand, playingStyle = 'smart') {
+    const candidates = legalCandidates(hand);
+    if (!candidates.length) return null;
+
+    if (playingStyle === 'funny' && Math.random() < 0.24) {
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    const leadMode = !state.trick.play;
+    const handSize = hand.length;
+    const style = playingStyle || 'smart';
+
+    if (leadMode) {
+      const moodRoll = Math.random();
+      const bigThreshold = style === 'aggressive'
+        ? 0.5
+        : style === 'friendly'
+          ? 0.9
+          : style === 'funny'
+            ? 0.7
+            : 0.78;
+      if (handSize <= 5 || moodRoll > bigThreshold) {
+        return pickBigLead(candidates);
+      }
+      return pickSmallLead(candidates);
+    }
+
+    return pickBeatMove(candidates, handSize, style);
   }
 
   function chooseHint() {
@@ -1846,7 +1952,7 @@
     if (state.gameOver || state.busy || state.currentPlayer === state.humanIndex) return;
     const index = state.currentPlayer;
     const player = state.players[index];
-    const move = pickAIMove(player.hand);
+    const move = pickAIMove(player.hand, player.playingStyle);
     state.busy = true;
     render();
     setTimeout(() => {
