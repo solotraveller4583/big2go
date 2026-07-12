@@ -517,6 +517,8 @@ function updateVoiceState(room, playerId, voice = {}) {
   player.voiceMuted = voice.muted !== false;
   player.voiceSpeaking = Boolean(voice.speaking) && player.voiceEnabled && !player.voiceMuted;
   room.updatedAt = Date.now();
+  rememberRoomSessions(room);
+  broadcast(room);
   return { ok: true };
 }
 
