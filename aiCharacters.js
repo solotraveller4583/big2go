@@ -55,6 +55,10 @@
           "That win won't repeat twice 😤",
           "My claws slipped — don't get used to it 🔥"
         ]
+      },
+      farewell: {
+        humanWon: ['You got me this time 😏', 'Respect — you earned that win 🐻', 'See you at the next table 💪'],
+        humanLost: ['Better luck next round 😏', 'Train up and come back 🔥', 'The table remembers 🐻']
       }
     },
     {
@@ -107,6 +111,10 @@
           'Okay wow — teach me your secrets ✨',
           'Best match I have had in ages 👏'
         ]
+      },
+      farewell: {
+        humanWon: ['That was fun! See you again 🐰', 'You played beautifully ✨', 'Same time tomorrow? 🌸'],
+        humanLost: ['Good game — you kept it close 🐰', 'I had fun anyway 🌸', 'Want another round? ✨']
       }
     },
     {
@@ -159,6 +167,10 @@
           'The audience picks you tonight 👏',
           'Save some spotlight for me next round 🍿'
         ]
+      },
+      farewell: {
+        humanWon: ['Great game ❤️', 'You stole the show 🎭', 'Encore soon? 🍿'],
+        humanLost: ['Same time next episode? 📺', 'The crowd wants a rematch 🎤', 'Save me a seat 🍿']
       }
     },
     {
@@ -212,6 +224,10 @@
           'That loss goes in my learning log 📚',
           'You cracked my cookie code this round 🔥'
         ]
+      },
+      farewell: {
+        humanWon: ['That loss goes in my learning log 📚', 'Well played — updating my playbook 🍪', 'Sharp reads this round 🤓'],
+        humanLost: ['Probability favored me today 📊', 'Crunch time complete 🍪', 'Rematch after more data? 📈']
       }
     }
   ];
@@ -296,6 +312,24 @@
     return rivalPlayer || gameState.players.find((player, index) => index !== gameState.humanIndex && player && !player.isHuman) || null;
   }
 
+  function getSessionFarewells(gameState, lastWinner) {
+    if (!gameState?.players?.length) return [];
+    const humanWon = Boolean(lastWinner?.isHuman);
+    return gameState.players
+      .filter(player => player && !player.isHuman)
+      .map(player => {
+        const character = getForPlayer(player);
+        if (!character) return null;
+        const pool = humanWon ? character.farewell?.humanWon : character.farewell?.humanLost;
+        const fallback = humanWon ? character.rival?.defeatedByPlayer : character.rival?.defeatPlayer;
+        const message = pickRivalLine(pool, `${character.id}:farewell:${humanWon}`)
+          || pickRivalLine(fallback, `${character.id}:farewell-fallback:${humanWon}`)
+          || (humanWon ? 'Great game!' : 'See you again!');
+        return { character, player, message };
+      })
+      .filter(Boolean);
+  }
+
   function getRivalVictoryCopy(winner, gameState) {
     if (!gameState || gameState.liveRoom || !winner) return null;
     const rivalPlayer = resolveRivalPlayer(gameState, winner);
@@ -363,6 +397,7 @@
     pickRandom,
     getTableSlot,
     getRivalVictoryCopy,
+    getSessionFarewells,
     renderAvatar
   };
 })();

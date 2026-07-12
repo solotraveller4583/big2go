@@ -79,6 +79,15 @@
     seenReactionIds: new Set(),
     liveRoom: null,
     liveRoomPlayers: [],
+    playSession: {
+      gamesPlayed: 0,
+      wins: 0,
+      coinsEarned: 0,
+      bestCombo: '',
+      bestComboScore: 0,
+      lastWinner: null,
+      farewellSnapshot: []
+    },
     voice: {
       enabled: false,
       micMuted: true,
@@ -108,6 +117,12 @@
   const els = {
     home: document.querySelector('#home-screen'),
     game: document.querySelector('#game-screen'),
+    sessionComplete: document.querySelector('#session-complete-screen'),
+    sessionSummary: document.querySelector('#session-summary'),
+    sessionFarewells: document.querySelector('#session-farewells'),
+    sessionPlayAgain: document.querySelector('#session-play-again'),
+    sessionBackHome: document.querySelector('#session-back-home'),
+    exitConfirmDialog: document.querySelector('#exit-confirm-dialog'),
     playerCount: document.querySelector('#player-count'),
     start: document.querySelector('#start-button'),
     continue: document.querySelector('#continue-button'),
@@ -1198,6 +1213,161 @@
     });
   }
 
+  function comboScore(play) {
+    if (!play) return 0;
+    const kindWeight = {
+      single: 1,
+      pair: 2,
+      triple: 3,
+      straight: 4,
+      flush: 5,
+      'full-house': 6,
+      'four-kind': 7,
+      'straight-flush': 8
+    };
+    const base = kindWeight[play.kind] || 1;
+    const cardScore = Array.isArray(play.score) ? play.score.reduce((sum, value) => sum + value, 0) : 0;
+    return base * 1000 + cardScore;
+  }
+
+  function resetPlaySession() {
+    state.playSession = {
+      gamesPlayed: 0,
+      wins: 0,
+      coinsEarned: 0,
+      bestCombo: '',
+      bestComboScore: 0,
+      lastWinner: null,
+      farewellSnapshot: []
+    };
+  }
+
+  function recordSessionCombo(play) {
+    if (!play || state.liveRoom?.code) return;
+    const score = comboScore(play);
+    const label = describePlay(play);
+    if (score > state.playSession.bestComboScore) {
+      state.playSession.bestComboScore = score;
+      state.playSession.bestCombo = label;
+    }
+  }
+
+  function recordSessionMatchResult(winner, coinPrize = 0) {
+    state.playSession.gamesPlayed += 1;
+    state.playSession.lastWinner = winner || null;
+    if (winner?.isHuman) {
+      state.playSession.wins += 1;
+      state.playSession.coinsEarned += Math.max(0, Number(coinPrize) || 0);
+    }
+    state.playSession.farewellSnapshot = window.Big2GoAICharacters?.getSessionFarewells?.(state, winner) || [];
+  }
+
+  function dismissSessionCompleteScreen() {
+    els.sessionComplete?.classList.add('hidden');
+  }
+
+  function renderSessionSummary() {
+    if (!els.sessionSummary) return;
+    const summary = state.playSession;
+    const bestCombo = summary.bestCombo || 'Opening spark';
+    els.sessionSummary.innerHTML = `
+      <div class="session-summary-item">
+        <small>Games Played</small>
+        <strong>${summary.gamesPlayed}</strong>
+      </div>
+      <div class="session-summary-item">
+        <small>Wins</small>
+        <strong>${summary.wins}</strong>
+      </div>
+      <div class="session-summary-item">
+        <small>Coins Earned</small>
+        <strong>🪙 ${summary.coinsEarned}</strong>
+      </div>
+      <div class="session-summary-item session-summary-item--wide">
+        <small>Best Moment / Combo</small>
+        <strong>${bestCombo}</strong>
+      </div>`;
+  }
+
+  function renderSessionFarewells() {
+    if (!els.sessionFarewells) return;
+    els.sessionFarewells.innerHTML = '';
+    const farewells = state.playSession.farewellSnapshot?.length
+      ? state.playSession.farewellSnapshot
+      : (window.Big2GoAICharacters?.getSessionFarewells?.(state, state.playSession.lastWinner) || []);
+    if (!farewells.length) {
+      const empty = document.createElement('p');
+      empty.className = 'session-thanks';
+      empty.textContent = 'The table is quiet — see you at the next match.';
+      els.sessionFarewells.appendChild(empty);
+      return;
+    }
+    farewells.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'session-farewell';
+      const avatar = document.createElement('div');
+      avatar.className = 'session-farewell-avatar';
+      window.Big2GoAICharacters?.renderAvatar(avatar, entry.character || entry.player, {
+        className: 'character-avatar',
+        imgClassName: 'character-avatar-img'
+      });
+      const copy = document.createElement('div');
+      copy.className = 'session-farewell-copy';
+      const name = document.createElement('strong');
+      name.textContent = entry.character?.name || entry.player?.name || 'Rival';
+      const message = document.createElement('p');
+      message.textContent = `"${entry.message || 'Great game!'}"`;
+      copy.append(name, message);
+      row.append(avatar, copy);
+      els.sessionFarewells.appendChild(row);
+    });
+  }
+
+  function showSessionCompleteScreen() {
+    document.querySelector('#victory-overlay')?.remove();
+    els.home?.classList.add('hidden');
+    els.game?.classList.add('hidden');
+    els.sessionComplete?.classList.remove('hidden');
+    renderSessionSummary();
+    renderSessionFarewells();
+    playUiSound('win');
+  }
+
+  function showExitConfirmDialog() {
+    return new Promise(resolve => {
+      const dialog = els.exitConfirmDialog;
+      if (!dialog) {
+        resolve(window.confirm('Are you sure you want to exit Big2Go?'));
+        return;
+      }
+      const onClose = () => {
+        dialog.removeEventListener('close', onClose);
+        resolve(dialog.returnValue === 'exit');
+      };
+      dialog.addEventListener('close', onClose);
+      dialog.showModal();
+    });
+  }
+
+  function performFullExit() {
+    persistPlayerWallet();
+    cancelAiTimer();
+    state.busy = false;
+    document.querySelector('#victory-overlay')?.remove();
+    dismissSessionCompleteScreen();
+    resetFinishedMatchState();
+    resetPlaySession();
+    clearSave();
+    if (state.liveRoom?.code) {
+      saveRoomSession();
+      leaveCurrentRoom();
+    }
+    showHomeScreen();
+    updateContinueButton();
+    renderCoinHud();
+    renderRoomRecovery();
+  }
+
   function persistPlayerWallet() {
     if (state.liveRoom?.code) return getWalletDisplayBalance();
     persistCoinBalance(state.coins.balance);
@@ -1215,54 +1385,24 @@
     clearSelection();
   }
 
-  function exitGame(options = {}) {
-    const { confirmLeave = true, fromVictory = false } = options;
-
-    if (state.liveRoom?.code) {
-      if (confirmLeave && !fromVictory) {
-        const leave = window.confirm('Exit game?\n\nYour room session stays saved. Your solo coin wallet stays safe.\n\nPress OK to leave, or Cancel to stay.');
-        if (!leave) return;
-      }
-      saveRoomSession();
-      leaveCurrentRoom();
-      cancelAiTimer();
-      state.busy = false;
-      document.querySelector('#victory-overlay')?.remove();
-      showHomeScreen();
-      updateContinueButton();
-      renderCoinHud();
-      renderRoomRecovery();
-      return;
-    }
-
-    const inProgress = !state.gameOver && state.players.length > 0 && !fromVictory;
-    if (confirmLeave && inProgress) {
-      const leave = window.confirm(
-        'Exit game?\n\nYour coins are saved and this match can be continued from the home screen.\n\nPress OK to exit, or Cancel to keep playing.'
-      );
-      if (!leave) return;
-    }
-
-    cancelAiTimer();
-    state.busy = false;
-    document.querySelector('#victory-overlay')?.remove();
-
-    const savedCoins = persistPlayerWallet();
-    if (fromVictory || state.gameOver) {
-      resetFinishedMatchState();
-      clearSave();
-      showCoinPop(`Coins saved: 🪙 ${savedCoins}`);
-    } else if (inProgress) {
-      saveGame();
-    }
-
-    showHomeScreen();
-    updateContinueButton();
-    renderCoinHud();
+  async function exitGame() {
+    const confirmed = await showExitConfirmDialog();
+    if (!confirmed) return;
+    performFullExit();
   }
 
   function endGame() {
-    exitGame({ fromVictory: true, confirmLeave: false });
+    document.querySelector('#victory-overlay')?.remove();
+    cancelAiTimer();
+    state.busy = false;
+    persistPlayerWallet();
+    if (state.liveRoom?.code) {
+      saveRoomSession();
+      leaveCurrentRoom();
+    }
+    resetFinishedMatchState();
+    clearSave();
+    showSessionCompleteScreen();
   }
 
   function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0) {
@@ -1381,8 +1521,8 @@
 
     const exitButton = document.createElement('button');
     exitButton.className = 'secondary';
-    exitButton.textContent = 'Exit Game';
-    exitButton.addEventListener('click', () => exitGame({ fromVictory: true, confirmLeave: false }));
+    exitButton.textContent = '🚪 Exit Game';
+    exitButton.addEventListener('click', () => exitGame());
 
     actions.classList.add('victory-actions--quad');
     actions.appendChild(newButton);
@@ -1408,6 +1548,7 @@
     clearSelection();
     clearSave();
     const coinPrize = state.liveRoom ? (state.coins.prizePool || 0) : paySinglePlayerPrize(winner);
+    recordSessionMatchResult(winner, coinPrize);
     if (!state.liveRoom?.code) saveCoinBalance();
     renderConfetti(winner.isHuman ? 56 : 42);
     playUiSound(winner.isHuman ? 'win' : 'pass');
@@ -3494,6 +3635,7 @@
       state.busy = false;
       removeCardsFromHand(getHumanPlayer(), cards);
       const play = buildPlay(cards, state.settings);
+      recordSessionCombo(play);
       const comment = playComment(play);
       logState(`You played ${describePlay(play)}. ${comment}`);
       advanceTurnAfterPlay(state.humanIndex, play);
@@ -3605,6 +3747,19 @@
     document.querySelector('#bonus-button')?.addEventListener('click', () => showHelp('Daily Bonus', '<ul><li>Come back and play a fresh Big2Go table.</li><li>Daily rewards can be connected later.</li></ul>'));
     document.querySelector('#achievements-button')?.addEventListener('click', () => showHelp('Goals', '<ul><li>Win with singles, pairs, and 5-card combos.</li><li>Try to beat the AI with fewer passes.</li></ul>'));
     els.back.addEventListener('click', () => exitGame());
+    els.sessionPlayAgain?.addEventListener('click', () => {
+      dismissSessionCompleteScreen();
+      resetPlaySession();
+      document.querySelector('#victory-overlay')?.remove();
+      newGame();
+    });
+    els.sessionBackHome?.addEventListener('click', () => {
+      dismissSessionCompleteScreen();
+      resetPlaySession();
+      showHomeScreen();
+      updateContinueButton();
+      renderCoinHud();
+    });
     els.sound.addEventListener('click', () => {
       state.sound = !state.sound;
       els.sound.textContent = state.sound ? '🔊' : '🔇';

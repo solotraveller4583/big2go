@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="big2go-coins.css?v=8" />
   <link rel="stylesheet" href="big2go-mobile-redesign.css?v=9" />
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=3" />
-  <link rel="stylesheet" href="big2go-landing-v3.css?v=20" />
+  <link rel="stylesheet" href="big2go-session-complete.css?v=1" />
   <link rel="stylesheet" href="big2go-gameplay-premium.css?v=24" />
 </head>
 <body>
@@ -273,11 +273,45 @@
       </div>
     </section>
 
+    <section class="panel session-complete-screen hidden" id="session-complete-screen" aria-label="Session complete">
+      <div class="session-complete-bg" aria-hidden="true">
+        <div class="session-float-card session-float-card--a">3♦</div>
+        <div class="session-float-card session-float-card--b">2♠</div>
+        <div class="session-float-card session-float-card--c">A♥</div>
+        <div class="session-float-card session-float-card--d">K♣</div>
+        <div class="session-coin-sparkles"></div>
+      </div>
+      <div class="session-complete-card">
+        <div class="session-brand" aria-label="Big2Go">
+          <span class="session-brand-mark">B2</span>
+          <strong>Big<span>2Go</span></strong>
+        </div>
+        <h1 class="session-complete-title">Session Complete</h1>
+        <p class="session-thanks">Thanks for playing Big2Go. Hope you enjoyed the battle!</p>
+        <div class="session-summary" id="session-summary"></div>
+        <div class="session-farewells" id="session-farewells" aria-live="polite"></div>
+        <div class="session-complete-actions">
+          <button type="button" class="primary" id="session-play-again">Play Again</button>
+          <button type="button" class="secondary" id="session-back-home">🏠 Back To Home</button>
+        </div>
+      </div>
+    </section>
+
     <div class="voice-panel hidden" id="voice-panel" aria-label="Voice chat controls">
       <button type="button" class="voice-btn mic muted" id="voice-mic-button" aria-pressed="false" aria-label="Turn microphone on">🎤</button>
       <button type="button" class="voice-btn speaker" id="voice-speaker-button" aria-pressed="true" aria-label="Toggle speaker">🔊</button>
     </div>
     <div id="remote-audio" class="remote-audio" aria-hidden="true"></div>
+
+    <dialog id="exit-confirm-dialog" class="exit-confirm-dialog">
+      <form method="dialog" class="exit-confirm-card">
+        <h2>Are you sure you want to exit Big2Go?</h2>
+        <div class="exit-confirm-actions">
+          <button type="submit" class="primary" value="stay">Stay</button>
+          <button type="submit" class="secondary" value="exit">Exit</button>
+        </div>
+      </form>
+    </dialog>
 
     <dialog id="help-dialog">
       <form method="dialog" class="dialog-card">
@@ -291,8 +325,8 @@
   </main>
   <div id="coin-fx-layer" class="coin-fx-layer" aria-hidden="true"></div>
 
-  <script src="aiCharacters.js?v=3" defer></script>
+  <script src="aiCharacters.js?v=4" defer></script>
   <script src="aiReactions.js?v=5" defer></script>
-  <script src="game.js?v=71" defer></script>
+  <script src="game.js?v=72" defer></script>
 </body>
 </html>
