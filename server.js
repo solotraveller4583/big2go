@@ -565,10 +565,33 @@ function createRoom(name = 'Host', options = {}) {
   return { room, playerId: hostId };
 }
 
+function findReconnectPlayer(room, name, playerId = '') {
+  const requestedId = String(playerId || '').trim();
+  if (requestedId) {
+    const byId = room.players.find(player => player.id === requestedId);
+    if (byId) return byId;
+  }
+  const sanitizedName = sanitizeName(name, '').toLowerCase();
+  if (!sanitizedName) return null;
+  return room.players.find(player =>
+    player.connected === false &&
+    sanitizeName(player.name, '').toLowerCase() === sanitizedName
+  ) || null;
+}
+
 function joinRoom(code, name = 'Friend', options = {}) {
-  const room = rooms.get(String(code || '').trim().toUpperCase());
+  const normalizedCode = String(code || '').trim().toUpperCase();
+  const room = rooms.get(normalizedCode);
   if (!room) return { error: 'Room not found' };
-  if (room.game) return { error: 'Game already started' };
+  if (room.game) {
+    const reconnectPlayer = findReconnectPlayer(room, name, options.playerId);
+    if (!reconnectPlayer) {
+      return { error: 'Game in progress. Tap Rejoin if you were already in this room, or enter the same name you used before.' };
+    }
+    const result = rejoinRoom(normalizedCode, reconnectPlayer.id);
+    if (!result.ok) return { error: result.error || 'Could not rejoin room' };
+    return { rejoined: true, playerId: reconnectPlayer.id, ...result };
+  }
   if (room.players.filter(player => player.connected !== false).length >= room.maxPlayers) return { error: 'Room is full' };
   const playerId = crypto.randomUUID();
   room.players.push({ id: playerId, name: sanitizeName(name, `Player ${room.players.length + 1}`), ready: true, connected: true, disconnectedAt: null, timedOut: false, coins: STARTING_COINS, voiceEnabled: false, voiceMuted: true, voiceSpeaking: false });
@@ -814,8 +837,12 @@ function createHttpServer() {
       req.on('end', () => {
         try {
           const parsed = body ? JSON.parse(body) : {};
-          const result = joinRoom(parsed.code, parsed.name);
-          if (result.error) return json(res, 404, { error: result.error });
+          const result = joinRoom(parsed.code, parsed.name, { playerId: parsed.playerId });
+          if (result.error) {
+            const status = result.error === 'Room not found' ? 404 : 409;
+            return json(res, status, { error: result.error });
+          }
+          if (result.rejoined) return json(res, 200, result);
           return json(res, 200, { room: publicRoom(result.room), playerId: result.playerId });
         } catch (_) {
           return json(res, 400, { error: 'Invalid join request' });
@@ -958,6 +985,7 @@ module.exports = {
   ENTRY_FEE_COINS,
   createRoom,
   joinRoom,
+  findReconnectPlayer,
   rejoinRoom,
   markPlayerDisconnected,
   leaveRoom,

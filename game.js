@@ -2362,27 +2362,8 @@
     if (!saved) return;
     els.roomRejoin && (els.roomRejoin.disabled = true);
     try {
-      const response = await fetch('/api/rooms/rejoin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ code: saved.code, playerId: saved.playerId })
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || 'Could not rejoin room');
-      state.liveRoom = { code: payload.room.code, playerId: saved.playerId, playerIndex: payload.game?.playerIndex ?? saved.playerIndex ?? 0, hostId: payload.room.hostId };
-      renderRoomState(payload.room);
-      if (payload.chat) applyChatPayload(payload.chat);
-      if (payload.voice) applyVoicePayload(payload.voice);
-      if (payload.game) {
-        applyLiveGame(payload.game, payload.room);
-      } else {
-        showPrivateRoom();
-        setTimeout(() => renderRoomState(payload.room), 0);
-      }
-      connectRoomSocket(payload.room.code, saved.playerId);
-      startRoomPolling();
-      saveRoomSession(payload.room, payload.game, payload.session);
-      playUiSound('start');
+      const payload = await rejoinBackendRoom(saved.code, saved.playerId);
+      applyRoomConnection(payload);
     } catch (error) {
       showOracle('Rejoin failed', `${error.message || 'The room could not be restored.'}<br><br>If the room expired, choose Exit Room and create a new room.`);
     } finally {
@@ -2698,11 +2679,48 @@
     return response.json();
   }
 
-  async function joinBackendRoom(code, name) {
+  async function rejoinBackendRoom(code, playerId) {
+    const response = await fetch('/api/rooms/rejoin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ code, playerId })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Could not rejoin room');
+    return payload;
+  }
+
+  function applyRoomConnection(payload, controls = {}) {
+    const room = payload.room;
+    const playerId = payload.playerId || payload.session?.playerId;
+    if (!room?.code || !playerId) throw new Error('Invalid room response');
+    state.liveRoom = {
+      code: room.code,
+      playerId,
+      playerIndex: payload.game?.playerIndex ?? payload.session?.playerIndex ?? Math.max(0, (room.playerCount || 1) - 1),
+      hostId: room.hostId
+    };
+    state.pendingRoomInvite = null;
+    saveRoomSession(room, payload.game, payload.session);
+    renderRoomState(room);
+    if (payload.game) applyLiveGame(payload.game, room);
+    if (payload.chat) applyChatPayload(payload.chat);
+    if (payload.voice) applyVoicePayload(payload.voice);
+    connectRoomSocket(room.code, playerId);
+    startRoomPolling();
+    controls.input?.removeAttribute('readonly');
+    const shareButton = document.querySelector('#room-share-button');
+    if (shareButton) shareButton.disabled = false;
+    playUiSound('start');
+  }
+
+  async function joinBackendRoom(code, name, playerId = null) {
+    const body = { code, name };
+    if (playerId) body.playerId = playerId;
     const response = await fetch('/api/rooms/join', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ code, name })
+      body: JSON.stringify(body)
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || 'Could not join room');
@@ -2770,25 +2788,22 @@
       setRoomStatus('Enter a valid 5-character room code from your friend.', 'error');
       return false;
     }
+    const saved = getRoomSession();
+    const savedPlayerId = saved?.code === normalizedCode ? saved.playerId : null;
     if (joinButton) joinButton.disabled = true;
-    setRoomStatus('Joining room…', 'waiting');
+    setRoomStatus(savedPlayerId ? 'Rejoining your seat…' : 'Joining room…', 'waiting');
     try {
-      const payload = await joinBackendRoom(normalizedCode, name);
-      state.liveRoom = {
-        code: payload.room.code,
-        playerId: payload.playerId,
-        playerIndex: Math.max(0, payload.room.playerCount - 1),
-        hostId: payload.room.hostId
-      };
-      state.pendingRoomInvite = null;
-      saveRoomSession(payload.room, payload.game, payload.session);
-      renderRoomState(payload.room);
-      connectRoomSocket(payload.room.code, payload.playerId);
-      startRoomPolling();
-      const shareButton = document.querySelector('#room-share-button');
-      if (shareButton) shareButton.disabled = false;
-      input?.removeAttribute('readonly');
-      playUiSound('start');
+      if (savedPlayerId) {
+        try {
+          const payload = await rejoinBackendRoom(normalizedCode, savedPlayerId);
+          applyRoomConnection(payload, controls);
+          return true;
+        } catch (rejoinError) {
+          setRoomStatus('Saved seat unavailable. Trying to reconnect by name…', 'waiting');
+        }
+      }
+      const payload = await joinBackendRoom(normalizedCode, name, savedPlayerId);
+      applyRoomConnection(payload, controls);
       return true;
     } catch (error) {
       if (joinButton) joinButton.disabled = false;
@@ -2798,6 +2813,9 @@
   }
   function attachRoomModalEvents() {
     const inviteCode = state.pendingRoomInvite || null;
+    const saved = getRoomSession();
+    const savedCode = saved?.code && isValidRoomCode(saved.code) ? saved.code : null;
+    const reconnectMode = Boolean(savedCode && !state.liveRoom?.code);
     const createButton = document.querySelector('#room-create-button');
     const joinButton = document.querySelector('#room-join-button');
     const copyButton = document.querySelector('#room-copy-button');
@@ -2806,9 +2824,15 @@
     const input = document.querySelector('#room-code-input');
     const nameInput = document.querySelector('#room-name-input');
 
-    const playerName = () => String(nameInput?.value || '').replace(/\s+/g, ' ').trim().slice(0, 18) || 'Player';
+    const playerName = () => String(nameInput?.value || saved?.playerName || '').replace(/\s+/g, ' ').trim().slice(0, 18) || 'Player';
 
-    if (inviteCode && input) {
+    if (reconnectMode && input) {
+      input.value = savedCode;
+      if (nameInput && saved?.playerName) nameInput.value = saved.playerName;
+      if (joinButton) joinButton.textContent = 'Rejoin Room';
+      setRoomStatus(`Welcome back to room ${savedCode}. Tap Rejoin Room to restore your seat and cards.`, 'ready');
+      nameInput?.focus();
+    } else if (inviteCode && input) {
       input.value = inviteCode;
       input.setAttribute('readonly', 'readonly');
       setRoomStatus(`You were invited to room ${inviteCode}. Enter your name and tap Join.`, 'ready');
@@ -2848,7 +2872,7 @@
     });
 
     joinButton?.addEventListener('click', async () => {
-      const code = String(input?.value || inviteCode || '').trim();
+      const code = String(input?.value || inviteCode || savedCode || '').trim();
       await joinRoomFromModal(code, playerName(), { joinButton, input });
     });
 
@@ -2897,37 +2921,42 @@
   function showPrivateRoom(inviteCode = null) {
     state.pendingRoomInvite = isValidRoomCode(inviteCode) ? normalizeRoomCode(inviteCode) : null;
 
+    const saved = getRoomSession();
+    const savedCode = saved?.code && isValidRoomCode(saved.code) ? saved.code : null;
+    const reconnectMode = Boolean(savedCode && !state.liveRoom?.code && !state.pendingRoomInvite);
     const invited = Boolean(state.pendingRoomInvite);
-    const introCopy = invited
+    const introCopy = reconnectMode
+      ? `You have a saved seat in room <strong>${savedCode}</strong>. Tap <strong>Rejoin Room</strong> to pick up where you left off.`
+      : invited
       ? `You were invited to room <strong>${state.pendingRoomInvite}</strong>. Enter your name below and tap <strong>Join</strong>.`
       : 'Create a room, send the invite link, then start as soon as 1 friend joins.';
 
     showHelp('Private Room', `
-      <div class="room-modal room-simple${invited ? ' room-invite-mode' : ''}">
+      <div class="room-modal room-simple${invited ? ' room-invite-mode' : ''}${reconnectMode ? ' room-reconnect-mode' : ''}">
         <p class="room-copy">${introCopy}</p>
-        <div class="room-role-pill" id="room-role">${invited ? 'Friend Invite' : 'Create or join a room'}</div>
+        <div class="room-role-pill" id="room-role">${reconnectMode ? 'Reconnect' : invited ? 'Friend Invite' : 'Create or join a room'}</div>
         <label class="room-join-label" for="room-name-input">Your name</label>
-        <input class="room-name-input" id="room-name-input" maxlength="18" autocomplete="nickname" placeholder="Your name" aria-label="Your player name" />
+        <input class="room-name-input" id="room-name-input" maxlength="18" autocomplete="nickname" placeholder="Your name" aria-label="Your player name" value="${reconnectMode && saved?.playerName ? saved.playerName.replace(/"/g, '&quot;') : ''}" />
         <div class="room-code-card">
           <span>Room Code</span>
-          <strong id="room-code-display">${invited ? state.pendingRoomInvite : '-----'}</strong>
+          <strong id="room-code-display">${invited ? state.pendingRoomInvite : reconnectMode ? savedCode : '-----'}</strong>
         </div>
-        <div class="room-actions"${invited ? ' hidden' : ''}>
+        <div class="room-actions"${invited || reconnectMode ? ' hidden' : ''}>
           <button type="button" class="primary" id="room-create-button">Create Room</button>
           <button type="button" class="secondary" id="room-copy-button" disabled>Copy Code</button>
           <button type="button" class="secondary" id="room-share-button" disabled>Share Link</button>
         </div>
-        <label class="room-join-label" for="room-code-input">Friend code</label>
+        <label class="room-join-label" for="room-code-input">${reconnectMode ? 'Your room' : 'Friend code'}</label>
         <div class="room-join-row">
-          <input id="room-code-input" maxlength="5" inputmode="text" autocomplete="off" placeholder="ABCDE" aria-label="Enter room code" value="${invited ? state.pendingRoomInvite : ''}"${invited ? ' readonly' : ''} />
-          <button type="button" class="primary" id="room-join-button">${invited ? 'Join Room' : 'Join'}</button>
+          <input id="room-code-input" maxlength="5" inputmode="text" autocomplete="off" placeholder="ABCDE" aria-label="Enter room code" value="${invited ? state.pendingRoomInvite : reconnectMode ? savedCode : ''}"${invited ? ' readonly' : ''} />
+          <button type="button" class="primary" id="room-join-button">${reconnectMode ? 'Rejoin Room' : invited ? 'Join Room' : 'Join'}</button>
         </div>
         <div class="room-live-row">
           <span>Players joined</span>
           <strong id="room-player-count">0</strong>
         </div>
         <button type="button" class="primary room-start" id="room-start-button" disabled>Start Game</button>
-        <p id="room-status" class="room-status" data-tone="neutral">${invited ? 'Enter your name, then tap Join Room.' : 'Create a room or enter your friend’s code.'}</p>
+        <p id="room-status" class="room-status" data-tone="neutral">${reconnectMode ? 'Tap Rejoin Room to restore your saved seat.' : invited ? 'Enter your name, then tap Join Room.' : 'Create a room or enter your friend’s code.'}</p>
         <ul id="room-player-list" class="room-player-list"></ul>
       </div>`);
     setTimeout(attachRoomModalEvents, 0);

@@ -440,6 +440,27 @@ test('virtual gold coins start at 100, pay entry fee, and create a room prize po
   assert.equal(friendState.game.players[1].coins, 90);
 });
 
+test('join during active game reconnects disconnected player by playerId or name', () => {
+  const { room, playerId: hostId } = server.createRoom('Cm');
+  const joined = server.joinRoom(room.code, 'Jack');
+  server.startRoomGame(room.code, hostId);
+
+  const left = server.leaveRoom(room.code, joined.playerId);
+  assert.equal(left.ok, true);
+
+  const byId = server.joinRoom(room.code, 'Anyone', { playerId: joined.playerId });
+  assert.equal(byId.error, undefined);
+  assert.equal(byId.rejoined, true);
+  assert.equal(byId.playerId, joined.playerId);
+  assert.equal(byId.room.players.find(player => player.id === joined.playerId).connected, true);
+
+  server.leaveRoom(room.code, joined.playerId);
+  const byName = server.joinRoom(room.code, 'Jack');
+  assert.equal(byName.rejoined, true);
+  assert.equal(byName.playerId, joined.playerId);
+  assert.equal(byName.game.hand.length, 13);
+});
+
 test('virtual gold coin winner receives the full entertainment prize pool', () => {
   const { room, playerId: hostId } = server.createRoom('Jack');
   server.joinRoom(room.code, 'Tarn');
