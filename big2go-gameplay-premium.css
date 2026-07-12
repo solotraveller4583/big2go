@@ -1538,33 +1538,86 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
   overflow: visible !important;
 }
 
-/* Trick table — normal readable size for 2- and 3-card plays only */
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-tile,
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-tile {
-  width: clamp(60px, 15.5vw, 74px) !important;
-  height: clamp(84px, 21.5vw, 102px) !important;
-  min-width: clamp(60px, 15.5vw, 74px) !important;
-  flex: 0 0 clamp(60px, 15.5vw, 74px) !important;
-}
+/* Trick table — standardized display by play size (2–5 cards) */
 
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-rank,
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-rank {
-  font-size: clamp(18px, 4.8vw, 22px) !important;
-}
-
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-suit-small,
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-suit-small {
-  font-size: clamp(13px, 3.4vw, 16px) !important;
-}
-
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-suit,
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-suit {
-  font-size: clamp(22px, 5.8vw, 28px) !important;
-}
-
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child),
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) {
+/* 2-card plays (pair) */
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) {
+  gap: clamp(6px, 1.6vw, 10px) !important;
   overflow: visible !important;
+  padding: 10px 8px 8px !important;
+  min-height: 88px !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-tile {
+  width: clamp(80px, 20vw, 96px) !important;
+  height: clamp(112px, 28vw, 134px) !important;
+  min-width: clamp(80px, 20vw, 96px) !important;
+  flex: 0 0 clamp(80px, 20vw, 96px) !important;
+}
+
+/* 3-card plays */
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) {
+  gap: clamp(4px, 1vw, 8px) !important;
+  overflow: visible !important;
+  padding: 10px 6px 8px !important;
+  min-height: 88px !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-tile {
+  width: clamp(72px, 18vw, 88px) !important;
+  height: clamp(100px, 25vw, 122px) !important;
+  min-width: clamp(72px, 18vw, 88px) !important;
+  flex: 0 0 clamp(72px, 18vw, 88px) !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-corner,
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-corner,
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(4):last-child) .card-corner,
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) .card-corner {
+  left: clamp(7px, 1.8vw, 10px) !important;
+  top: clamp(6px, 1.5vw, 8px) !important;
+  gap: 1px !important;
+  font-weight: 950 !important;
+  line-height: 0.88 !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-rank {
+  font-size: clamp(24px, 6.2vw, 29px) !important;
+  font-weight: 950 !important;
+  line-height: 0.88 !important;
+  letter-spacing: -0.02em !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-rank,
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) .card-rank {
+  font-size: clamp(22px, 5.8vw, 27px) !important;
+  font-weight: 950 !important;
+  line-height: 0.88 !important;
+  letter-spacing: -0.02em !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-suit-small {
+  font-size: clamp(18px, 4.8vw, 22px) !important;
+  line-height: 1 !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-suit-small,
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) .card-suit-small {
+  font-size: clamp(17px, 4.5vw, 21px) !important;
+  line-height: 1 !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child) .card-suit {
+  font-size: clamp(32px, 8.4vw, 38px) !important;
+  line-height: 1 !important;
+  opacity: 1 !important;
+}
+
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) .card-suit,
+#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) .card-suit {
+  font-size: clamp(30px, 7.8vw, 36px) !important;
+  line-height: 1 !important;
+  opacity: 1 !important;
 }
 
 /* Trick table — larger fan for 4- and 5-card plays */
@@ -1573,9 +1626,6 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
   gap: 0 !important;
   overflow: visible !important;
   padding: 10px 2px 8px !important;
-}
-
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) {
   min-height: 92px !important;
 }
 
@@ -1600,24 +1650,8 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
   margin-left: 0 !important;
 }
 
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(4):last-child) .card-corner,
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) .card-corner {
-  left: clamp(7px, 1.8vw, 10px) !important;
-  top: clamp(6px, 1.5vw, 8px) !important;
-  gap: 1px !important;
-  font-weight: 950 !important;
-  line-height: 0.88 !important;
-}
-
 #game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(4):last-child) .card-rank {
   font-size: clamp(20px, 5.2vw, 24px) !important;
-  font-weight: 950 !important;
-  line-height: 0.88 !important;
-  letter-spacing: -0.02em !important;
-}
-
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) .card-rank {
-  font-size: clamp(22px, 5.8vw, 27px) !important;
   font-weight: 950 !important;
   line-height: 0.88 !important;
   letter-spacing: -0.02em !important;
@@ -1628,19 +1662,8 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
   line-height: 1 !important;
 }
 
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) .card-suit-small {
-  font-size: clamp(17px, 4.5vw, 21px) !important;
-  line-height: 1 !important;
-}
-
 #game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(4):last-child) .card-suit {
   font-size: clamp(26px, 6.8vw, 32px) !important;
-  line-height: 1 !important;
-  opacity: 1 !important;
-}
-
-#game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) .card-suit {
-  font-size: clamp(30px, 7.8vw, 36px) !important;
   line-height: 1 !important;
   opacity: 1 !important;
 }
