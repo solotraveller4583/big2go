@@ -433,11 +433,11 @@ test('virtual gold coins start at 100, pay entry fee, and create a room prize po
   const hostState = server.privateRoomState(room, hostId);
   const friendState = server.privateRoomState(room, joined.playerId);
 
-  assert.equal(game.entryFee, 5);
-  assert.equal(game.prizePool, 10);
-  assert.equal(hostState.room.prizePool, 10);
-  assert.equal(hostState.game.players[0].coins, 95);
-  assert.equal(friendState.game.players[1].coins, 95);
+  assert.equal(game.entryFee, 10);
+  assert.equal(game.prizePool, 20);
+  assert.equal(hostState.room.prizePool, 20);
+  assert.equal(hostState.game.players[0].coins, 90);
+  assert.equal(friendState.game.players[1].coins, 90);
 });
 
 test('virtual gold coin winner receives the full entertainment prize pool', () => {
@@ -452,8 +452,8 @@ test('virtual gold coin winner receives the full entertainment prize pool', () =
 
   assert.equal(result.ok, true);
   assert.equal(room.game.status, 'finished');
-  assert.equal(room.game.prizePool, 10);
-  assert.equal(room.game.players[winner.index].coins, 105);
-  assert.equal(room.players.find(player => player.id === winner.id).coins, 105);
-  assert.match(room.game.logs[0], /wins 10 virtual gold coins/);
+  assert.equal(room.game.prizePool, 20);
+  assert.equal(room.game.players[winner.index].coins, 110);
+  assert.equal(room.players.find(player => player.id === winner.id).coins, 110);
+  assert.match(room.game.logs[0], /wins 20 virtual gold coins/);
 });

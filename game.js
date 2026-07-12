@@ -5,7 +5,7 @@
   const COIN_KEY = 'big2go-virtual-coins-v1';
   const SOUND_SETTINGS_KEY = 'big2go-sound-settings-v1';
   const STARTING_COINS = 100;
-  const ENTRY_FEE_COINS = 5;
+  const ENTRY_FEE_COINS = 10;
   const ROOM_SESSION_KEY = 'big2go-room-session-v1';
   const RULES_HTML = `
     <ul>

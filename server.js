@@ -13,7 +13,7 @@ const RECONNECT_WARNING_MS = 1000 * 30;
 const RECONNECT_TIMEOUT_MS = 1000 * 60;
 const MAX_PLAYERS = 4;
 const STARTING_COINS = 100;
-const ENTRY_FEE_COINS = 5;
+const ENTRY_FEE_COINS = 10;
 const rooms = new Map();
 const activeSessions = new Map();
 
