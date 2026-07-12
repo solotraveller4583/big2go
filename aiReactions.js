@@ -89,21 +89,20 @@
   }
 
   function getReactionLayer() {
-    return document.getElementById('ai-reaction-layer');
+    return document.getElementById('ai-reaction-layer')
+      || document.querySelector('#game-screen .table-arena .ai-reaction-layer');
   }
 
   function ensureReactionLayer() {
     let layer = getReactionLayer();
     if (layer) return layer;
-    const gameScreen = document.getElementById('game-screen');
-    if (!gameScreen) return null;
+    const arena = document.querySelector('#game-screen .table-arena');
+    if (!arena) return null;
     layer = document.createElement('div');
     layer.id = 'ai-reaction-layer';
     layer.className = 'ai-reaction-layer';
     layer.setAttribute('aria-live', 'polite');
-    const tableArena = gameScreen.querySelector('.table-arena');
-    if (tableArena) gameScreen.insertBefore(layer, tableArena);
-    else gameScreen.appendChild(layer);
+    arena.appendChild(layer);
     return layer;
   }
 

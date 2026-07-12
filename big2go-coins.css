@@ -209,119 +209,39 @@
 }
 
 #game-screen.gameplay-premium .ai-reaction-layer {
-  position: relative;
-  display: none;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  align-items: start;
-  min-height: 0;
-  height: auto;
-  max-height: none;
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-  pointer-events: none;
-  z-index: 5;
-}
-
-#game-screen.gameplay-premium .ai-reaction-layer:has(.ai-table-reaction) {
-  display: grid;
-  min-height: 58px;
-}
-
-#game-screen.gameplay-premium .ai-table-reaction {
-  position: relative;
-  left: auto;
-  right: auto;
-  top: auto;
+  top: 32px;
+  left: 8px;
+  right: 8px;
   bottom: auto;
-  max-width: none;
-  width: 100%;
-  padding: 8px 10px 9px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 200, 61, 0.62);
-  background: linear-gradient(180deg, rgba(255, 200, 61, 0.24), rgba(21, 16, 68, 0.98));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 8px 20px rgba(0, 0, 0, 0.34);
-  opacity: 0;
-  transform: translateY(8px) scale(0.94);
-}
-
-#game-screen.gameplay-premium .ai-table-reaction--left {
-  grid-column: 1;
-  justify-self: stretch;
-}
-
-#game-screen.gameplay-premium .ai-table-reaction--center {
-  grid-column: 2;
-  justify-self: stretch;
-  transform: translateY(8px) scale(0.94);
-}
-
-#game-screen.gameplay-premium .ai-table-reaction--right {
-  grid-column: 3;
-  justify-self: stretch;
-}
-
-#game-screen.gameplay-premium .ai-table-reaction.show {
-  opacity: 1;
-  animation: gpAiReactionStripIn 480ms cubic-bezier(0.22, 1.18, 0.36, 1) forwards;
-}
-
-#game-screen.gameplay-premium .ai-table-reaction-head {
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-#game-screen.gameplay-premium .ai-table-reaction-avatar {
-  width: 28px;
-  height: 28px;
-  font-size: 14px;
-}
-
-#game-screen.gameplay-premium .ai-table-reaction-name {
-  font-size: 11px;
-  letter-spacing: 0.05em;
-}
-
-#game-screen.gameplay-premium .ai-table-reaction-msg {
-  font-size: 14px;
-  font-weight: 900;
-  line-height: 1.35;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
-}
-
-@keyframes gpAiReactionStripIn {
-  0% { opacity: 0; transform: translateY(10px) scale(0.9); }
-  60% { opacity: 1; transform: translateY(-2px) scale(1.02); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  height: 50px;
+  z-index: 6;
 }
 
 @media (max-width: 639px) {
-  #game-screen.gameplay-premium .ai-reaction-layer:has(.ai-table-reaction) {
-    min-height: 62px;
+  #game-screen.gameplay-premium .ai-reaction-layer {
+    top: 30px !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: auto !important;
+    height: 48px !important;
   }
 
-  #game-screen.gameplay-premium .ai-table-reaction {
-    padding: 9px 10px 10px;
+  #game-screen.gameplay-premium .ai-table-reaction--left,
+  #game-screen.gameplay-premium .ai-table-reaction--center,
+  #game-screen.gameplay-premium .ai-table-reaction--right {
+    top: 0 !important;
+    bottom: auto !important;
   }
 
-  #game-screen.gameplay-premium .ai-table-reaction-avatar {
-    width: 30px;
-    height: 30px;
-    font-size: 15px;
-  }
+  #game-screen.gameplay-premium .ai-table-reaction--left { left: 0 !important; }
+  #game-screen.gameplay-premium .ai-table-reaction--center { left: 50% !important; }
+  #game-screen.gameplay-premium .ai-table-reaction--right { right: 0 !important; }
+}
 
-  #game-screen.gameplay-premium .ai-table-reaction-name {
-    font-size: 12px;
-  }
-
-  #game-screen.gameplay-premium .ai-table-reaction-msg {
-    font-size: 15px;
-    line-height: 1.4;
-  }
+@media (max-width: 639px) {
+  .ai-table-reaction--left { left: 1%; bottom: 4%; }
+  .ai-table-reaction--center { bottom: 8%; }
+  .ai-table-reaction--right { right: 1%; bottom: 4%; }
 }
 
 @media (max-height: 760px) {
