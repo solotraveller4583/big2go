@@ -36,6 +36,7 @@
   <link rel="stylesheet" href="big2go-mobile-redesign.css?v=9" />
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=3" />
   <link rel="stylesheet" href="big2go-session-complete.css?v=1" />
+  <link rel="stylesheet" href="big2go-result-story.css?v=1" />
   <link rel="stylesheet" href="big2go-landing-v3.css?v=20" />
   <link rel="stylesheet" href="big2go-gameplay-premium.css?v=24" />
 </head>
@@ -298,6 +299,31 @@
       </div>
     </section>
 
+    <section class="panel result-story-screen hidden" id="game-result-story-screen" aria-label="Game result story">
+      <div class="result-story-bg" aria-hidden="true">
+        <div class="result-story-float-card result-story-float-card--a">3♦</div>
+        <div class="result-story-float-card result-story-float-card--b">2♠</div>
+        <div class="result-story-float-card result-story-float-card--c">A♥</div>
+        <div class="result-story-float-card result-story-float-card--d">K♣</div>
+        <div class="result-story-coin-sparkles"></div>
+      </div>
+      <div class="result-story-card">
+        <div class="result-story-brand" aria-label="Big2Go">
+          <span class="result-story-brand-mark">B2</span>
+          <strong>Big<span>2Go</span></strong>
+        </div>
+        <p class="result-story-eyebrow">Game Result Story</p>
+        <h1 class="result-story-headline" id="result-story-headline">Match complete</h1>
+        <div class="result-story-stats" id="result-story-stats"></div>
+        <div class="result-story-players" id="result-story-players"></div>
+        <div class="result-story-farewells" id="result-story-farewells" aria-live="polite"></div>
+        <div class="result-story-actions">
+          <button type="button" class="primary" id="result-story-play-again">Play Again</button>
+          <button type="button" class="secondary" id="result-story-home">🏠 Back to Home</button>
+        </div>
+      </div>
+    </section>
+
     <div class="voice-panel hidden" id="voice-panel" aria-label="Voice chat controls">
       <button type="button" class="voice-btn mic muted" id="voice-mic-button" aria-pressed="false" aria-label="Turn microphone on">🎤</button>
       <button type="button" class="voice-btn speaker" id="voice-speaker-button" aria-pressed="true" aria-label="Toggle speaker">🔊</button>
@@ -328,6 +354,6 @@
 
   <script src="aiCharacters.js?v=4" defer></script>
   <script src="aiReactions.js?v=5" defer></script>
-  <script src="game.js?v=73" defer></script>
+  <script src="game.js?v=74" defer></script>
 </body>
 </html>
