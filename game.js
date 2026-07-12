@@ -48,7 +48,7 @@
     'straight-flush': ['Straight flush! Fireworks now!', 'That is a headline move.', 'Absolute festival chaos.']
   };
   const OPENING_LINE = '♦ 3 Holder Starts';
-  const ALLOWED_REACTIONS = new Set(['😂', '👏', '🔥', '😮', '🎉', '💪', '😎', '🙌', '🤔', '✨', '🥳', '😭']);
+  const ALLOWED_REACTIONS = new Set(['😂', '👏', '🔥', '😮', '🎉', '💪', '😎', '🙌']);
 
   const state = {
     settings: { players: 4, straightRule: DEFAULT_STRAIGHT_RULE },
@@ -2075,12 +2075,18 @@
       renderOpponentAvatar(avatar, player);
       const stack = document.createElement('div');
       stack.className = 'opponent-stack';
+      const nameRow = document.createElement('div');
+      nameRow.className = 'opponent-name-row';
       const name = document.createElement('div');
       name.className = 'opponent-name';
-      const playerLevel = !state.liveRoom?.code ? getProfileLevelForPlayer(player) : null;
-      name.textContent = playerLevel
-        ? `${isSelf ? 'You' : player.name} · Lv ${playerLevel}`
-        : (isSelf ? 'You' : player.name);
+      name.textContent = isSelf ? 'You' : player.name;
+      nameRow.appendChild(name);
+      if (!state.liveRoom?.code) {
+        const level = document.createElement('span');
+        level.className = 'opponent-level';
+        level.textContent = `Lv${getProfileLevelForPlayer(player)}`;
+        nameRow.appendChild(level);
+      }
       const stats = document.createElement('div');
       stats.className = 'opponent-stats';
       const coins = document.createElement('span');
@@ -2094,7 +2100,7 @@
       online.setAttribute('aria-label', player.connected === false ? 'Offline' : 'Online');
       stats.appendChild(coins);
       stats.appendChild(cards);
-      stack.appendChild(name);
+      stack.appendChild(nameRow);
       stack.appendChild(stats);
       if (isLastCard) renderLastCardBadge(stack, '1 LEFT');
       row.appendChild(avatar);
@@ -2952,10 +2958,6 @@
     state.heat = Math.max(0, state.heat - 8);
     logState(`${state.players[playerIndex].name} passed. The table keeps moving.`);
     playUiSound('pass');
-    const passer = state.players[playerIndex];
-    if (!state.liveRoom && passer && !passer.isHuman) {
-      window.Big2GoAIReactions?.onAiPass(playerIndex, state);
-    }
     if (state.trick.passes >= state.players.length - 1) {
       const leader = state.trick.leader;
       if (!state.liveRoom) {
