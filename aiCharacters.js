@@ -38,12 +38,22 @@
         defeatPlayer: [
           'Better luck next time 😏',
           'Too easy for me 🔥',
-          'Train harder and come back 💪'
+          'Train harder and come back 💪',
+          'That table was mine from the start 🐻',
+          'Come back when your hand is stronger 😎',
+          'I barely had to try that round 😏',
+          'Big Two legend? Not yet 🔥',
+          'Study my moves and try again 📚'
         ],
         defeatedByPlayer: [
           "Next time I won't lose 🔥",
           'You got lucky this round 😤',
-          'Rematch — I want a rematch! 🐻'
+          'Rematch — I want a rematch! 🐻',
+          'I was holding back... maybe 😏',
+          'You caught me off guard this time 🐻',
+          'Fine. Round two. Right now 💪',
+          "That win won't repeat twice 😤",
+          "My claws slipped — don't get used to it 🔥"
         ]
       }
     },
@@ -80,12 +90,22 @@
         defeatPlayer: [
           'Good game — you played well 😊',
           'Maybe next round? 🐰',
-          'I had fun anyway 🌸'
+          'I had fun anyway 🌸',
+          'You kept me on my toes 👏',
+          'So close — want another try? 🐰',
+          'That was a lovely match ✨',
+          'Your moves were really sharp today 😊',
+          'Same time tomorrow for a rematch? 🌸'
         ],
         defeatedByPlayer: [
           'Wow, you are amazing 👏',
           'I will practice more for next time 🐰',
-          'You totally deserved that win ✨'
+          'You totally deserved that win ✨',
+          'I am cheering for you now 🌸',
+          'That was beautiful play 😊',
+          'You made that look easy 🐰',
+          'Okay wow — teach me your secrets ✨',
+          'Best match I have had in ages 👏'
         ]
       }
     },
@@ -122,12 +142,22 @@
         defeatPlayer: [
           'And the crowd goes wild 🎭',
           'That was my best episode yet 🍿',
-          'Write that down — Sally wins 📺'
+          'Write that down — Sally wins 📺',
+          'Somebody call the press — Sally wins again 🎤',
+          'I should get my own TV show after that 🍿',
+          'Plot twist: Sally always wins 😜',
+          "That ending was chef's kiss 💋",
+          'Credits roll — starring Sally 🎬'
         ],
         defeatedByPlayer: [
           'You stole the show this time 🎬',
           'Fine, you got the punchline 😂',
-          'Encore rematch? I have new jokes 🍿'
+          'Encore rematch? I have new jokes 🍿',
+          'Okay that twist got me good 😅',
+          'You wrote a better ending than me 📺',
+          'I demand a sequel immediately 🎭',
+          'The audience picks you tonight 👏',
+          'Save some spotlight for me next round 🍿'
         ]
       }
     },
@@ -165,12 +195,22 @@
         defeatPlayer: [
           'Calculated win — sweet 🍪',
           'The odds favored me this round 📊',
-          'Crunch time complete 😎'
+          'Crunch time complete 😎',
+          'Probability says I win again next time 📈',
+          'That plan baked perfectly 🍪',
+          'Data does not lie — Cookie wins 🤓',
+          'Another clean read of the table 😎',
+          'Sweet victory, well earned 🍪'
         ],
         defeatedByPlayer: [
           'My strategy needs a patch 🤓',
           'Well played — I underestimated you 🍪',
-          'Next match I am updating my playbook 🔥'
+          'Next match I am updating my playbook 🔥',
+          'Your reads were sharper than mine 📊',
+          'I miscalculated one turn — impressive 🍪',
+          'Running simulations for our rematch now 🤓',
+          'That loss goes in my learning log 📚',
+          'You cracked my cookie code this round 🔥'
         ]
       }
     }
@@ -219,9 +259,24 @@
     return TABLE_SLOTS[position] || 'center';
   }
 
-  function pickRivalLine(lines) {
+  const rivalLineBags = new Map();
+
+  function pickRivalLine(lines, bagKey) {
     if (!Array.isArray(lines) || !lines.length) return '';
-    return lines[Math.floor(Math.random() * lines.length)];
+
+    let bag = rivalLineBags.get(bagKey);
+    if (!bag || !bag.remaining.length) {
+      let pool = [...lines];
+      if (bag?.last && pool.length > 1) {
+        pool = pool.filter(line => line !== bag.last);
+      }
+      bag = { remaining: shuffle(pool), last: bag?.last ?? null };
+      rivalLineBags.set(bagKey, bag);
+    }
+
+    const pick = bag.remaining.shift();
+    bag.last = pick;
+    return pick || lines[0];
   }
 
   function resolveRivalPlayer(gameState, winner) {
@@ -248,9 +303,11 @@
     if (!character) return null;
 
     const playerWon = Boolean(winner.isHuman);
-    const lines = playerWon ? character.rival?.defeatedByPlayer : character.rival?.defeatPlayer;
-    const quote = pickRivalLine(lines)
-      || pickRivalLine(character.reactions?.[playerWon ? 'ai_lose' : 'ai_win'])
+    const scenario = playerWon ? 'defeatedByPlayer' : 'defeatPlayer';
+    const lines = character.rival?.[scenario];
+    const bagKey = `${character.id}:${scenario}`;
+    const quote = pickRivalLine(lines, bagKey)
+      || pickRivalLine(character.reactions?.[playerWon ? 'ai_lose' : 'ai_win'], `${character.id}:reaction-${scenario}`)
       || (playerWon ? 'Good game!' : 'Better luck next time!');
 
     return {
