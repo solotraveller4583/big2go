@@ -1516,7 +1516,7 @@
 
     const endButton = document.createElement('button');
     endButton.className = 'secondary';
-    endButton.textContent = 'End Game';
+    endButton.textContent = '🏠 Back to Home';
     endButton.addEventListener('click', () => endGame());
 
     const exitButton = document.createElement('button');
