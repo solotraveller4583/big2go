@@ -461,6 +461,19 @@ test('join during active game reconnects disconnected player by playerId or name
   assert.equal(byName.game.hand.length, 13);
 });
 
+test('voice signal relay queues messages for polling clients', () => {
+  const { room, playerId: hostId } = server.createRoom('Host');
+  const joined = server.joinRoom(room.code, 'Friend');
+  const signal = { description: { type: 'offer', sdp: 'v=0' } };
+  const relay = server.relayVoiceSignal(room, hostId, joined.playerId, signal);
+  assert.equal(relay.ok, true);
+  const hostView = server.privateRoomState(room, joined.playerId);
+  assert.equal(hostView.voiceSignals.length, 1);
+  assert.equal(hostView.voiceSignals[0].from, hostId);
+  const again = server.privateRoomState(room, joined.playerId);
+  assert.equal(again.voiceSignals.length, 0);
+});
+
 test('virtual gold coin winner receives the full entertainment prize pool', () => {
   const { room, playerId: hostId } = server.createRoom('Jack');
   server.joinRoom(room.code, 'Tarn');

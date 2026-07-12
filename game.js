@@ -1584,6 +1584,7 @@
 
   function updateVoicePanel() {
     const isLive = Boolean(state.liveRoom?.code);
+    document.body.classList.toggle('live-room-active', isLive);
     els.voicePanel?.classList.toggle('hidden', !isLive);
     if (!isLive) return;
     els.voiceMic?.classList.toggle('muted', state.voice.micMuted || !state.voice.enabled);
@@ -1624,8 +1625,9 @@
     renderVoiceMixer();
   }
 
-  function restoreVoiceAfterLiveGame() {
+  function restoreVoiceInRoom() {
     if (!state.liveRoom?.code) return;
+    updateVoicePanel();
     if (state.voice.enabled) {
       refreshVoicePeers().catch(() => {});
       return;
@@ -1640,13 +1642,40 @@
   }
 
   const VOICE_ENABLED_KEY = 'big2go-voice-enabled-v1';
-  const VOICE_ICE_SERVERS = [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' }
-  ];
+  let voiceIceServersPromise = null;
+
+  async function fetchVoiceIceServers() {
+    if (state.voice.iceServers?.length) return state.voice.iceServers;
+    if (!voiceIceServersPromise) {
+      voiceIceServersPromise = fetch('/api/voice/ice', { headers: { Accept: 'application/json' }, cache: 'no-store' })
+        .then(response => response.json().catch(() => ({})))
+        .then(payload => {
+          const servers = Array.isArray(payload?.iceServers) ? payload.iceServers : [];
+          state.voice.iceServers = servers.length ? servers : [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+          ];
+          return state.voice.iceServers;
+        })
+        .catch(() => {
+          state.voice.iceServers = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+          ];
+          return state.voice.iceServers;
+        });
+    }
+    return voiceIceServersPromise;
+  }
 
   function voicePeerIds() {
-    return state.players.map(player => player.id).filter(id => id && id !== state.liveRoom?.playerId);
+    const ids = new Set();
+    state.voice.statuses.forEach(entry => { if (entry?.id) ids.add(entry.id); });
+    state.players.forEach(player => { if (player?.id) ids.add(player.id); });
+    const saved = getRoomSession();
+    (saved?.players || saved?.room?.players || []).forEach(player => { if (player?.id) ids.add(player.id); });
+    ids.delete(state.liveRoom?.playerId);
+    return [...ids];
   }
 
   function shouldInitiateVoiceCall(playerId) {
@@ -1684,8 +1713,24 @@
   }
 
   function sendVoiceSignal(targetId, signal) {
-    if (!targetId || !signal || state.roomSocket?.readyState !== WebSocket.OPEN) return;
-    state.roomSocket.send(JSON.stringify({ type: 'voice:signal', targetId, signal }));
+    if (!targetId || !signal || !state.liveRoom?.code || !state.liveRoom?.playerId) return;
+    const payload = { type: 'voice:signal', targetId, signal };
+    if (state.roomSocket?.readyState === WebSocket.OPEN) {
+      state.roomSocket.send(JSON.stringify(payload));
+    }
+    fetch('/api/rooms/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ ...payload, code: state.liveRoom.code, playerId: state.liveRoom.playerId })
+    }).catch(() => {});
+  }
+
+  function processVoiceSignals(signals) {
+    if (!Array.isArray(signals) || !signals.length) return;
+    signals.forEach(entry => {
+      if (!entry?.from || !entry?.signal) return;
+      handleVoiceSignal(entry.from, entry.signal).catch(() => {});
+    });
   }
 
   function attachLocalVoiceTracks(pc) {
@@ -1702,10 +1747,11 @@
     }
   }
 
-  function createVoicePeer(playerId) {
+  async function createVoicePeer(playerId) {
     if (state.voice.peers.has(playerId)) return state.voice.peers.get(playerId);
-    const pc = new RTCPeerConnection({ iceServers: VOICE_ICE_SERVERS });
-    const entry = { pc, audio: null };
+    const iceServers = await fetchVoiceIceServers();
+    const pc = new RTCPeerConnection({ iceServers });
+    const entry = { pc, audio: null, pendingCandidates: [], remoteReady: false };
     state.voice.peers.set(playerId, entry);
     attachLocalVoiceTracks(pc);
     pc.onicecandidate = event => {
@@ -1722,7 +1768,7 @@
         audioEl.volume = state.voice.volumes.get(playerId) ?? state.voiceVolume ?? 0.9;
         audioEl.muted = state.voice.speakerMuted || state.voice.mutedPlayers.has(playerId);
         entry.audio = audioEl;
-        els.remoteAudio?.appendChild(audioEl);
+        (els.remoteAudio || document.body).appendChild(audioEl);
       } else if (entry.audio.srcObject !== stream) {
         entry.audio.srcObject = stream;
       }
@@ -1760,34 +1806,53 @@
   async function callVoicePeer(playerId) {
     if (!state.liveRoom?.code || !('RTCPeerConnection' in window)) return;
     if (!shouldInitiateVoiceCall(playerId)) return;
-    const { pc } = createVoicePeer(playerId);
+    const { pc } = await createVoicePeer(playerId);
     if (pc.signalingState !== 'stable') return;
     const offer = await pc.createOffer({ offerToReceiveAudio: true });
     await pc.setLocalDescription(offer);
     sendVoiceSignal(playerId, { description: pc.localDescription });
   }
 
+  async function flushPendingCandidates(entry) {
+    if (!entry?.pc || !entry.pendingCandidates?.length) return;
+    const pending = entry.pendingCandidates.splice(0);
+    for (const candidate of pending) {
+      await entry.pc.addIceCandidate(candidate).catch(() => {});
+    }
+  }
+
   async function handleVoiceSignal(from, signal) {
     if (!from || from === state.liveRoom?.playerId || !('RTCPeerConnection' in window)) return;
-    const { pc } = createVoicePeer(from);
+    const entry = await createVoicePeer(from);
+    const { pc } = entry;
     if (signal.description) {
       const description = signal.description;
       if (description.type === 'offer') {
-        const offerCollision = pc.signalingState !== 'stable' || (pc.currentRemoteDescription && !shouldInitiateVoiceCall(from));
-        if (offerCollision && pc.signalingState === 'have-local-offer' && typeof pc.setLocalDescription === 'function') {
+        if (pc.signalingState === 'have-local-offer') {
+          if (shouldInitiateVoiceCall(from)) return;
           try { await pc.setLocalDescription({ type: 'rollback' }); } catch (_) {}
-        } else if (offerCollision && pc.signalingState !== 'stable') {
+        } else if (pc.signalingState !== 'stable') {
           return;
         }
         await pc.setRemoteDescription(description);
+        entry.remoteReady = true;
+        await flushPendingCandidates(entry);
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         sendVoiceSignal(from, { description: pc.localDescription });
       } else {
         await pc.setRemoteDescription(description);
+        entry.remoteReady = true;
+        await flushPendingCandidates(entry);
       }
     }
-    if (signal.candidate) await pc.addIceCandidate(signal.candidate).catch(() => {});
+    if (signal.candidate) {
+      if (pc.remoteDescription) {
+        await pc.addIceCandidate(signal.candidate).catch(() => {});
+      } else {
+        entry.pendingCandidates.push(signal.candidate);
+      }
+    }
   }
 
   function startSpeakingMeter(stream) {
@@ -2531,6 +2596,7 @@
     if (payload.game) applyLiveGame(payload.game, payload.room);
     if (payload.chat) applyChatPayload(payload.chat);
     if (payload.voice) applyVoicePayload(payload.voice);
+    processVoiceSignals(payload.voiceSignals);
     return payload;
   }
 
@@ -2569,6 +2635,8 @@
       state.roomSocket = null;
     }
     state.liveRoom = null;
+    document.body.classList.remove('live-room-active');
+    updateVoicePanel();
   }
 
   async function sendLiveRoomMessage(message) {
@@ -2591,6 +2659,7 @@
       if (payload.game) applyLiveGame(payload.game, payload.room);
       if (payload.chat) applyChatPayload(payload.chat);
       if (payload.voice) applyVoicePayload(payload.voice);
+      processVoiceSignals(payload.voiceSignals);
       return payload;
     } catch (error) {
       if (state.roomSocket && state.roomSocket.readyState === WebSocket.OPEN) {
@@ -2665,7 +2734,7 @@
     syncLiveLastCardFromGame(game);
     els.playerCount.value = String(game.players.length);
     showGameScreen();
-    if (state.liveRoom?.code) restoreVoiceAfterLiveGame();
+    if (state.liveRoom?.code) restoreVoiceInRoom();
     if (!game.gameOver) document.querySelector('#victory-overlay')?.remove();
     render();
     if (game.gameOver && !document.querySelector('#victory-overlay')) {
@@ -2765,6 +2834,7 @@
           if (message.game) applyLiveGame(message.game, message.room);
           if (message.chat) applyChatPayload(message.chat);
           if (message.voice) applyVoicePayload(message.voice);
+          processVoiceSignals(message.voiceSignals);
         }
         if (message.type === 'voice:signal') {
           handleVoiceSignal(message.from, message.signal).catch(() => {});
@@ -2828,12 +2898,14 @@
     if (payload.game) applyLiveGame(payload.game, room);
     if (payload.chat) applyChatPayload(payload.chat);
     if (payload.voice) applyVoicePayload(payload.voice);
+    processVoiceSignals(payload.voiceSignals);
     connectRoomSocket(room.code, playerId);
     startRoomPolling();
     controls.input?.removeAttribute('readonly');
     const shareButton = document.querySelector('#room-share-button');
     if (shareButton) shareButton.disabled = false;
     playUiSound('start');
+    restoreVoiceInRoom();
   }
 
   async function joinBackendRoom(code, name, playerId = null) {

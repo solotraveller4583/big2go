@@ -439,7 +439,7 @@ function activeSessionForPlayer(playerId) {
 
 function privateRoomState(room, playerId) {
   processRoomTimeouts(room);
-  const state = { room: publicRoom(room), game: publicGameState(room, playerId), chat: publicChat(room), voice: publicVoice(room) };
+  const state = { room: publicRoom(room), game: publicGameState(room, playerId), chat: publicChat(room), voice: publicVoice(room), voiceSignals: takeVoiceSignals(room, playerId) };
   state.session = rememberActiveSession(room, playerId);
   return state;
 }
@@ -449,6 +449,65 @@ function roomForPlayer(code, playerId) {
   if (!room) return { error: 'Room not found' };
   if (!room.players.some(player => player.id === playerId)) return { error: 'Player not in room' };
   return { room };
+}
+
+function ensureRoomSignalQueue(room) {
+  if (!room.voiceSignals) room.voiceSignals = new Map();
+  return room.voiceSignals;
+}
+
+function queueVoiceSignal(room, targetId, from, signal) {
+  const queue = ensureRoomSignalQueue(room);
+  const list = queue.get(targetId) || [];
+  list.push({ from, signal, at: Date.now() });
+  queue.set(targetId, list.slice(-40));
+}
+
+function takeVoiceSignals(room, playerId) {
+  const queue = ensureRoomSignalQueue(room);
+  const pending = queue.get(playerId) || [];
+  queue.set(playerId, []);
+  return pending;
+}
+
+function relayVoiceSignal(room, fromId, targetId, signal) {
+  if (!targetId || !signal || typeof signal !== 'object') return { ok: false, error: 'Invalid voice signal' };
+  if (!room.players.some(player => player.id === targetId)) return { ok: false, error: 'Invalid voice target' };
+  queueVoiceSignal(room, targetId, fromId, signal);
+  for (const client of room.clients) {
+    if (client.readyState === client.OPEN && client.playerId === targetId) {
+      client.send(JSON.stringify({ type: 'voice:signal', from: fromId, signal }));
+    }
+  }
+  room.updatedAt = Date.now();
+  return { ok: true };
+}
+
+function voiceIceServers() {
+  const servers = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' }
+  ];
+  const turnUrl = String(process.env.TURN_URL || '').trim();
+  if (turnUrl) {
+    servers.push({
+      urls: turnUrl,
+      username: String(process.env.TURN_USERNAME || ''),
+      credential: String(process.env.TURN_CREDENTIAL || '')
+    });
+  } else {
+    servers.push({
+      urls: [
+        'turn:openrelay.metered.ca:80',
+        'turn:openrelay.metered.ca:443',
+        'turn:openrelay.metered.ca:443?transport=tcp'
+      ],
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    });
+  }
+  return servers;
 }
 
 function updateVoiceState(room, playerId, voice = {}) {
@@ -499,6 +558,9 @@ function applyRoomAction(code, playerId, action) {
       if (!result.ok) return result;
     } else if (action.type === 'voice:state') {
       const result = updateVoiceState(room, playerId, action.voice || action);
+      if (!result.ok) return result;
+    } else if (action.type === 'voice:signal') {
+      const result = relayVoiceSignal(room, playerId, action.targetId, action.signal);
       if (!result.ok) return result;
     } else if (action.type === 'game:play') {
       const result = applyRoomPlay(room.code, playerId, action.cards);
@@ -901,6 +963,10 @@ function createHttpServer() {
       return;
     }
 
+    if (req.method === 'GET' && req.url === '/api/voice/ice') {
+      return json(res, 200, { iceServers: voiceIceServers() });
+    }
+
     if (req.method === 'GET' && req.url === '/api/health') {
       return json(res, 200, { ok: true, rooms: rooms.size });
     }
@@ -938,11 +1004,7 @@ function createHttpServer() {
             socket.send(JSON.stringify({ type: 'room:error', error: 'Invalid voice signal' }));
             return;
           }
-          for (const client of room.clients) {
-            if (client !== socket && client.readyState === client.OPEN && client.playerId === targetId) {
-              client.send(JSON.stringify({ type: 'voice:signal', from: playerId, signal }));
-            }
-          }
+          relayVoiceSignal(room, playerId, targetId, signal);
           return;
         }
         if (message.type === 'room:start' || message.type === 'room:leave' || message.type === 'room:rejoin' || message.type === 'room:chat' || message.type === 'voice:state' || message.type === 'game:play' || message.type === 'game:pass') {
@@ -986,6 +1048,8 @@ module.exports = {
   createRoom,
   joinRoom,
   findReconnectPlayer,
+  relayVoiceSignal,
+  voiceIceServers,
   rejoinRoom,
   markPlayerDisconnected,
   leaveRoom,

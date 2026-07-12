@@ -99,8 +99,21 @@
 
 #game-screen .match-hud,
 #game-screen .momentum-card,
-#game-screen .match-log,
-#game-screen .remote-audio { display: none !important; }
+#game-screen .match-log {
+  display: none !important;
+}
+
+/* Keep WebRTC audio playable on mobile — never use display:none on remote-audio. */
+#game-screen .remote-audio,
+.remote-audio {
+  position: fixed !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  clip: rect(0 0 0 0) !important;
+}
 
 /* Player information row */
 #game-screen .opponent-rail {

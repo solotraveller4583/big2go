@@ -57,7 +57,9 @@
 }
 
 /* Keep remote voice audio in the DOM for playback — display:none breaks iOS WebRTC audio. */
-#game-screen.gameplay-premium .remote-audio {
+#game-screen.gameplay-premium .remote-audio,
+.remote-audio {
+  display: block !important;
   position: fixed !important;
   width: 1px !important;
   height: 1px !important;
