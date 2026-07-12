@@ -35,13 +35,13 @@
 
 /* Solo stack — content-sized rows */
 #game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel.hidden) {
-  grid-template-rows: 46px 68px minmax(108px, auto) 26px auto 90px !important;
+  grid-template-rows: 46px 68px auto minmax(108px, auto) 26px auto 90px !important;
   gap: 5px !important;
 }
 
 /* Room stack */
 #game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel:not(.hidden)) {
-  grid-template-rows: 46px 68px 40px minmax(100px, auto) 26px auto 90px !important;
+  grid-template-rows: 46px 68px auto 40px minmax(100px, auto) 26px auto 90px !important;
   gap: 5px !important;
 }
 
@@ -513,7 +513,7 @@
 /* ── Reactions (compact 2×4 emoji grid) ── */
 #game-screen.gameplay-premium .reaction-row {
   height: auto !important;
-  min-height: 58px !important;
+  min-height: 0 !important;
   max-height: none !important;
   margin: 0 !important;
   display: grid !important;
@@ -824,7 +824,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     --gp-mobile-gap: 5px;
     --gp-mobile-header: 64px;
     --gp-mobile-opponents: 72px;
-    --gp-mobile-reactions: 56px;
+    --gp-mobile-reactions: 52px;
     --gp-mobile-hand-lift: 14px;
     --gp-mobile-dock: 118px;
     --gp-table-max: none;
@@ -849,6 +849,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     grid-template-rows:
       var(--gp-mobile-header)
       var(--gp-mobile-opponents)
+      auto
       minmax(0, 1fr)
       var(--gp-mobile-reactions)
       auto
@@ -859,6 +860,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     grid-template-rows:
       var(--gp-mobile-header)
       var(--gp-mobile-opponents)
+      auto
       40px
       minmax(0, 1fr)
       var(--gp-mobile-reactions)
@@ -895,6 +897,34 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     height: 100% !important;
   }
 
+  #game-screen.gameplay-premium .opponent-name {
+    font-size: 12px !important;
+  }
+
+  #game-screen.gameplay-premium .opponent-coins,
+  #game-screen.gameplay-premium .opponent-cards {
+    font-size: 11px !important;
+  }
+
+  /* AI speech strip — sits between opponents and table, never over cards */
+  #game-screen.gameplay-premium .ai-reaction-layer {
+    align-self: stretch !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #game-screen.gameplay-premium .ai-reaction-layer:not(:has(.ai-table-reaction)) {
+    display: none !important;
+  }
+
+  #game-screen.gameplay-premium .ai-reaction-layer:has(.ai-table-reaction) {
+    display: grid !important;
+    min-height: 62px !important;
+    max-height: 76px !important;
+  }
+
   /* Table — fill flexible row */
   #game-screen.gameplay-premium .table-arena {
     height: 100% !important;
@@ -905,54 +935,6 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     grid-template-rows: 14px minmax(0, 1fr) 24px !important;
     gap: 5px !important;
     overflow: visible !important;
-  }
-
-  #game-screen.gameplay-premium .ai-reaction-layer {
-    top: 30px !important;
-    left: 8px !important;
-    right: 8px !important;
-    bottom: auto !important;
-    height: 48px !important;
-    z-index: 6 !important;
-    overflow: visible !important;
-  }
-
-  #game-screen.gameplay-premium .ai-table-reaction {
-    max-width: min(40vw, 152px) !important;
-    padding: 5px 8px 6px !important;
-  }
-
-  #game-screen.gameplay-premium .ai-table-reaction--left {
-    top: 0 !important;
-    bottom: auto !important;
-    left: 0 !important;
-    transform: translateY(6px) scale(0.92) !important;
-  }
-
-  #game-screen.gameplay-premium .ai-table-reaction--left.show {
-    animation: gpAiReactionSideTop 520ms cubic-bezier(0.22, 1.18, 0.36, 1) forwards !important;
-  }
-
-  #game-screen.gameplay-premium .ai-table-reaction--center {
-    top: 0 !important;
-    bottom: auto !important;
-    left: 50% !important;
-    transform: translateX(-50%) translateY(6px) scale(0.92) !important;
-  }
-
-  #game-screen.gameplay-premium .ai-table-reaction--center.show {
-    animation: gpAiReactionCenterTop 520ms cubic-bezier(0.22, 1.18, 0.36, 1) forwards !important;
-  }
-
-  #game-screen.gameplay-premium .ai-table-reaction--right {
-    top: 0 !important;
-    bottom: auto !important;
-    right: 0 !important;
-    transform: translateY(6px) scale(0.92) !important;
-  }
-
-  #game-screen.gameplay-premium .ai-table-reaction--right.show {
-    animation: gpAiReactionSideTop 520ms cubic-bezier(0.22, 1.18, 0.36, 1) forwards !important;
   }
 
   #game-screen.gameplay-premium #trick-play {
@@ -1121,6 +1103,7 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
     grid-template-rows:
       var(--gp-mobile-header)
       var(--gp-mobile-opponents)
+      auto
       minmax(0, 1fr)
       var(--gp-mobile-reactions)
       auto
@@ -1373,12 +1356,6 @@ body:has(#game-screen.gameplay-premium:not(.hidden)) .app-shell {
 #game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(2):last-child),
 #game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(3):last-child) {
   overflow: visible !important;
-}
-
-@keyframes gpAiReactionCenterTop {
-  0% { opacity: 0; transform: translateX(-50%) translateY(12px) scale(0.86); }
-  55% { opacity: 1; transform: translateX(-50%) translateY(-2px) scale(1.03); }
-  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
 
 @keyframes gpAiReactionSideTop {
