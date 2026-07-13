@@ -153,7 +153,7 @@
 
   const LEVEL_UP_MASTER_GAIN = 0.96;
   const LANDING_MUSIC_GAIN = 0.3;
-  const VICTORY_MUSIC_GAIN = 0.72;
+  const VICTORY_MUSIC_GAIN = 0.78;
   const LANDING_MUSIC = {
     bpm: 102,
     bar: 0,
@@ -171,17 +171,19 @@
     ]
   };
   const VICTORY_MUSIC = {
-    bpm: 116,
+    bpm: 132,
     bar: 0,
     beat: 0,
     timer: null,
     chords: [
-      { bass: 65.41, arp: [261.63, 329.63, 392, 523.25] },
-      { bass: 49, arp: [196, 246.94, 293.66, 392] },
-      { bass: 55, arp: [220, 261.63, 329.63, 440] },
-      { bass: 43.65, arp: [174.61, 220, 261.63, 349.23] },
-      { bass: 73.42, arp: [293.66, 369.99, 440, 587.33] },
-      { bass: 55, arp: [220, 277.18, 329.63, 440] }
+      { bass: 65.41, lead: [523.25, 659.25, 783.99, 1046.5], sparkle: 1318.51 },
+      { bass: 49, lead: [392, 493.88, 587.33, 783.99], sparkle: 1174.66 },
+      { bass: 43.65, lead: [349.23, 440, 523.25, 698.46], sparkle: 1046.5 },
+      { bass: 49, lead: [392, 493.88, 587.33, 783.99], sparkle: 1174.66 },
+      { bass: 65.41, lead: [523.25, 659.25, 783.99, 1046.5], sparkle: 1567.98 },
+      { bass: 55, lead: [440, 523.25, 659.25, 880], sparkle: 1046.5 },
+      { bass: 43.65, lead: [349.23, 440, 523.25, 698.46], sparkle: 987.77 },
+      { bass: 65.41, lead: [523.25, 659.25, 783.99, 1046.5], sparkle: 2093 }
     ]
   };
 
@@ -1740,14 +1742,23 @@
   }
 
   function playVictoryOpeningFanfare(bus) {
-    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51];
-    notes.forEach((freq, index) => {
-      playTone(freq, 0.22, 'triangle', 0.11 - index * 0.008, index * 0.09, 0, bus);
-      playTone(freq * 0.5, 0.14, 'sine', 0.05, index * 0.09 + 0.02, 0, bus);
+    const fanfare = [
+      { f: 523.25, d: 0.11, w: 0, g: 0.15, type: 'triangle' },
+      { f: 659.25, d: 0.11, w: 0.1, g: 0.15, type: 'triangle' },
+      { f: 783.99, d: 0.11, w: 0.2, g: 0.15, type: 'triangle' },
+      { f: 1046.5, d: 0.34, w: 0.32, g: 0.17, type: 'sine' },
+      { f: 1318.51, d: 0.3, w: 0.48, g: 0.13, type: 'sine' }
+    ];
+    fanfare.forEach(note => playTone(note.f, note.d, note.type, note.g, note.w, 0, bus));
+    playChord([523.25, 659.25, 783.99, 1046.5], 0.48, 'sine', 0.075, 0.52, bus);
+    playChord([659.25, 783.99, 1046.5, 1318.51], 0.4, 'triangle', 0.055, 0.68, bus);
+    [1567.98, 2093, 2637].forEach((freq, index) => {
+      playTone(freq, 0.18, 'sine', 0.048 - index * 0.008, 0.58 + index * 0.07, 0, bus);
     });
-    playChord([523.25, 659.25, 783.99, 1046.5], 0.52, 'sine', 0.055, 0.5, bus);
-    playNoise(0.14, 0.07, 0.48, 4200, bus);
-    playNoise(0.1, 0.05, 0.62, 2800, bus);
+    playTone(1046.5, 0.12, 'square', 0.028, 0.82, 0, bus);
+    playTone(1318.51, 0.14, 'triangle', 0.035, 0.9, 0, bus);
+    playNoise(0.1, 0.06, 0.42, 7200, bus);
+    playNoise(0.08, 0.045, 0.62, 9200, bus);
   }
 
   function tickVictoryMusicBeat() {
@@ -1760,32 +1771,41 @@
 
     const chord = VICTORY_MUSIC.chords[VICTORY_MUSIC.bar % VICTORY_MUSIC.chords.length];
     const beat = VICTORY_MUSIC.beat % 4;
-    const arpIndex = (VICTORY_MUSIC.bar * 4 + beat) % chord.arp.length;
-    const arpNote = chord.arp[arpIndex];
+    const leadIndex = (VICTORY_MUSIC.bar * 4 + beat) % chord.lead.length;
+    const leadNote = chord.lead[leadIndex];
 
     if (beat === 0) {
-      playTone(chord.bass, 0.3, 'sine', 0.09, 0, 0, bus);
-      playTone(chord.bass * 2, 0.14, 'triangle', 0.045, 0.03, 0, bus);
-      playChord(chord.arp.slice(0, 3), 0.55, 'sine', 0.038, 0, bus);
-      playNoise(0.05, 0.022, 0, 5200, bus);
+      playTone(chord.bass, 0.16, 'sine', 0.1, 0, 0, bus);
+      playTone(chord.bass * 2, 0.1, 'triangle', 0.055, 0.02, 0, bus);
+      playChord(chord.lead.slice(0, 3), 0.32, 'sine', 0.048, 0, bus);
+      playNoise(0.04, 0.028, 0, 6800, bus);
     } else if (beat === 2) {
-      playTone(chord.bass, 0.2, 'sine', 0.065, 0, 0, bus);
+      playTone(chord.bass, 0.12, 'sine', 0.078, 0, 0, bus);
+      playTone(chord.bass * 1.5, 0.08, 'triangle', 0.04, 0.01, 0, bus);
     }
 
-    playTone(arpNote, 0.15, 'triangle', 0.052, 0.02, 0, bus);
-    playTone(arpNote * 2, 0.09, 'square', 0.016, 0.02, 0, bus);
+    playTone(leadNote, 0.09, 'sine', 0.062, 0.01, 0, bus);
+    playTone(leadNote * 2, 0.07, 'triangle', 0.028, 0.01, 0, bus);
 
     if (beat === 1 || beat === 3) {
-      playNoise(0.035, 0.026, 0, 6000, bus);
+      playNoise(0.022, 0.034, 0, 7800, bus);
+      playTone(chord.sparkle, 0.07, 'sine', 0.03, 0, 0, bus);
     }
 
     if (beat === 2 && VICTORY_MUSIC.bar % 2 === 0) {
-      playTone(chord.arp[2], 0.18, 'square', 0.032, 0.04, 0, bus);
-      playTone(chord.arp[3] || chord.arp[0] * 2, 0.16, 'triangle', 0.04, 0.16, 0, bus);
+      playTone(chord.lead[1], 0.1, 'square', 0.034, 0.04, 0, bus);
+      playTone(chord.lead[3] || chord.lead[0] * 2, 0.12, 'triangle', 0.042, 0.14, 0, bus);
+    }
+
+    if (beat === 0 && VICTORY_MUSIC.bar % 2 === 1) {
+      playTone(chord.sparkle, 0.11, 'sine', 0.04, 0.04, 0, bus);
+      playTone(chord.sparkle * 1.25, 0.09, 'triangle', 0.03, 0.1, 0, bus);
     }
 
     if (VICTORY_MUSIC.bar % 4 === 3 && beat === 3) {
-      playChord([chord.arp[0], chord.arp[2], chord.arp[3] || chord.arp[1] * 2], 0.3, 'triangle', 0.03, 0.06, bus);
+      chord.lead.forEach((freq, index) => playTone(freq, 0.08, 'triangle', 0.042, index * 0.055, 0, bus));
+      playChord(chord.lead, 0.26, 'sine', 0.038, 0.26, bus);
+      playNoise(0.08, 0.05, 0.22, 8600, bus);
     }
 
     VICTORY_MUSIC.beat += 1;
@@ -1808,7 +1828,7 @@
       if (!audio.victoryMusicActive || !isVictoryOverlayVisible()) return;
       tickVictoryMusicBeat();
       VICTORY_MUSIC.timer = setInterval(tickVictoryMusicBeat, beatMs);
-    }, 780);
+    }, 920);
   }
 
   function playVictoryCelebrationMusic() {
