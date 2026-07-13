@@ -141,9 +141,12 @@
   const audio = {
     context: null,
     master: null,
+    levelUpMaster: null,
     victoryTimer: null,
     levelUpTimer: null
   };
+
+  const LEVEL_UP_MASTER_GAIN = 0.96;
 
   const LEVEL_FANFARE_SCALES = {
     rookie: [392, 440, 494, 523.25, 587.33, 659.25],
@@ -339,6 +342,9 @@
   function saveSoundSettings() {
     try { localStorage.setItem(SOUND_SETTINGS_KEY, JSON.stringify({ soundVolume: state.soundVolume, voiceVolume: state.voiceVolume })); } catch (_) {}
     if (audio.master) audio.master.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * 0.24;
+    if (audio.levelUpMaster) {
+      audio.levelUpMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * LEVEL_UP_MASTER_GAIN;
+    }
     state.voice.peers?.forEach(entry => { if (entry.audio) entry.audio.volume = state.voiceVolume; });
   }
 
@@ -1498,9 +1504,22 @@
     return ctx;
   }
 
-  function playTone(freq, duration, type = 'sine', gain = 0.04, when = 0, detune = 0) {
+  function getLevelUpAudioMaster() {
+    const ctx = getAudioContext();
+    if (!ctx) return null;
+    if (!audio.levelUpMaster) {
+      audio.levelUpMaster = ctx.createGain();
+      audio.levelUpMaster.connect(ctx.destination);
+    }
+    audio.levelUpMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume || 0.72)) * LEVEL_UP_MASTER_GAIN;
+    return audio.levelUpMaster;
+  }
+
+  function playTone(freq, duration, type = 'sine', gain = 0.04, when = 0, detune = 0, output = null) {
     const ctx = getAudioContext();
     if (!ctx || !state.sound) return;
+    const bus = output || audio.master;
+    if (!bus) return;
     const start = ctx.currentTime + when;
     const osc = ctx.createOscillator();
     const amp = ctx.createGain();
@@ -1511,18 +1530,20 @@
     amp.gain.exponentialRampToValueAtTime(gain, start + 0.015);
     amp.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     osc.connect(amp);
-    amp.connect(audio.master);
+    amp.connect(bus);
     osc.start(start);
     osc.stop(start + duration + 0.05);
   }
 
-  function playChord(freqs, duration, type = 'triangle', gain = 0.035, when = 0) {
-    freqs.forEach(freq => playTone(freq, duration, type, gain, when));
+  function playChord(freqs, duration, type = 'triangle', gain = 0.035, when = 0, output = null) {
+    freqs.forEach(freq => playTone(freq, duration, type, gain, when, 0, output));
   }
 
-  function playNoise(duration = 0.08, gain = 0.025, when = 0, filterFreq = 1200) {
+  function playNoise(duration = 0.08, gain = 0.025, when = 0, filterFreq = 1200, output = null) {
     const ctx = getAudioContext();
     if (!ctx || !state.sound) return;
+    const bus = output || audio.master;
+    if (!bus) return;
     const start = ctx.currentTime + when;
     const buffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * duration)), ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -1539,7 +1560,7 @@
     source.buffer = buffer;
     source.connect(filter);
     filter.connect(amp);
-    amp.connect(audio.master);
+    amp.connect(bus);
     source.start(start);
     source.stop(start + duration + 0.02);
   }
@@ -1864,10 +1885,10 @@
       const wave = i % 3 === 0 ? 'triangle' : 'sine';
       melody.push({
         freq: scale[scaleIndex],
-        duration: 0.09 + (i % 4) * 0.025 + (tier.skill === 'master' ? 0.02 : 0),
+        duration: 0.12 + (i % 4) * 0.03 + (tier.skill === 'master' ? 0.03 : 0),
         wave,
-        gain: 0.028 + Math.min(0.02, level * 0.0012),
-        wait: i * (tier.skill === 'legend' ? 0.1 : 0.12)
+        gain: 0.11 + Math.min(0.07, level * 0.0025),
+        wait: i * (tier.skill === 'legend' ? 0.1 : 0.11)
       });
     }
     return melody;
@@ -1880,23 +1901,34 @@
     const tierPromo = crossedSkillTier(levelUp?.previousLevel || level - 1, level);
     unlockAudio().then(ctx => {
       if (!ctx) return;
-      const melody = buildLevelMelody(level);
-      melody.forEach(note => playTone(note.freq, note.duration, note.wave, note.gain, note.wait));
+      const loudBus = getLevelUpAudioMaster();
+      if (!loudBus) return;
+      const scale = LEVEL_FANFARE_SCALES[tier.skill] || LEVEL_FANFARE_SCALES.rookie;
+      const root = scale[0] / 2;
 
-      const tail = melody[melody.length - 1]?.wait || 0;
+      playTone(root, 0.22, 'sine', 0.16, 0, 0, loudBus);
+      playTone(root * 2, 0.18, 'triangle', 0.12, 0.04, 0, loudBus);
+      playNoise(0.14, 0.08, 0.02, 1800, loudBus);
+
+      const melody = buildLevelMelody(level);
+      melody.forEach(note => playTone(note.freq, note.duration, note.wave, note.gain, note.wait + 0.08, 0, loudBus));
+
+      const tail = (melody[melody.length - 1]?.wait || 0) + 0.08;
+      playChord([scale[0], scale[2], scale[Math.min(4, scale.length - 1)]], 0.42, 'triangle', 0.09, tail + 0.06, loudBus);
+
       if (tierPromo) {
-        const scale = LEVEL_FANFARE_SCALES[tier.skill] || LEVEL_FANFARE_SCALES.rookie;
-        playChord([scale[0], scale[2], scale[Math.min(4, scale.length - 1)]], 0.34, 'sine', 0.022, tail + 0.14);
-        playNoise(0.12, 0.028, tail + 0.12, 3000 + level * 20);
+        playChord([scale[0], scale[2], scale[Math.min(4, scale.length - 1)]], 0.48, 'sine', 0.1, tail + 0.22, loudBus);
+        playNoise(0.18, 0.09, tail + 0.18, 3200 + level * 20, loudBus);
       }
 
       if (level === MAX_LEVEL) {
         const legendScale = LEVEL_FANFARE_SCALES.legend;
-        playChord(legendScale.slice(0, 3), 0.48, 'triangle', 0.026, tail + 0.42);
-        playChord(legendScale.slice(2, 5), 0.56, 'sine', 0.02, tail + 0.72);
-        playTone(legendScale[5] || 1975.53, 0.22, 'sine', 0.034, tail + 1.02);
+        playChord(legendScale.slice(0, 3), 0.58, 'triangle', 0.12, tail + 0.5, loudBus);
+        playChord(legendScale.slice(2, 5), 0.66, 'sine', 0.1, tail + 0.82, loudBus);
+        playTone(legendScale[5] || 1975.53, 0.28, 'sine', 0.14, tail + 1.12, 0, loudBus);
+        playNoise(0.22, 0.1, tail + 0.48, 4200, loudBus);
       } else if (levelUp?.kind === 'human') {
-        playTone(1046.5 + level, 0.08, 'sine', 0.018, tail + 0.28);
+        playTone(1046.5 + level, 0.14, 'sine', 0.1, tail + 0.34, 0, loudBus);
       }
     });
   }
