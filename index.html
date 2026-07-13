@@ -37,6 +37,7 @@
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=3" />
   <link rel="stylesheet" href="big2go-session-complete.css?v=1" />
   <link rel="stylesheet" href="big2go-result-story.css?v=1" />
+  <link rel="stylesheet" href="big2go-level-up.css?v=1" />
   <link rel="stylesheet" href="big2go-landing-v3.css?v=21" />
   <link rel="stylesheet" href="big2go-gameplay-premium.css?v=27" />
 </head>
@@ -327,6 +328,49 @@
       </div>
     </section>
 
+    <section class="panel level-up-screen hidden" id="level-up-screen" aria-label="Level up congratulations">
+      <div class="level-up-bg" aria-hidden="true">
+        <div class="level-up-rays"></div>
+        <div class="level-up-star level-up-star--a"></div>
+        <div class="level-up-star level-up-star--b"></div>
+        <div class="level-up-star level-up-star--c"></div>
+        <div class="level-up-star level-up-star--d"></div>
+        <div class="level-up-star level-up-star--e"></div>
+      </div>
+      <div class="level-up-card">
+        <div class="level-up-brand" aria-label="Big2Go">
+          <span class="level-up-brand-mark">B2</span>
+          <strong>Big<span>2Go</span></strong>
+        </div>
+        <p class="level-up-eyebrow" id="level-up-eyebrow">Level Up</p>
+        <h1 class="level-up-title" id="level-up-title">Congratulations!</h1>
+        <p class="level-up-message" id="level-up-message">You reached a new level at the Big2Go table.</p>
+        <div class="level-up-hero">
+          <div class="level-up-avatar-wrap" id="level-up-avatar-wrap">
+            <span class="level-up-avatar-crown" aria-hidden="true">👑</span>
+            <div id="level-up-avatar"></div>
+          </div>
+          <div class="level-up-transition" aria-label="Level progression">
+            <div class="level-up-badge">
+              <small>Previous</small>
+              <strong id="level-up-from">Lv 1</strong>
+            </div>
+            <span class="level-up-arrow" aria-hidden="true">➜</span>
+            <div class="level-up-badge level-up-badge--new">
+              <small>New Level</small>
+              <strong id="level-up-to">Lv 2</strong>
+            </div>
+          </div>
+        </div>
+        <div class="level-up-milestone hidden" id="level-up-milestone">⭐ First Promotion</div>
+        <div class="level-up-stats" id="level-up-stats"></div>
+        <p class="level-up-quote hidden" id="level-up-quote"></p>
+        <div class="level-up-actions">
+          <button type="button" class="primary" id="level-up-continue">Continue</button>
+        </div>
+      </div>
+    </section>
+
     <div class="voice-panel hidden" id="voice-panel" aria-label="Voice chat controls">
       <button type="button" class="voice-btn mic muted" id="voice-mic-button" aria-pressed="false" aria-label="Turn microphone on">🎤</button>
       <button type="button" class="voice-btn speaker" id="voice-speaker-button" aria-pressed="true" aria-label="Toggle speaker">🔊</button>
@@ -357,6 +401,6 @@
 
   <script src="aiCharacters.js?v=6" defer></script>
   <script src="aiReactions.js?v=5" defer></script>
-  <script src="game.js?v=78" defer></script>
+  <script src="game.js?v=79" defer></script>
 </body>
 </html>

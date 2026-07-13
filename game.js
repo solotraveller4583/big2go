@@ -93,6 +93,7 @@
       farewellSnapshot: []
     },
     lastMatchStory: null,
+    pendingVictoryReveal: null,
     voice: {
       enabled: false,
       micMuted: true,
@@ -134,6 +135,17 @@
     resultStoryFarewells: document.querySelector('#result-story-farewells'),
     resultStoryHome: document.querySelector('#result-story-home'),
     resultStoryPlayAgain: document.querySelector('#result-story-play-again'),
+    levelUp: document.querySelector('#level-up-screen'),
+    levelUpEyebrow: document.querySelector('#level-up-eyebrow'),
+    levelUpTitle: document.querySelector('#level-up-title'),
+    levelUpMessage: document.querySelector('#level-up-message'),
+    levelUpAvatar: document.querySelector('#level-up-avatar'),
+    levelUpFrom: document.querySelector('#level-up-from'),
+    levelUpTo: document.querySelector('#level-up-to'),
+    levelUpMilestone: document.querySelector('#level-up-milestone'),
+    levelUpStats: document.querySelector('#level-up-stats'),
+    levelUpQuote: document.querySelector('#level-up-quote'),
+    levelUpContinue: document.querySelector('#level-up-continue'),
     exitConfirmDialog: document.querySelector('#exit-confirm-dialog'),
     playerCount: document.querySelector('#player-count'),
     start: document.querySelector('#start-button'),
@@ -487,7 +499,8 @@
     els.game?.classList.add('hidden');
     els.sessionComplete?.classList.add('hidden');
     els.resultStory?.classList.add('hidden');
-    document.body.classList.remove('live-room-active', 'result-story-active', 'session-complete-active');
+    els.levelUp?.classList.add('hidden');
+    document.body.classList.remove('live-room-active', 'result-story-active', 'session-complete-active', 'level-up-active');
     els.voicePanel?.classList.add('hidden');
   }
 
@@ -620,6 +633,8 @@
   }
 
   function goBackToHomeFromVictory() {
+    state.pendingVictoryReveal = null;
+    dismissLevelUpScreen();
     finalizeFinishedMatch();
     resetPlaySession();
     state.lastMatchStory = null;
@@ -628,6 +643,8 @@
   }
 
   function showGameResultStoryFromVictory() {
+    state.pendingVictoryReveal = null;
+    dismissLevelUpScreen();
     if (!state.lastMatchStory) {
       const prize = state.playSession.coinsEarned || state.coins.prizePool || 0;
       state.lastMatchStory = captureMatchStory(state.playSession.lastWinner, prize);
@@ -1048,7 +1065,13 @@
       savePlayerProfile(profile);
       renderPlayerProfileHud();
       return profile.level > previousLevel
-        ? { kind: 'human', level: profile.level, name: 'You' }
+        ? {
+            kind: 'human',
+            level: profile.level,
+            previousLevel,
+            name: 'You',
+            totalWins: profile.totalWins
+          }
         : null;
     }
     if (winner.characterId) {
@@ -1058,7 +1081,14 @@
       profile.level = computeProfileLevel(profile.totalWins);
       saveAiProfile(winner.characterId, profile);
       return profile.level > previousLevel
-        ? { kind: 'ai', level: profile.level, name: winner.name, characterId: winner.characterId }
+        ? {
+            kind: 'ai',
+            level: profile.level,
+            previousLevel,
+            name: winner.name,
+            characterId: winner.characterId,
+            totalWins: profile.totalWins
+          }
         : null;
     }
     return null;
@@ -1692,6 +1722,129 @@
     state.logs = [];
   }
 
+  function dismissLevelUpScreen() {
+    els.levelUp?.classList.add('hidden');
+    document.body.classList.remove('level-up-active');
+  }
+
+  function getLevelUpCopy(levelUp) {
+    const isHuman = levelUp.kind === 'human';
+    const isFirstPromotion = levelUp.previousLevel === 1 && levelUp.level === 2;
+    if (isHuman && isFirstPromotion) {
+      return {
+        eyebrow: 'First Promotion',
+        title: 'Congratulations!',
+        message: 'You earned your stripes at the Big2Go table. Level 2 unlocked — rivals will take you more seriously now.',
+        quote: '"Twenty wins. The lanterns burn brighter when you rise."',
+        milestone: true
+      };
+    }
+    if (isHuman) {
+      return {
+        eyebrow: 'Level Up',
+        title: 'Congratulations!',
+        message: `You climbed to Level ${levelUp.level}. Keep winning to unlock even tougher tables.`,
+        quote: '"Every win sharpens your edge at the arena."',
+        milestone: false
+      };
+    }
+    if (levelUp.previousLevel === 1 && levelUp.level === 2) {
+      return {
+        eyebrow: 'Rival Promotion',
+        title: `${levelUp.name} leveled up!`,
+        message: `${levelUp.name} just reached Level 2. This rival is growing stronger — rematch them soon.`,
+        quote: '"Watch out… I am just getting warmed up."',
+        milestone: true
+      };
+    }
+    return {
+      eyebrow: 'Rival Promotion',
+      title: `${levelUp.name} leveled up!`,
+      message: `${levelUp.name} reached Level ${levelUp.level}. The competition at Big2Go keeps heating up.`,
+      quote: '"Next table, I play even harder."',
+      milestone: false
+    };
+  }
+
+  function renderLevelUpScreen(levelUp) {
+    if (!levelUp) return;
+    const copy = getLevelUpCopy(levelUp);
+    const progress = getProfileProgress(levelUp.totalWins || 0);
+    const winsToNext = Math.max(0, progress.target - progress.current);
+
+    if (els.levelUpEyebrow) els.levelUpEyebrow.textContent = copy.eyebrow;
+    if (els.levelUpTitle) els.levelUpTitle.textContent = copy.title;
+    if (els.levelUpMessage) els.levelUpMessage.textContent = copy.message;
+    if (els.levelUpFrom) els.levelUpFrom.textContent = `Lv ${levelUp.previousLevel}`;
+    if (els.levelUpTo) els.levelUpTo.textContent = `Lv ${levelUp.level}`;
+
+    if (els.levelUpMilestone) {
+      els.levelUpMilestone.classList.toggle('hidden', !copy.milestone);
+      els.levelUpMilestone.textContent = levelUp.kind === 'human' ? '⭐ First Promotion' : '⭐ Rival Milestone';
+    }
+
+    if (els.levelUpQuote) {
+      els.levelUpQuote.textContent = copy.quote;
+      els.levelUpQuote.classList.remove('hidden');
+    }
+
+    if (els.levelUpAvatar) {
+      els.levelUpAvatar.innerHTML = '';
+      if (levelUp.kind === 'human') {
+        const fallback = document.createElement('span');
+        fallback.className = 'level-up-avatar-fallback';
+        fallback.textContent = 'Y';
+        els.levelUpAvatar.appendChild(fallback);
+      } else {
+        const character = window.Big2GoAICharacters?.getById?.(levelUp.characterId)
+          || { characterId: levelUp.characterId, name: levelUp.name };
+        window.Big2GoAICharacters?.renderAvatar(els.levelUpAvatar, character, {
+          className: 'character-avatar',
+          imgClassName: 'character-avatar-img'
+        });
+      }
+    }
+
+    if (els.levelUpStats) {
+      const subject = levelUp.kind === 'human' ? 'Your Wins' : `${levelUp.name} Wins`;
+      els.levelUpStats.innerHTML = `
+        <div class="level-up-stat">
+          <small>${subject}</small>
+          <strong>${levelUp.totalWins || 0}</strong>
+        </div>
+        <div class="level-up-stat">
+          <small>New Level</small>
+          <strong>Lv ${levelUp.level}</strong>
+        </div>
+        <div class="level-up-stat level-up-stat--wide">
+          <small>Next Level In</small>
+          <strong>${winsToNext} more win${winsToNext === 1 ? '' : 's'}</strong>
+        </div>`;
+    }
+  }
+
+  function showLevelUpScreen(levelUp) {
+    hideAllScreens();
+    renderLevelUpScreen(levelUp);
+    els.levelUp?.classList.remove('hidden');
+    document.body.classList.add('level-up-active');
+    window.scrollTo(0, 0);
+    playUiSound('win');
+    if (levelUp.kind === 'human') renderConfetti(52);
+  }
+
+  function continueFromLevelUp() {
+    const pending = state.pendingVictoryReveal;
+    dismissLevelUpScreen();
+    state.pendingVictoryReveal = null;
+    if (!pending) return;
+    showGameScreen();
+    if (pending.winner?.isHuman) renderConfetti(56);
+    showVictoryCelebration(pending.winner, pending.coinPrize, null);
+    render();
+    playUiSound('click');
+  }
+
   function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0, levelUp = null) {
     const existing = document.querySelector('#victory-overlay');
     if (existing) existing.remove();
@@ -1770,13 +1923,6 @@
       : `<div class="reward-line">Good Game! -🪙 ${ENTRY_FEE_COINS}</div><div class="reward-line">These are entertainment coins only — rematch anytime</div>`;
 
     let levelUpPanel = null;
-    if (levelUp) {
-      levelUpPanel = document.createElement('div');
-      levelUpPanel.className = 'victory-level-up';
-      levelUpPanel.textContent = levelUp.kind === 'human'
-        ? `⬆️ Level Up! You reached Level ${levelUp.level}`
-        : `⬆️ ${levelUp.name} reached Level ${levelUp.level}`;
-    }
 
     const actions = document.createElement('div');
     actions.className = 'victory-actions';
@@ -1851,10 +1997,15 @@
     const levelUp = recordProfileWin(winner);
     state.lastMatchStory = captureMatchStory(winner, coinPrize);
     if (!state.liveRoom?.code) saveCoinBalance();
-    renderConfetti(winner.isHuman ? 56 : 42);
     playUiSound(winner.isHuman ? 'win' : 'pass');
     window.Big2GoAIReactions?.onVictory(winner, state);
-    showVictoryCelebration(winner, coinPrize, levelUp);
+    if (levelUp) {
+      state.pendingVictoryReveal = { winner, coinPrize };
+      showLevelUpScreen(levelUp);
+    } else {
+      renderConfetti(winner.isHuman ? 56 : 42);
+      showVictoryCelebration(winner, coinPrize, null);
+    }
     render();
   }
 
@@ -4091,6 +4242,7 @@
       state.lastMatchStory = null;
       newGame();
     });
+    els.levelUpContinue?.addEventListener('click', () => continueFromLevelUp());
     els.sound.addEventListener('click', () => {
       state.sound = !state.sound;
       els.sound.textContent = state.sound ? '🔊' : '🔇';
