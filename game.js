@@ -117,6 +117,7 @@
     },
     lastMatchStory: null,
     pendingVictoryReveal: null,
+    levelUpFxTimers: [],
     voice: {
       enabled: false,
       micMuted: true,
@@ -140,7 +141,22 @@
   const audio = {
     context: null,
     master: null,
-    victoryTimer: null
+    victoryTimer: null,
+    levelUpTimer: null
+  };
+
+  const LEVEL_FANFARE_SCALES = {
+    rookie: [392, 440, 494, 523.25, 587.33, 659.25],
+    strategist: [523.25, 587.33, 659.25, 698.46, 783.99, 880],
+    master: [659.25, 783.99, 880, 987.77, 1046.5, 1174.66],
+    legend: [783.99, 987.77, 1174.66, 1318.51, 1567.98, 1975.53]
+  };
+
+  const LEVEL_CONFETTI_PALETTES = {
+    rookie: ['#7ad7ff', '#63f0b0', '#ffd86b', '#9ed0ff', '#8ef5c8'],
+    strategist: ['#ffd24a', '#ff9f43', '#ffe68f', '#ffb347', '#fff0b8'],
+    master: ['#ff6bcb', '#b59cff', '#ffd24a', '#ff8ad8', '#d8b4ff'],
+    legend: ['#ffd700', '#fff4b0', '#ff9f1c', '#ffe566', '#ffffff']
   };
 
   const els = {
@@ -170,6 +186,7 @@
     levelUpQuote: document.querySelector('#level-up-quote'),
     levelUpTier: document.querySelector('#level-up-tier'),
     levelUpSkill: document.querySelector('#level-up-skill'),
+    levelUpFxLayer: document.querySelector('#level-up-fx-layer'),
     levelUpContinue: document.querySelector('#level-up-continue'),
     exitConfirmDialog: document.querySelector('#exit-confirm-dialog'),
     playerCount: document.querySelector('#player-count'),
@@ -902,13 +919,13 @@
     els.heatText.textContent = note || (state.heat >= 80 ? 'The Big2Go crowd is roaring.' : state.heat >= 50 ? 'The Big2Go crowd is leaning in.' : 'The Big2Go crowd is waiting for a spark.');
   }
 
-  function renderConfetti(intensity = 12) {
+  function renderConfetti(intensity = 12, palette = null) {
     if (!state.confettiLayer) {
       state.confettiLayer = document.createElement('div');
       state.confettiLayer.className = 'confetti-layer';
       document.body.appendChild(state.confettiLayer);
     }
-    const colors = ['#45d6ff', '#ff5fb8', '#63f0b0', '#ffd86b', '#7a59ff'];
+    const colors = palette || ['#45d6ff', '#ff5fb8', '#63f0b0', '#ffd86b', '#7a59ff'];
     for (let i = 0; i < intensity; i++) {
       const bit = document.createElement('span');
       bit.className = 'confetti-bit';
@@ -1800,8 +1817,176 @@
   }
 
   function dismissLevelUpScreen() {
+    clearLevelUpCelebration();
     els.levelUp?.classList.add('hidden');
     document.body.classList.remove('level-up-active');
+  }
+
+  function clearLevelUpCelebration() {
+    if (audio.levelUpTimer) {
+      clearTimeout(audio.levelUpTimer);
+      audio.levelUpTimer = null;
+    }
+    state.levelUpFxTimers.forEach(timer => clearTimeout(timer));
+    state.levelUpFxTimers = [];
+    if (els.levelUp) {
+      els.levelUp.classList.remove('is-celebrating', 'level-up-screen--tier-promo', 'level-up-screen--legend');
+      els.levelUp.removeAttribute('data-level');
+      els.levelUp.removeAttribute('data-tier');
+      els.levelUp.style.removeProperty('--level-up-hue');
+    }
+    if (els.levelUpFxLayer) els.levelUpFxLayer.innerHTML = '';
+  }
+
+  function getLevelCelebrationStyle(levelUp) {
+    const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(levelUp?.level) || STARTING_LEVEL));
+    const tier = levelUp?.tier || getLevelTier(level);
+    const tierPromo = crossedSkillTier(levelUp?.previousLevel || level - 1, level);
+    return {
+      level,
+      tier,
+      tierPromo,
+      palette: LEVEL_CONFETTI_PALETTES[tier.skill] || LEVEL_CONFETTI_PALETTES.rookie,
+      confettiIntensity: Math.min(88, 24 + level * 2 + (tierPromo ? 14 : 0)),
+      burstCount: Math.min(14, 5 + Math.floor(level / 2) + (tierPromo ? 3 : 0)),
+      ringCount: tier.skill === 'legend' ? 4 : tier.skill === 'master' ? 3 : tier.skill === 'strategist' ? 2 : 1,
+      hue: ((level - 1) * 12) % 360
+    };
+  }
+
+  function buildLevelMelody(level) {
+    const tier = getLevelTier(level);
+    const scale = LEVEL_FANFARE_SCALES[tier.skill] || LEVEL_FANFARE_SCALES.rookie;
+    const noteCount = Math.min(10, 3 + Math.floor(level / 3) + (tier.skill === 'legend' ? 2 : 0));
+    const melody = [];
+    for (let i = 0; i < noteCount; i += 1) {
+      const scaleIndex = (i * ((level % 4) + 1) + (level % scale.length)) % scale.length;
+      const wave = i % 3 === 0 ? 'triangle' : 'sine';
+      melody.push({
+        freq: scale[scaleIndex],
+        duration: 0.09 + (i % 4) * 0.025 + (tier.skill === 'master' ? 0.02 : 0),
+        wave,
+        gain: 0.028 + Math.min(0.02, level * 0.0012),
+        wait: i * (tier.skill === 'legend' ? 0.1 : 0.12)
+      });
+    }
+    return melody;
+  }
+
+  function playLevelUpFanfare(levelUp) {
+    if (!state.sound) return;
+    const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(levelUp?.level) || STARTING_LEVEL));
+    const tier = getLevelTier(level);
+    const tierPromo = crossedSkillTier(levelUp?.previousLevel || level - 1, level);
+    unlockAudio().then(ctx => {
+      if (!ctx) return;
+      const melody = buildLevelMelody(level);
+      melody.forEach(note => playTone(note.freq, note.duration, note.wave, note.gain, note.wait));
+
+      const tail = melody[melody.length - 1]?.wait || 0;
+      if (tierPromo) {
+        const scale = LEVEL_FANFARE_SCALES[tier.skill] || LEVEL_FANFARE_SCALES.rookie;
+        playChord([scale[0], scale[2], scale[Math.min(4, scale.length - 1)]], 0.34, 'sine', 0.022, tail + 0.14);
+        playNoise(0.12, 0.028, tail + 0.12, 3000 + level * 20);
+      }
+
+      if (level === MAX_LEVEL) {
+        const legendScale = LEVEL_FANFARE_SCALES.legend;
+        playChord(legendScale.slice(0, 3), 0.48, 'triangle', 0.026, tail + 0.42);
+        playChord(legendScale.slice(2, 5), 0.56, 'sine', 0.02, tail + 0.72);
+        playTone(legendScale[5] || 1975.53, 0.22, 'sine', 0.034, tail + 1.02);
+      } else if (levelUp?.kind === 'human') {
+        playTone(1046.5 + level, 0.08, 'sine', 0.018, tail + 0.28);
+      }
+    });
+  }
+
+  function scheduleLevelUpFx(callback, delay) {
+    const timer = setTimeout(callback, delay);
+    state.levelUpFxTimers.push(timer);
+    return timer;
+  }
+
+  function spawnLevelUpBurst(style) {
+    if (!els.levelUpFxLayer) return;
+    const burst = document.createElement('div');
+    burst.className = 'level-up-burst';
+    burst.style.setProperty('--burst-hue', `${style.hue}deg`);
+    burst.style.setProperty('--burst-size', `${120 + style.level * 6}px`);
+    els.levelUpFxLayer.appendChild(burst);
+    scheduleLevelUpFx(() => burst.remove(), 1200);
+  }
+
+  function spawnLevelUpRing(style, index = 0) {
+    if (!els.levelUpFxLayer) return;
+    const ring = document.createElement('div');
+    ring.className = 'level-up-ring';
+    ring.style.setProperty('--ring-hue', `${(style.hue + index * 28) % 360}deg`);
+    ring.style.setProperty('--ring-delay', `${index * 0.12}s`);
+    els.levelUpFxLayer.appendChild(ring);
+    scheduleLevelUpFx(() => ring.remove(), 1400 + index * 120);
+  }
+
+  function spawnLevelUpSpark(style) {
+    if (!els.levelUpFxLayer) return;
+    const spark = document.createElement('span');
+    spark.className = 'level-up-spark';
+    spark.style.setProperty('--sx', `${8 + Math.random() * 84}%`);
+    spark.style.setProperty('--sy', `${10 + Math.random() * 72}%`);
+    spark.style.setProperty('--spark-hue', `${style.hue}deg`);
+    spark.style.setProperty('--spark-dx', `${(Math.random() - 0.5) * 180}px`);
+    spark.style.setProperty('--spark-dy', `${(Math.random() - 0.5) * 180}px`);
+    els.levelUpFxLayer.appendChild(spark);
+    scheduleLevelUpFx(() => spark.remove(), 900 + Math.random() * 500);
+  }
+
+  function spawnLevelUpEmoji(style) {
+    if (!els.levelUpFxLayer || !style.tierPromo) return;
+    const emoji = document.createElement('span');
+    emoji.className = 'level-up-emoji-burst';
+    emoji.textContent = style.tier.emoji;
+    emoji.style.setProperty('--ex', `${15 + Math.random() * 70}%`);
+    emoji.style.setProperty('--ey', `${12 + Math.random() * 58}%`);
+    els.levelUpFxLayer.appendChild(emoji);
+    scheduleLevelUpFx(() => emoji.remove(), 1400);
+  }
+
+  function playLevelUpCelebration(levelUp) {
+    const style = getLevelCelebrationStyle(levelUp);
+    if (!els.levelUp) return;
+    clearLevelUpCelebration();
+
+    els.levelUp.dataset.level = String(style.level);
+    els.levelUp.dataset.tier = style.tier.skill;
+    els.levelUp.style.setProperty('--level-up-hue', `${style.hue}deg`);
+    els.levelUp.classList.add('is-celebrating');
+    if (style.tierPromo) els.levelUp.classList.add('level-up-screen--tier-promo');
+    if (style.level >= MAX_LEVEL) els.levelUp.classList.add('level-up-screen--legend');
+
+    playLevelUpFanfare(levelUp);
+    renderConfetti(style.confettiIntensity, style.palette);
+
+    for (let i = 0; i < style.ringCount; i += 1) {
+      scheduleLevelUpFx(() => spawnLevelUpRing(style, i), i * 140);
+    }
+    for (let i = 0; i < style.burstCount; i += 1) {
+      scheduleLevelUpFx(() => spawnLevelUpBurst(style), 80 + i * 90);
+    }
+    for (let i = 0; i < style.burstCount * 2; i += 1) {
+      scheduleLevelUpFx(() => spawnLevelUpSpark(style), 40 + i * 55);
+    }
+    for (let i = 0; i < (style.tierPromo ? 6 : 2); i += 1) {
+      scheduleLevelUpFx(() => spawnLevelUpEmoji(style), 180 + i * 160);
+    }
+
+    scheduleLevelUpFx(() => {
+      renderConfetti(Math.floor(style.confettiIntensity * 0.45), style.palette);
+    }, 520);
+
+    audio.levelUpTimer = scheduleLevelUpFx(() => {
+      els.levelUp?.classList.remove('is-celebrating');
+      audio.levelUpTimer = null;
+    }, style.level >= MAX_LEVEL ? 2200 : 1600);
   }
 
   function getSkillUpgradeCopy(tier) {
@@ -1987,8 +2172,7 @@
     els.levelUp?.classList.remove('hidden');
     document.body.classList.add('level-up-active');
     window.scrollTo(0, 0);
-    playUiSound('win');
-    if (levelUp.kind === 'human') renderConfetti(52);
+    playLevelUpCelebration(levelUp);
   }
 
   function continueFromLevelUp() {
