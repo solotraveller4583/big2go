@@ -144,12 +144,15 @@
     levelUpMaster: null,
     landingMusicMaster: null,
     landingMusicActive: false,
+    victoryMusicMaster: null,
+    victoryMusicActive: false,
     victoryTimer: null,
     levelUpTimer: null
   };
 
   const LEVEL_UP_MASTER_GAIN = 0.96;
   const LANDING_MUSIC_GAIN = 0.3;
+  const VICTORY_MUSIC_GAIN = 0.72;
   const LANDING_MUSIC = {
     bpm: 102,
     bar: 0,
@@ -164,6 +167,20 @@
       { bass: 55, arp: [220, 277.18, 329.63, 440] },
       { bass: 41.2, arp: [164.81, 207.65, 261.63, 329.63] },
       { bass: 65.41, arp: [130.81, 196, 261.63, 392] }
+    ]
+  };
+  const VICTORY_MUSIC = {
+    bpm: 116,
+    bar: 0,
+    beat: 0,
+    timer: null,
+    chords: [
+      { bass: 65.41, arp: [261.63, 329.63, 392, 523.25] },
+      { bass: 49, arp: [196, 246.94, 293.66, 392] },
+      { bass: 55, arp: [220, 261.63, 329.63, 440] },
+      { bass: 43.65, arp: [174.61, 220, 261.63, 349.23] },
+      { bass: 73.42, arp: [293.66, 369.99, 440, 587.33] },
+      { bass: 55, arp: [220, 277.18, 329.63, 440] }
     ]
   };
 
@@ -367,6 +384,9 @@
     if (audio.landingMusicMaster) {
       audio.landingMusicMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * LANDING_MUSIC_GAIN;
     }
+    if (audio.victoryMusicMaster) {
+      audio.victoryMusicMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * VICTORY_MUSIC_GAIN;
+    }
     state.voice.peers?.forEach(entry => { if (entry.audio) entry.audio.volume = state.voiceVolume; });
   }
 
@@ -560,6 +580,7 @@
 
   function showGameScreen() {
     stopLandingMusic();
+    stopVictoryMusic();
     hideAllScreens();
     els.game?.classList.remove('hidden');
     document.body.classList.toggle('live-room-active', Boolean(state.liveRoom?.code));
@@ -708,6 +729,7 @@
   }
 
   function goBackToHomeFromVictory() {
+    stopVictoryMusic();
     state.pendingVictoryReveal = null;
     dismissLevelUpScreen();
     finalizeFinishedMatch();
@@ -718,6 +740,7 @@
   }
 
   function showGameResultStoryFromVictory() {
+    stopVictoryMusic();
     state.pendingVictoryReveal = null;
     dismissLevelUpScreen();
     if (!state.lastMatchStory) {
@@ -1649,6 +1672,119 @@
     });
   }
 
+  function isVictoryOverlayVisible() {
+    return Boolean(document.querySelector('#victory-overlay'));
+  }
+
+  function getVictoryMusicMaster() {
+    const ctx = getAudioContext();
+    if (!ctx) return null;
+    if (!audio.victoryMusicMaster) {
+      audio.victoryMusicMaster = ctx.createGain();
+      audio.victoryMusicMaster.connect(ctx.destination);
+    }
+    audio.victoryMusicMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume || 0.72)) * VICTORY_MUSIC_GAIN;
+    return audio.victoryMusicMaster;
+  }
+
+  function stopVictoryMusic() {
+    if (VICTORY_MUSIC.timer) {
+      clearInterval(VICTORY_MUSIC.timer);
+      VICTORY_MUSIC.timer = null;
+    }
+    if (audio.victoryTimer) {
+      clearTimeout(audio.victoryTimer);
+      audio.victoryTimer = null;
+    }
+    audio.victoryMusicActive = false;
+    VICTORY_MUSIC.bar = 0;
+    VICTORY_MUSIC.beat = 0;
+  }
+
+  function playVictoryOpeningFanfare(bus) {
+    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51];
+    notes.forEach((freq, index) => {
+      playTone(freq, 0.22, 'triangle', 0.11 - index * 0.008, index * 0.09, 0, bus);
+      playTone(freq * 0.5, 0.14, 'sine', 0.05, index * 0.09 + 0.02, 0, bus);
+    });
+    playChord([523.25, 659.25, 783.99, 1046.5], 0.52, 'sine', 0.055, 0.5, bus);
+    playNoise(0.14, 0.07, 0.48, 4200, bus);
+    playNoise(0.1, 0.05, 0.62, 2800, bus);
+  }
+
+  function tickVictoryMusicBeat() {
+    if (!audio.victoryMusicActive || !state.sound || !isVictoryOverlayVisible() || !isAudioContextRunning()) {
+      stopVictoryMusic();
+      return;
+    }
+    const bus = getVictoryMusicMaster();
+    if (!bus) return;
+
+    const chord = VICTORY_MUSIC.chords[VICTORY_MUSIC.bar % VICTORY_MUSIC.chords.length];
+    const beat = VICTORY_MUSIC.beat % 4;
+    const arpIndex = (VICTORY_MUSIC.bar * 4 + beat) % chord.arp.length;
+    const arpNote = chord.arp[arpIndex];
+
+    if (beat === 0) {
+      playTone(chord.bass, 0.3, 'sine', 0.09, 0, 0, bus);
+      playTone(chord.bass * 2, 0.14, 'triangle', 0.045, 0.03, 0, bus);
+      playChord(chord.arp.slice(0, 3), 0.55, 'sine', 0.038, 0, bus);
+      playNoise(0.05, 0.022, 0, 5200, bus);
+    } else if (beat === 2) {
+      playTone(chord.bass, 0.2, 'sine', 0.065, 0, 0, bus);
+    }
+
+    playTone(arpNote, 0.15, 'triangle', 0.052, 0.02, 0, bus);
+    playTone(arpNote * 2, 0.09, 'square', 0.016, 0.02, 0, bus);
+
+    if (beat === 1 || beat === 3) {
+      playNoise(0.035, 0.026, 0, 6000, bus);
+    }
+
+    if (beat === 2 && VICTORY_MUSIC.bar % 2 === 0) {
+      playTone(chord.arp[2], 0.18, 'square', 0.032, 0.04, 0, bus);
+      playTone(chord.arp[3] || chord.arp[0] * 2, 0.16, 'triangle', 0.04, 0.16, 0, bus);
+    }
+
+    if (VICTORY_MUSIC.bar % 4 === 3 && beat === 3) {
+      playChord([chord.arp[0], chord.arp[2], chord.arp[3] || chord.arp[1] * 2], 0.3, 'triangle', 0.03, 0.06, bus);
+    }
+
+    VICTORY_MUSIC.beat += 1;
+    if (VICTORY_MUSIC.beat >= 4) {
+      VICTORY_MUSIC.beat = 0;
+      VICTORY_MUSIC.bar += 1;
+    }
+  }
+
+  function beginVictoryMusicLoop() {
+    if (audio.victoryMusicActive || !state.sound || !isVictoryOverlayVisible() || !isAudioContextRunning()) return;
+    stopVictoryMusic();
+    const bus = getVictoryMusicMaster();
+    if (!bus) return;
+    audio.victoryMusicActive = true;
+    playVictoryOpeningFanfare(bus);
+    const beatMs = Math.round(60000 / VICTORY_MUSIC.bpm);
+    audio.victoryTimer = setTimeout(() => {
+      audio.victoryTimer = null;
+      if (!audio.victoryMusicActive || !isVictoryOverlayVisible()) return;
+      tickVictoryMusicBeat();
+      VICTORY_MUSIC.timer = setInterval(tickVictoryMusicBeat, beatMs);
+    }, 780);
+  }
+
+  function playVictoryCelebrationMusic() {
+    if (!state.sound || !isVictoryOverlayVisible()) return;
+    if (isAudioContextRunning()) {
+      beginVictoryMusicLoop();
+      return;
+    }
+    unlockAudio().then(ctx => {
+      if (!ctx || !isVictoryOverlayVisible()) return;
+      beginVictoryMusicLoop();
+    });
+  }
+
   function getLevelUpAudioMaster() {
     const ctx = getAudioContext();
     if (!ctx) return null;
@@ -2504,6 +2640,7 @@
     card.appendChild(actions);
     overlay.appendChild(card);
     document.body.appendChild(overlay);
+    if (winner?.isHuman && !state.liveRoom?.code) playVictoryCelebrationMusic();
   }
 
   function announceVictory(winner) {
@@ -2518,7 +2655,9 @@
     const levelUp = recordProfileWin(winner);
     state.lastMatchStory = captureMatchStory(winner, coinPrize);
     if (!state.liveRoom?.code) saveCoinBalance();
-    playUiSound(winner.isHuman ? 'win' : 'pass');
+    if (!(winner.isHuman && !state.liveRoom?.code)) {
+      playUiSound(winner.isHuman ? 'win' : 'pass');
+    }
     window.Big2GoAIReactions?.onVictory(winner, state);
     if (levelUp) {
       state.pendingVictoryReveal = { winner, coinPrize };
@@ -2590,6 +2729,7 @@
     state.liveRoom = null;
     stopRoomPolling();
     cancelAiTimer();
+    stopVictoryMusic();
     document.querySelector('#victory-overlay')?.remove();
     const aiCast = assembleSoloAiCast(count);
     createPlayers(count, aiCast);
