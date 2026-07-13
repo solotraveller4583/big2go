@@ -392,7 +392,6 @@
       audio.victoryMusicMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * VICTORY_MUSIC_GAIN;
     }
     state.voice.peers?.forEach(entry => { if (entry.audio) entry.audio.volume = state.voiceVolume; });
-    if (state.sound && isLandingScreenVisible()) ensureLandingMusicPlaying();
   }
 
   function nextSortMode() {
@@ -1520,19 +1519,17 @@
 
   function playShuffleSound() {
     if (!state.sound) return;
-    unlockAudio().then(ctx => {
-      if (!ctx) return;
-      for (let i = 0; i < 11; i += 1) {
-        playNoise(
-          0.024 + Math.random() * 0.014,
-          0.016 + Math.random() * 0.01,
-          i * 0.028,
-          2600 - i * 110 + Math.random() * 80
-        );
-      }
-      playTone(220, 0.07, 'triangle', 0.022, 0.32);
-      playTone(329.63, 0.09, 'sine', 0.018, 0.38);
-    });
+    if (!unlockAudioFromGesture()) return;
+    for (let i = 0; i < 11; i += 1) {
+      playNoise(
+        0.024 + Math.random() * 0.014,
+        0.016 + Math.random() * 0.01,
+        i * 0.028,
+        2600 - i * 110 + Math.random() * 80
+      );
+    }
+    playTone(220, 0.07, 'triangle', 0.022, 0.32);
+    playTone(329.63, 0.09, 'sine', 0.018, 0.38);
   }
 
   function getAudioContext() {
@@ -1579,14 +1576,25 @@
     } catch (_) {}
   }
 
-  async function unlockAudio() {
+  function unlockAudioFromGesture() {
     if (!state.sound) return null;
     const ctx = getAudioContext();
     if (!ctx) return null;
     if (ctx.state === 'suspended') {
+      primeAudioContextFromGesture(ctx);
+      const resumeTask = ctx.resume();
+      if (resumeTask && typeof resumeTask.catch === 'function') resumeTask.catch(() => {});
+    }
+    return ctx;
+  }
+
+  async function unlockAudio() {
+    const ctx = unlockAudioFromGesture();
+    if (!ctx) return null;
+    if (ctx.state === 'suspended') {
       try { await ctx.resume(); } catch (_) {}
     }
-    return ctx.state === 'running' ? ctx : null;
+    return ctx;
   }
 
   function isAudioContextRunning() {
@@ -1605,21 +1613,16 @@
 
   function primeLandingMusicFromGesture() {
     if (!state.sound || !isLandingScreenVisible()) return;
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'running') {
+    if (!unlockAudioFromGesture()) return;
+    if (isAudioContextRunning()) {
       beginLandingMusicLoop();
       return;
     }
-    if (ctx.state === 'suspended') {
-      primeAudioContextFromGesture(ctx);
-      const resumeTask = ctx.resume();
-      if (resumeTask && typeof resumeTask.then === 'function') {
-        resumeTask.then(() => {
-          if (isAudioContextRunning() && isLandingScreenVisible()) beginLandingMusicLoop();
-        }).catch(() => {});
-      }
-      if (ctx.state === 'running') beginLandingMusicLoop();
+    const ctx = audio.context;
+    if (ctx?.state === 'suspended') {
+      ctx.resume().then(() => {
+        if (isAudioContextRunning() && isLandingScreenVisible()) beginLandingMusicLoop();
+      }).catch(() => {});
     }
   }
 
@@ -1818,6 +1821,7 @@
 
   function playVictoryCelebrationMusic() {
     if (!state.sound || !isVictoryOverlayVisible()) return;
+    unlockAudioFromGesture();
     if (isAudioContextRunning()) {
       beginVictoryMusicLoop();
       return;
@@ -1891,9 +1895,8 @@
 
   function playUiSound(kind) {
     if (!state.sound) return;
-    unlockAudio().then(ctx => {
-      if (!ctx) return;
-      const sequences = {
+    if (!unlockAudioFromGesture()) return;
+    const sequences = {
         shuffle: [
           { noise: true, d: .028, w: 0, g: .024, ff: 2800 },
           { noise: true, d: .026, w: .024, g: .022, ff: 2500 },
@@ -1978,12 +1981,11 @@
           { chord: [659.25, 783.99, 1046.5, 1318.51], d: .36, w: .48, type: 'sine', g: .02 }
         ]
       };
-      const plan = sequences[kind] || sequences.click;
-      plan.forEach(step => {
-        if (step.noise) playNoise(step.d, step.g, step.w, step.ff);
-        else if (step.chord) playChord(step.chord, step.d, step.type, step.g, step.w);
-        else playTone(step.f, step.d, step.type, step.g, step.w);
-      });
+    const plan = sequences[kind] || sequences.click;
+    plan.forEach(step => {
+      if (step.noise) playNoise(step.d, step.g, step.w, step.ff);
+      else if (step.chord) playChord(step.chord, step.d, step.type, step.g, step.w);
+      else playTone(step.f, step.d, step.type, step.g, step.w);
     });
   }
 
@@ -2221,41 +2223,39 @@
 
   function playLevelUpFanfare(levelUp) {
     if (!state.sound) return;
+    if (!unlockAudioFromGesture()) return;
     const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(levelUp?.level) || STARTING_LEVEL));
     const tier = getLevelTier(level);
     const tierPromo = crossedSkillTier(levelUp?.previousLevel || level - 1, level);
-    unlockAudio().then(ctx => {
-      if (!ctx) return;
-      const loudBus = getLevelUpAudioMaster();
-      if (!loudBus) return;
-      const scale = LEVEL_FANFARE_SCALES[tier.skill] || LEVEL_FANFARE_SCALES.rookie;
-      const root = scale[0] / 2;
+    const loudBus = getLevelUpAudioMaster();
+    if (!loudBus) return;
+    const scale = LEVEL_FANFARE_SCALES[tier.skill] || LEVEL_FANFARE_SCALES.rookie;
+    const root = scale[0] / 2;
 
-      playTone(root, 0.22, 'sine', 0.16, 0, 0, loudBus);
-      playTone(root * 2, 0.18, 'triangle', 0.12, 0.04, 0, loudBus);
-      playNoise(0.14, 0.08, 0.02, 1800, loudBus);
+    playTone(root, 0.22, 'sine', 0.16, 0, 0, loudBus);
+    playTone(root * 2, 0.18, 'triangle', 0.12, 0.04, 0, loudBus);
+    playNoise(0.14, 0.08, 0.02, 1800, loudBus);
 
-      const melody = buildLevelMelody(level);
-      melody.forEach(note => playTone(note.freq, note.duration, note.wave, note.gain, note.wait + 0.08, 0, loudBus));
+    const melody = buildLevelMelody(level);
+    melody.forEach(note => playTone(note.freq, note.duration, note.wave, note.gain, note.wait + 0.08, 0, loudBus));
 
-      const tail = (melody[melody.length - 1]?.wait || 0) + 0.08;
-      playChord([scale[0], scale[2], scale[Math.min(4, scale.length - 1)]], 0.42, 'triangle', 0.09, tail + 0.06, loudBus);
+    const tail = (melody[melody.length - 1]?.wait || 0) + 0.08;
+    playChord([scale[0], scale[2], scale[Math.min(4, scale.length - 1)]], 0.42, 'triangle', 0.09, tail + 0.06, loudBus);
 
-      if (tierPromo) {
-        playChord([scale[0], scale[2], scale[Math.min(4, scale.length - 1)]], 0.48, 'sine', 0.1, tail + 0.22, loudBus);
-        playNoise(0.18, 0.09, tail + 0.18, 3200 + level * 20, loudBus);
-      }
+    if (tierPromo) {
+      playChord([scale[0], scale[2], scale[Math.min(4, scale.length - 1)]], 0.48, 'sine', 0.1, tail + 0.22, loudBus);
+      playNoise(0.18, 0.09, tail + 0.18, 3200 + level * 20, loudBus);
+    }
 
-      if (level === MAX_LEVEL) {
-        const legendScale = LEVEL_FANFARE_SCALES.legend;
-        playChord(legendScale.slice(0, 3), 0.58, 'triangle', 0.12, tail + 0.5, loudBus);
-        playChord(legendScale.slice(2, 5), 0.66, 'sine', 0.1, tail + 0.82, loudBus);
-        playTone(legendScale[5] || 1975.53, 0.28, 'sine', 0.14, tail + 1.12, 0, loudBus);
-        playNoise(0.22, 0.1, tail + 0.48, 4200, loudBus);
-      } else if (levelUp?.kind === 'human') {
-        playTone(1046.5 + level, 0.14, 'sine', 0.1, tail + 0.34, 0, loudBus);
-      }
-    });
+    if (level === MAX_LEVEL) {
+      const legendScale = LEVEL_FANFARE_SCALES.legend;
+      playChord(legendScale.slice(0, 3), 0.58, 'triangle', 0.12, tail + 0.5, loudBus);
+      playChord(legendScale.slice(2, 5), 0.66, 'sine', 0.1, tail + 0.82, loudBus);
+      playTone(legendScale[5] || 1975.53, 0.28, 'sine', 0.14, tail + 1.12, 0, loudBus);
+      playNoise(0.22, 0.1, tail + 0.48, 4200, loudBus);
+    } else if (levelUp?.kind === 'human') {
+      playTone(1046.5 + level, 0.14, 'sine', 0.1, tail + 0.34, 0, loudBus);
+    }
   }
 
   function scheduleLevelUpFx(callback, delay) {
@@ -2740,6 +2740,7 @@
         state.soundVolume = Number(soundRange.value) / 100;
         document.querySelector('#sound-volume-label').textContent = `${soundRange.value}%`;
         saveSoundSettings();
+        unlockAudioFromGesture();
         ensureLandingMusicPlaying();
       });
       voiceRange?.addEventListener('input', () => { state.voiceVolume = Number(voiceRange.value) / 100; document.querySelector('#voice-volume-label').textContent = `${voiceRange.value}%`; saveSoundSettings(); });
@@ -2772,7 +2773,7 @@
   }
 
   function newGame() {
-    unlockAudio();
+    unlockAudioFromGesture();
     const count = Number(els.playerCount.value) || 4;
     disableVoiceChat();
     state.liveRoom = null;
@@ -4933,7 +4934,9 @@
 
   function bindLandingAudioUnlock() {
     const unlockLandingAudio = () => {
-      if (isLandingScreenVisible()) ensureLandingMusicPlaying();
+      if (!isLandingScreenVisible()) return;
+      unlockAudioFromGesture();
+      ensureLandingMusicPlaying();
     };
     ['pointerdown', 'touchstart', 'touchend', 'click'].forEach(type => {
       document.addEventListener(type, unlockLandingAudio, { passive: true, capture: true });
@@ -4942,9 +4945,12 @@
 
   function bindEvents() {
     bindLandingAudioUnlock();
+    els.game?.addEventListener('pointerdown', () => {
+      if (!els.game?.classList.contains('hidden')) unlockAudioFromGesture();
+    }, { passive: true, capture: true });
     els.start.addEventListener('click', newGame);
     els.continue.addEventListener('click', () => {
-      unlockAudio();
+      unlockAudioFromGesture();
       if (!restoreGame()) newGame();
     });
     els.rules.addEventListener('click', () => showHelp('How to Play', RULES_HTML));
@@ -4994,6 +5000,7 @@
       });
     });
     document.querySelector('#settings-button')?.addEventListener('click', () => {
+      unlockAudioFromGesture();
       ensureLandingMusicPlaying();
       showSettingsPanel();
     });
