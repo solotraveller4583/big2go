@@ -239,6 +239,7 @@
     rules: document.querySelector('#rules-button'),
     share: document.querySelector('#share-button'),
     profileButton: document.querySelector('#profile-button'),
+    playerProfileAvatar: document.querySelector('#player-profile-avatar'),
     playerLevelLabel: document.querySelector('#player-level-label'),
     back: document.querySelector('#back-button'),
     sound: document.querySelector('#sound-button'),
@@ -670,7 +671,7 @@
         const avatar = document.createElement('div');
         avatar.className = 'result-story-player-avatar';
         if (player.isHuman) {
-          avatar.textContent = 'Y';
+          renderPlayerProfileAvatar(avatar, { extraClass: 'result-story-player-avatar' });
         } else {
           window.Big2GoAICharacters?.renderAvatar(avatar, { characterId: player.characterId, name: player.name }, {
             className: 'character-avatar',
@@ -1082,7 +1083,56 @@
   }
 
   function defaultProfileRecord() {
-    return { level: STARTING_LEVEL, totalWins: 0 };
+    return { level: STARTING_LEVEL, totalWins: 0, gender: 'male' };
+  }
+
+  const PLAYER_PROFILE_AVATARS = {
+    male: {
+      src: './assets/player/captain-shield.svg',
+      alt: 'Captain America shield profile logo'
+    },
+    female: {
+      src: './assets/player/wonder-woman.svg',
+      alt: 'Wonder Woman profile logo'
+    }
+  };
+
+  function normalizePlayerGender(gender) {
+    return gender === 'female' ? 'female' : 'male';
+  }
+
+  function getPlayerProfileMeta(profile = loadPlayerProfile()) {
+    const gender = normalizePlayerGender(profile?.gender);
+    return { gender, ...(PLAYER_PROFILE_AVATARS[gender] || PLAYER_PROFILE_AVATARS.male) };
+  }
+
+  function renderPlayerProfileAvatar(container, options = {}) {
+    if (!container) return;
+    const meta = getPlayerProfileMeta();
+    const className = options.className || 'player-profile-avatar';
+    const imgClassName = options.imgClassName || 'player-profile-avatar-img';
+    const classes = [
+      options.keepProfileShell ? 'profile-avatar' : '',
+      className,
+      `player-profile-avatar--${meta.gender}`,
+      options.extraClass || ''
+    ].filter(Boolean);
+    container.innerHTML = '';
+    container.className = classes.join(' ');
+    const img = document.createElement('img');
+    img.className = imgClassName;
+    img.src = meta.src;
+    img.alt = meta.alt;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    container.appendChild(img);
+  }
+
+  function setPlayerGender(gender) {
+    const profile = loadPlayerProfile();
+    profile.gender = normalizePlayerGender(gender);
+    savePlayerProfile(profile);
+    renderPlayerProfileHud();
   }
 
   function computeProfileLevel(totalWins) {
@@ -1140,6 +1190,7 @@
       const profile = raw && typeof raw === 'object' ? raw : defaultProfileRecord();
       profile.totalWins = Math.max(0, Number(profile.totalWins) || 0);
       profile.level = computeProfileLevel(profile.totalWins);
+      profile.gender = normalizePlayerGender(profile.gender);
       return profile;
     } catch (_) {
       return defaultProfileRecord();
@@ -1151,6 +1202,7 @@
       localStorage.setItem(PLAYER_PROFILE_KEY, JSON.stringify({
         level: computeProfileLevel(profile.totalWins),
         totalWins: Math.max(0, Number(profile.totalWins) || 0),
+        gender: normalizePlayerGender(profile.gender),
         updatedAt: Date.now()
       }));
     } catch (_) {}
@@ -1244,6 +1296,9 @@
 
   function renderPlayerProfileHud() {
     const profile = loadPlayerProfile();
+    if (els.playerProfileAvatar) {
+      renderPlayerProfileAvatar(els.playerProfileAvatar, { keepProfileShell: true });
+    }
     if (els.playerLevelLabel) {
       const tier = getLevelTier(profile.level);
       els.playerLevelLabel.textContent = `Lv ${tier.level} ${tier.emoji}`;
@@ -1253,6 +1308,7 @@
 
   function buildPlayerProfileHtml() {
     const profile = loadPlayerProfile();
+    const meta = getPlayerProfileMeta(profile);
     const progress = getProfileProgress(profile.totalWins);
     const tier = getLevelTier(profile.level);
     const rivals = (window.Big2GoAICharacters?.pool || []).map(character => {
@@ -1267,6 +1323,15 @@
     }).join('');
     return `
       <div class="profile-modal">
+        <div class="profile-logo-panel">
+          <div class="profile-logo-preview player-profile-avatar player-profile-avatar--${meta.gender}" id="profile-logo-preview">
+            <img class="player-profile-avatar-img" src="${meta.src}" alt="${meta.alt}" loading="lazy" decoding="async" />
+          </div>
+          <div class="profile-gender-picker" role="group" aria-label="Choose player logo">
+            <button type="button" class="profile-gender-option${meta.gender === 'male' ? ' selected' : ''}" data-profile-gender="male">🛡️ Captain Shield</button>
+            <button type="button" class="profile-gender-option${meta.gender === 'female' ? ' selected' : ''}" data-profile-gender="female">⭐ Wonder Woman</button>
+          </div>
+        </div>
         <div class="modal-row"><strong>You</strong><span>Lv ${tier.level} ${tier.emoji} ${tier.title}</span></div>
         <div class="modal-row"><strong>Total Wins</strong><span>${profile.totalWins}</span></div>
         <div class="modal-row"><strong>Next Level</strong><span>${progress.maxed ? 'Legend Mode — MAX' : `${progress.current} / ${progress.target} wins`}</span></div>
@@ -1277,6 +1342,27 @@
 
   function showPlayerProfilePanel() {
     showHelp('Player Profile', buildPlayerProfileHtml());
+    setTimeout(() => {
+      document.querySelectorAll('[data-profile-gender]').forEach(button => {
+        button.addEventListener('click', () => {
+          const gender = button.dataset.profileGender || 'male';
+          setPlayerGender(gender);
+          document.querySelectorAll('[data-profile-gender]').forEach(item => {
+            item.classList.toggle('selected', item.dataset.profileGender === gender);
+          });
+          const preview = document.querySelector('#profile-logo-preview');
+          const meta = getPlayerProfileMeta();
+          if (preview) {
+            preview.className = `profile-logo-preview player-profile-avatar player-profile-avatar--${meta.gender}`;
+            const img = preview.querySelector('img');
+            if (img) {
+              img.src = meta.src;
+              img.alt = meta.alt;
+            }
+          }
+        });
+      });
+    }, 0);
   }
 
   function shuffleCharacters(list) {
@@ -2491,10 +2577,7 @@
     if (els.levelUpAvatar) {
       els.levelUpAvatar.innerHTML = '';
       if (levelUp.kind === 'human') {
-        const fallback = document.createElement('span');
-        fallback.className = 'level-up-avatar-fallback';
-        fallback.textContent = 'Y';
-        els.levelUpAvatar.appendChild(fallback);
+        renderPlayerProfileAvatar(els.levelUpAvatar, { extraClass: 'level-up-player-avatar' });
       } else {
         const character = window.Big2GoAICharacters?.getById?.(levelUp.characterId)
           || { characterId: levelUp.characterId, name: levelUp.name };

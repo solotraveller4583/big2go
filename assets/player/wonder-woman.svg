@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Wonder Woman logo">
+  <defs>
+    <linearGradient id="ww-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff4b0"/>
+      <stop offset="45%" stop-color="#ffd24a"/>
+      <stop offset="100%" stop-color="#d97800"/>
+    </linearGradient>
+    <linearGradient id="ww-red" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff5a67"/>
+      <stop offset="100%" stop-color="#b3122f"/>
+    </linearGradient>
+  </defs>
+  <circle cx="48" cy="48" r="46" fill="#0d1b4d"/>
+  <circle cx="48" cy="48" r="40" fill="url(#ww-red)"/>
+  <path fill="url(#ww-gold)" d="M48 16c-10 12-22 19-28 21 2 16 9 29 20 37 2-9 4-16 6-20 2 4 4 11 6 20 11-8 18-21 20-37-6-2-18-9-28-21zm-12 38c-2 7-4 13-6 19 6-4 10-10 13-15-3-2-5-3-7-4zm24 0c-2 1-4 2-7 4 3 5 7 11 13 15-2-6-4-12-6-19z"/>
+  <path fill="#fff8dc" d="M48 33l-9 11h7l-4 13 6-9 6 9-4-13h7z" opacity="0.95"/>
+</svg>

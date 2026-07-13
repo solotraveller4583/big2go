@@ -178,9 +178,16 @@ body.level-up-active .app-shell {
 }
 
 .level-up-avatar-wrap .character-avatar,
-.level-up-avatar-wrap .character-avatar-img {
+.level-up-avatar-wrap .character-avatar-img,
+.level-up-avatar-wrap .player-profile-avatar,
+.level-up-avatar-wrap .player-profile-avatar-img {
   width: 68px !important;
   height: 68px !important;
+}
+
+.level-up-avatar-wrap .player-profile-avatar {
+  border-radius: 50%;
+  overflow: hidden;
 }
 
 .level-up-avatar-fallback {

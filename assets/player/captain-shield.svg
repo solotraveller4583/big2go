@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Captain shield logo">
+  <defs>
+    <linearGradient id="cap-shield-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#dfe8f5"/>
+      <stop offset="100%" stop-color="#8ea2bf"/>
+    </linearGradient>
+    <linearGradient id="cap-shield-star" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#d7e4f7"/>
+    </linearGradient>
+  </defs>
+  <circle cx="48" cy="48" r="46" fill="url(#cap-shield-rim)"/>
+  <circle cx="48" cy="48" r="42" fill="#b71c1c"/>
+  <circle cx="48" cy="48" r="34" fill="#ffffff"/>
+  <circle cx="48" cy="48" r="26" fill="#0d47a1"/>
+  <circle cx="48" cy="48" r="18" fill="#b71c1c"/>
+  <circle cx="48" cy="48" r="11" fill="#0d47a1"/>
+  <path fill="url(#cap-shield-star)" d="M48 30l3.4 10.5h11l-8.9 6.5 3.4 10.5L48 51l-8.9 6.5 3.4-10.5-8.9-6.5h11z"/>
+</svg>
