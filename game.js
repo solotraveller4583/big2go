@@ -142,11 +142,30 @@
     context: null,
     master: null,
     levelUpMaster: null,
+    landingMusicMaster: null,
+    landingMusicActive: false,
     victoryTimer: null,
     levelUpTimer: null
   };
 
   const LEVEL_UP_MASTER_GAIN = 0.96;
+  const LANDING_MUSIC_GAIN = 0.3;
+  const LANDING_MUSIC = {
+    bpm: 102,
+    bar: 0,
+    beat: 0,
+    timer: null,
+    chords: [
+      { bass: 73.42, arp: [293.66, 349.23, 440, 523.25] },
+      { bass: 58.27, arp: [233.08, 293.66, 349.23, 440] },
+      { bass: 43.65, arp: [174.61, 220, 261.63, 329.63] },
+      { bass: 32.7, arp: [130.81, 164.81, 196, 261.63] },
+      { bass: 73.42, arp: [293.66, 392, 440, 587.33] },
+      { bass: 55, arp: [220, 277.18, 329.63, 440] },
+      { bass: 41.2, arp: [164.81, 207.65, 261.63, 329.63] },
+      { bass: 65.41, arp: [130.81, 196, 261.63, 392] }
+    ]
+  };
 
   const LEVEL_FANFARE_SCALES = {
     rookie: [392, 440, 494, 523.25, 587.33, 659.25],
@@ -345,6 +364,9 @@
     if (audio.levelUpMaster) {
       audio.levelUpMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * LEVEL_UP_MASTER_GAIN;
     }
+    if (audio.landingMusicMaster) {
+      audio.landingMusicMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * LANDING_MUSIC_GAIN;
+    }
     state.voice.peers?.forEach(entry => { if (entry.audio) entry.audio.volume = state.voiceVolume; });
   }
 
@@ -537,6 +559,7 @@
   }
 
   function showGameScreen() {
+    stopLandingMusic();
     hideAllScreens();
     els.game?.classList.remove('hidden');
     document.body.classList.toggle('live-room-active', Boolean(state.liveRoom?.code));
@@ -560,9 +583,11 @@
     renderPlayerProfileHud();
     renderRoomRecovery();
     window.scrollTo(0, 0);
+    startLandingMusic();
   }
 
   function showResultStoryScreen() {
+    stopLandingMusic();
     hideAllScreens();
     els.resultStory?.classList.remove('hidden');
     document.body.classList.add('result-story-active');
@@ -1504,6 +1529,90 @@
     return ctx;
   }
 
+  function getLandingMusicMaster() {
+    const ctx = getAudioContext();
+    if (!ctx) return null;
+    if (!audio.landingMusicMaster) {
+      audio.landingMusicMaster = ctx.createGain();
+      audio.landingMusicMaster.connect(ctx.destination);
+    }
+    audio.landingMusicMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume || 0.72)) * LANDING_MUSIC_GAIN;
+    return audio.landingMusicMaster;
+  }
+
+  function stopLandingMusic() {
+    if (LANDING_MUSIC.timer) {
+      clearInterval(LANDING_MUSIC.timer);
+      LANDING_MUSIC.timer = null;
+    }
+    audio.landingMusicActive = false;
+    LANDING_MUSIC.bar = 0;
+    LANDING_MUSIC.beat = 0;
+    document.body.classList.remove('landing-music-active');
+  }
+
+  function isLandingScreenVisible() {
+    return Boolean(els.home && !els.home.classList.contains('hidden'));
+  }
+
+  function tickLandingMusicBeat() {
+    if (!audio.landingMusicActive || !state.sound || !isLandingScreenVisible()) {
+      stopLandingMusic();
+      return;
+    }
+    const bus = getLandingMusicMaster();
+    if (!bus) return;
+
+    const chord = LANDING_MUSIC.chords[LANDING_MUSIC.bar % LANDING_MUSIC.chords.length];
+    const beat = LANDING_MUSIC.beat % 4;
+    const arpIndex = (LANDING_MUSIC.bar * 4 + beat) % chord.arp.length;
+    const arpNote = chord.arp[arpIndex];
+
+    if (beat === 0) {
+      playTone(chord.bass, 0.34, 'sine', 0.1, 0, 0, bus);
+      playTone(chord.bass * 2, 0.16, 'triangle', 0.04, 0.03, 0, bus);
+      playChord(chord.arp.slice(0, 3), 0.62, 'sine', 0.034, 0, bus);
+      playNoise(0.05, 0.02, 0, 7600, bus);
+    } else if (beat === 2) {
+      playTone(chord.bass, 0.22, 'sine', 0.075, 0, 0, bus);
+    }
+
+    playTone(arpNote, 0.16, 'triangle', 0.05, 0.03, 0, bus);
+    playTone(arpNote * 2, 0.09, 'square', 0.014, 0.03, 0, bus);
+
+    if (beat === 1 || beat === 3) {
+      playNoise(0.04, 0.024, 0, 5400, bus);
+    }
+
+    if (beat === 2 && LANDING_MUSIC.bar % 2 === 1) {
+      playTone(chord.arp[2], 0.18, 'square', 0.03, 0.05, 0, bus);
+      playTone((chord.arp[3] || chord.arp[0] * 2), 0.16, 'triangle', 0.038, 0.2, 0, bus);
+    }
+
+    if (LANDING_MUSIC.bar % 4 === 3 && beat === 3) {
+      playChord([chord.arp[0], chord.arp[2], (chord.arp[3] || chord.arp[1] * 2)], 0.28, 'triangle', 0.026, 0.08, bus);
+    }
+
+    LANDING_MUSIC.beat += 1;
+    if (LANDING_MUSIC.beat >= 4) {
+      LANDING_MUSIC.beat = 0;
+      LANDING_MUSIC.bar += 1;
+    }
+  }
+
+  function startLandingMusic() {
+    if (!state.sound || audio.landingMusicActive || !isLandingScreenVisible()) return;
+    unlockAudio().then(ctx => {
+      if (!ctx || !isLandingScreenVisible()) return;
+      stopLandingMusic();
+      audio.landingMusicActive = true;
+      document.body.classList.add('landing-music-active');
+      tickLandingMusicBeat();
+      const beatMs = Math.round(60000 / LANDING_MUSIC.bpm);
+      LANDING_MUSIC.timer = setInterval(tickLandingMusicBeat, beatMs);
+    });
+  }
+
   function getLevelUpAudioMaster() {
     const ctx = getAudioContext();
     if (!ctx) return null;
@@ -1774,6 +1883,7 @@
   }
 
   function showSessionCompleteScreen() {
+    stopLandingMusic();
     document.querySelector('#victory-overlay')?.remove();
     hideAllScreens();
     els.sessionComplete?.classList.remove('hidden');
@@ -2199,6 +2309,7 @@
   }
 
   function showLevelUpScreen(levelUp) {
+    stopLandingMusic();
     hideAllScreens();
     renderLevelUpScreen(levelUp);
     els.levelUp?.classList.remove('hidden');
@@ -4597,6 +4708,11 @@
 
   function bindEvents() {
     els.start.addEventListener('click', newGame);
+    els.home?.addEventListener('pointerdown', () => {
+      if (state.sound && isLandingScreenVisible() && !audio.landingMusicActive) {
+        startLandingMusic();
+      }
+    }, { passive: true });
     els.continue.addEventListener('click', () => {
       unlockAudio();
       if (!restoreGame()) newGame();
@@ -4677,6 +4793,8 @@
     els.sound.addEventListener('click', () => {
       state.sound = !state.sound;
       els.sound.textContent = state.sound ? '🔊' : '🔇';
+      if (!state.sound) stopLandingMusic();
+      else if (isLandingScreenVisible()) startLandingMusic();
       playUiSound('click');
       saveGame();
     });

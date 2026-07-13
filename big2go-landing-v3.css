@@ -1217,6 +1217,28 @@
   50% { opacity: 1; transform: scale(1.04); }
 }
 
+/* Beat-synced neon pulse when landing ambient music is playing */
+body.landing-music-active #home-screen.landing-v3:not(.hidden) .hero-radial-glow {
+  animation: v3HeroGlowMusicPulse 0.588s ease-in-out infinite;
+}
+
+body.landing-music-active #home-screen.landing-v3:not(.hidden) .table-glow,
+body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
+  animation: v3NeonMusicGlow 2.353s ease-in-out infinite;
+}
+
+@keyframes v3HeroGlowMusicPulse {
+  0%, 100% { opacity: 0.9; transform: scale(1); filter: brightness(1); }
+  50% { opacity: 1; transform: scale(1.06); filter: brightness(1.14); }
+}
+
+@keyframes v3NeonMusicGlow {
+  0%, 100% { opacity: 0.35; }
+  25% { opacity: 0.5; }
+  50% { opacity: 0.38; }
+  75% { opacity: 0.54; }
+}
+
 @keyframes v3SuitDriftA {
   0%, 100% { transform: translate(0, 0) rotate(-8deg); opacity: 0.04; }
   50% { transform: translate(6px, -10px) rotate(-4deg); opacity: 0.055; }
@@ -2089,6 +2111,9 @@
   #home-screen.landing-v3 .play-now,
   #home-screen.landing-v3 .hero-particles,
   #home-screen.landing-v3 .hero-radial-glow,
+  body.landing-music-active #home-screen.landing-v3 .hero-radial-glow,
+  body.landing-music-active #home-screen.landing-v3 .table-glow,
+  body.landing-music-active #home-screen.landing-v3 .arena-orb,
   #home-screen.landing-v3 .hero-stage::before,
   #home-screen.landing-v3 .hero-stage::after,
   #home-screen.landing-v3 .hero-particles::before,
