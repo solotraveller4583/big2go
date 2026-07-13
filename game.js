@@ -11,7 +11,23 @@
   const STARTING_COINS = 100;
   const STARTING_LEVEL = 1;
   const MAX_LEVEL = 30;
-  const WINS_PER_LEVEL = 20;
+  const LEGEND_MODE_TOTAL_WINS = 300;
+  // Wins required to advance from level N → N+1 (29 steps total).
+  const LEVEL_UP_WINS = [
+    3, 3, 4, 5, 5, 6, 7, 8, 10,
+    10, 12, 15, 9, 9, 9, 9, 9, 8, 9,
+    20, 18, 17, 16, 15, 14, 13, 12, 13, 12
+  ];
+  const LEVEL_WIN_THRESHOLDS = (() => {
+    const thresholds = { 1: 0 };
+    let cumulative = 0;
+    LEVEL_UP_WINS.forEach((stepWins, index) => {
+      cumulative += stepWins;
+      thresholds[index + 2] = cumulative;
+    });
+    thresholds[MAX_LEVEL] = LEGEND_MODE_TOTAL_WINS;
+    return thresholds;
+  })();
   const LEVEL_TIERS = [
     { min: 1, max: 10, emoji: '🥉', title: 'Rookie Challenger', skill: 'rookie' },
     { min: 11, max: 20, emoji: '🥈', title: 'Battle Strategist', skill: 'strategist' },
@@ -995,8 +1011,16 @@
   }
 
   function computeProfileLevel(totalWins) {
-    const raw = Math.floor(Math.max(0, Number(totalWins) || 0) / WINS_PER_LEVEL) + STARTING_LEVEL;
-    return Math.min(MAX_LEVEL, raw);
+    const wins = Math.max(0, Number(totalWins) || 0);
+    let level = STARTING_LEVEL;
+    for (let nextLevel = STARTING_LEVEL + 1; nextLevel <= MAX_LEVEL; nextLevel += 1) {
+      if (wins >= (LEVEL_WIN_THRESHOLDS[nextLevel] || 0)) {
+        level = nextLevel;
+      } else {
+        break;
+      }
+    }
+    return level;
   }
 
   function getLevelTier(level) {
@@ -1017,9 +1041,22 @@
     const wins = Math.max(0, Number(totalWins) || 0);
     const level = computeProfileLevel(wins);
     if (level >= MAX_LEVEL) {
-      return { current: WINS_PER_LEVEL, target: WINS_PER_LEVEL, maxed: true };
+      return {
+        current: wins,
+        target: LEGEND_MODE_TOTAL_WINS,
+        maxed: true,
+        winsNeeded: 0
+      };
     }
-    return { current: wins % WINS_PER_LEVEL, target: WINS_PER_LEVEL, maxed: false };
+    const floor = LEVEL_WIN_THRESHOLDS[level] || 0;
+    const ceiling = LEVEL_WIN_THRESHOLDS[level + 1] || floor;
+    const span = Math.max(1, ceiling - floor);
+    return {
+      current: wins - floor,
+      target: span,
+      maxed: false,
+      winsNeeded: Math.max(0, ceiling - wins)
+    };
   }
 
   function loadPlayerProfile() {
@@ -1158,7 +1195,7 @@
         <div class="modal-row"><strong>You</strong><span>Lv ${tier.level} ${tier.emoji} ${tier.title}</span></div>
         <div class="modal-row"><strong>Total Wins</strong><span>${profile.totalWins}</span></div>
         <div class="modal-row"><strong>Next Level</strong><span>${progress.maxed ? 'Legend Mode — MAX' : `${progress.current} / ${progress.target} wins`}</span></div>
-        <p class="profile-note">Every ${WINS_PER_LEVEL} wins levels you up. Tiers: Lv 1–10 Rookie, Lv 11–20 Strategist, Lv 21–29 Master, Lv 30 Legend.</p>
+        <p class="profile-note">Rank tiers: Lv 1–10 Rookie, Lv 11–20 Strategist (~150 wins), Lv 21–29 Master, Lv 30 Legend (300 total wins). Each level needs more wins as you climb.</p>
         ${rivals ? `<div class="profile-rivals"><h3>Rival Levels</h3>${rivals}</div>` : ''}
       </div>`;
   }
@@ -1880,7 +1917,7 @@
     const copy = getLevelUpCopy(levelUp);
     const progress = getProfileProgress(levelUp.totalWins || 0);
     const tier = levelUp.tier || getLevelTier(levelUp.level);
-    const winsToNext = progress.maxed ? 0 : Math.max(0, progress.target - progress.current);
+    const winsToNext = progress.maxed ? 0 : progress.winsNeeded;
 
     if (els.levelUpEyebrow) els.levelUpEyebrow.textContent = copy.eyebrow;
     if (els.levelUpTitle) els.levelUpTitle.textContent = copy.title;
