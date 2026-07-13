@@ -10,7 +10,14 @@
   const SOUND_SETTINGS_KEY = 'big2go-sound-settings-v1';
   const STARTING_COINS = 100;
   const STARTING_LEVEL = 1;
+  const MAX_LEVEL = 30;
   const WINS_PER_LEVEL = 20;
+  const LEVEL_TIERS = [
+    { min: 1, max: 10, emoji: '🥉', title: 'Rookie Challenger', skill: 'rookie' },
+    { min: 11, max: 20, emoji: '🥈', title: 'Battle Strategist', skill: 'strategist' },
+    { min: 21, max: 29, emoji: '🥇', title: 'Big2Go Master', skill: 'master' },
+    { min: 30, max: 30, emoji: '👑', title: 'Legend Mode', skill: 'legend' }
+  ];
   const ENTRY_FEE_COINS = 10;
   const ROOM_SESSION_KEY = 'big2go-room-session-v1';
   const RULES_HTML = `
@@ -145,6 +152,8 @@
     levelUpMilestone: document.querySelector('#level-up-milestone'),
     levelUpStats: document.querySelector('#level-up-stats'),
     levelUpQuote: document.querySelector('#level-up-quote'),
+    levelUpTier: document.querySelector('#level-up-tier'),
+    levelUpSkill: document.querySelector('#level-up-skill'),
     levelUpContinue: document.querySelector('#level-up-continue'),
     exitConfirmDialog: document.querySelector('#exit-confirm-dialog'),
     playerCount: document.querySelector('#player-count'),
@@ -556,9 +565,11 @@
     if (els.resultStoryStats) {
       const humanProfile = loadPlayerProfile();
       const humanProgress = getProfileProgress(humanProfile.totalWins);
+      const humanTier = getLevelTier(humanProfile.level);
       els.resultStoryStats.innerHTML = `
-        <div class="result-story-stat"><small>Your Level</small><strong>Lv ${humanProfile.level}</strong></div>
-        <div class="result-story-stat"><small>Level Progress</small><strong>${humanProgress.current} / ${humanProgress.target}</strong></div>
+        <div class="result-story-stat"><small>Your Rank</small><strong>${humanTier.emoji} Lv ${humanTier.level}</strong></div>
+        <div class="result-story-stat"><small>Tier</small><strong>${humanTier.title}</strong></div>
+        <div class="result-story-stat"><small>Level Progress</small><strong>${humanProgress.maxed ? 'MAX' : `${humanProgress.current} / ${humanProgress.target}`}</strong></div>
         <div class="result-story-stat"><small>Your Coins</small><strong>🪙 ${story.coinsBalance}</strong></div>
         <div class="result-story-stat result-story-stat--wide"><small>Best Combo</small><strong>${story.bestCombo}</strong></div>`;
     }
@@ -581,7 +592,7 @@
         copy.className = 'result-story-player-copy';
         const status = player.won ? 'Winner' : (player.finished || player.cardsLeft === 0 ? 'Out' : `${player.cardsLeft} cards left`);
         copy.innerHTML = `
-          <strong>${player.name} · Lv ${player.level || STARTING_LEVEL}</strong>
+          <strong>${player.name} · ${getLevelTier(player.level || STARTING_LEVEL).emoji} Lv ${player.level || STARTING_LEVEL}</strong>
           <span>${status}</span>
           <small>🪙 ${player.coins}</small>`;
         const badge = document.createElement('span');
@@ -984,12 +995,31 @@
   }
 
   function computeProfileLevel(totalWins) {
-    return Math.floor(Math.max(0, Number(totalWins) || 0) / WINS_PER_LEVEL) + STARTING_LEVEL;
+    const raw = Math.floor(Math.max(0, Number(totalWins) || 0) / WINS_PER_LEVEL) + STARTING_LEVEL;
+    return Math.min(MAX_LEVEL, raw);
+  }
+
+  function getLevelTier(level) {
+    const lv = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(level) || STARTING_LEVEL));
+    const tier = LEVEL_TIERS.find(entry => lv >= entry.min && lv <= entry.max) || LEVEL_TIERS[0];
+    return { ...tier, level: lv };
+  }
+
+  function crossedSkillTier(previousLevel, newLevel) {
+    return getLevelTier(previousLevel).skill !== getLevelTier(newLevel).skill;
+  }
+
+  function getAiSkillTier(level) {
+    return getLevelTier(level).skill;
   }
 
   function getProfileProgress(totalWins) {
     const wins = Math.max(0, Number(totalWins) || 0);
-    return { current: wins % WINS_PER_LEVEL, target: WINS_PER_LEVEL };
+    const level = computeProfileLevel(wins);
+    if (level >= MAX_LEVEL) {
+      return { current: WINS_PER_LEVEL, target: WINS_PER_LEVEL, maxed: true };
+    }
+    return { current: wins % WINS_PER_LEVEL, target: WINS_PER_LEVEL, maxed: false };
   }
 
   function loadPlayerProfile() {
@@ -1070,7 +1100,10 @@
             level: profile.level,
             previousLevel,
             name: 'You',
-            totalWins: profile.totalWins
+            totalWins: profile.totalWins,
+            tier: getLevelTier(profile.level),
+            previousTier: getLevelTier(previousLevel),
+            skillUpgraded: crossedSkillTier(previousLevel, profile.level)
           }
         : null;
     }
@@ -1087,7 +1120,10 @@
             previousLevel,
             name: winner.name,
             characterId: winner.characterId,
-            totalWins: profile.totalWins
+            totalWins: profile.totalWins,
+            tier: getLevelTier(profile.level),
+            previousTier: getLevelTier(previousLevel),
+            skillUpgraded: crossedSkillTier(previousLevel, profile.level)
           }
         : null;
     }
@@ -1097,28 +1133,32 @@
   function renderPlayerProfileHud() {
     const profile = loadPlayerProfile();
     if (els.playerLevelLabel) {
-      els.playerLevelLabel.textContent = `Lv ${profile.level}`;
+      const tier = getLevelTier(profile.level);
+      els.playerLevelLabel.textContent = `Lv ${tier.level} ${tier.emoji}`;
+      els.playerLevelLabel.title = tier.title;
     }
   }
 
   function buildPlayerProfileHtml() {
     const profile = loadPlayerProfile();
     const progress = getProfileProgress(profile.totalWins);
+    const tier = getLevelTier(profile.level);
     const rivals = (window.Big2GoAICharacters?.pool || []).map(character => {
       const rivalProfile = loadAiProfile(character.id);
       const rivalProgress = getProfileProgress(rivalProfile.totalWins);
+      const rivalTier = getLevelTier(rivalProfile.level);
       return `
         <div class="modal-row profile-rival-row">
           <strong>${character.name}</strong>
-          <span>Lv ${rivalProfile.level} · ${rivalProfile.totalWins} wins · ${rivalProgress.current}/${rivalProgress.target}</span>
+          <span>Lv ${rivalTier.level} ${rivalTier.emoji} · ${rivalTier.title} · ${rivalProfile.totalWins} wins · ${rivalProgress.maxed ? 'MAX' : `${rivalProgress.current}/${rivalProgress.target}`}</span>
         </div>`;
     }).join('');
     return `
       <div class="profile-modal">
-        <div class="modal-row"><strong>You</strong><span>Level ${profile.level}</span></div>
+        <div class="modal-row"><strong>You</strong><span>Lv ${tier.level} ${tier.emoji} ${tier.title}</span></div>
         <div class="modal-row"><strong>Total Wins</strong><span>${profile.totalWins}</span></div>
-        <div class="modal-row"><strong>Next Level</strong><span>${progress.current} / ${progress.target} wins</span></div>
-        <p class="profile-note">Every ${WINS_PER_LEVEL} wins levels you up.</p>
+        <div class="modal-row"><strong>Next Level</strong><span>${progress.maxed ? 'Legend Mode — MAX' : `${progress.current} / ${progress.target} wins`}</span></div>
+        <p class="profile-note">Every ${WINS_PER_LEVEL} wins levels you up. Tiers: Lv 1–10 Rookie, Lv 11–20 Strategist, Lv 21–29 Master, Lv 30 Legend.</p>
         ${rivals ? `<div class="profile-rivals"><h3>Rival Levels</h3>${rivals}</div>` : ''}
       </div>`;
   }
@@ -1727,42 +1767,111 @@
     document.body.classList.remove('level-up-active');
   }
 
+  function getSkillUpgradeCopy(tier) {
+    if (tier.skill === 'strategist') {
+      return 'Skillset upgraded — this rival now plays smarter and reads the table better.';
+    }
+    if (tier.skill === 'master') {
+      return 'Skillset upgraded — this rival now outplays Strategist-level foes with sharper combos.';
+    }
+    if (tier.skill === 'legend') {
+      return 'Skillset upgraded — Expert Legend AI. Expect ruthless, intelligent plays every turn.';
+    }
+    return '';
+  }
+
   function getLevelUpCopy(levelUp) {
+    const tier = levelUp.tier || getLevelTier(levelUp.level);
+    const previousTier = levelUp.previousTier || getLevelTier(levelUp.previousLevel);
+    const tierChanged = previousTier.skill !== tier.skill;
     const isHuman = levelUp.kind === 'human';
     const isFirstPromotion = levelUp.previousLevel === 1 && levelUp.level === 2;
+
+    if (isHuman && tier.skill === 'legend' && tierChanged) {
+      return {
+        eyebrow: 'Legend Mode',
+        title: 'Congratulations!',
+        message: 'You reached Level 30 — the highest rank in Big2Go. You are now in Legend Mode.',
+        quote: '"The arena bows to a true master of the cards."',
+        milestone: true,
+        tierLabel: `${tier.emoji} ${tier.title}`,
+        skillNote: ''
+      };
+    }
+    if (isHuman && tierChanged) {
+      return {
+        eyebrow: 'Rank Promotion',
+        title: 'Congratulations!',
+        message: `You advanced to ${tier.emoji} ${tier.title}. New rivals will respect your table presence.`,
+        quote: '"Every tier climbed is another story at the Big2Go arena."',
+        milestone: true,
+        tierLabel: `${tier.emoji} ${tier.title}`,
+        skillNote: ''
+      };
+    }
     if (isHuman && isFirstPromotion) {
       return {
         eyebrow: 'First Promotion',
         title: 'Congratulations!',
-        message: 'You earned your stripes at the Big2Go table. Level 2 unlocked — rivals will take you more seriously now.',
+        message: 'You earned your stripes as a Rookie Challenger. Keep winning to reach Battle Strategist.',
         quote: '"Twenty wins. The lanterns burn brighter when you rise."',
-        milestone: true
+        milestone: true,
+        tierLabel: `${tier.emoji} ${tier.title}`,
+        skillNote: ''
       };
     }
     if (isHuman) {
       return {
         eyebrow: 'Level Up',
         title: 'Congratulations!',
-        message: `You climbed to Level ${levelUp.level}. Keep winning to unlock even tougher tables.`,
+        message: `You climbed to Lv ${levelUp.level} · ${tier.emoji} ${tier.title}.`,
         quote: '"Every win sharpens your edge at the arena."',
-        milestone: false
+        milestone: false,
+        tierLabel: `${tier.emoji} ${tier.title}`,
+        skillNote: ''
       };
     }
-    if (levelUp.previousLevel === 1 && levelUp.level === 2) {
+    if (levelUp.skillUpgraded && tier.skill === 'legend') {
+      return {
+        eyebrow: 'Rival Legend Mode',
+        title: `${levelUp.name} reached Legend Mode!`,
+        message: `${levelUp.name} hit Level 30. Their AI skillset is now Expert level — extremely intelligent.`,
+        quote: '"I see every card before it lands."',
+        milestone: true,
+        tierLabel: `${tier.emoji} ${tier.title}`,
+        skillNote: getSkillUpgradeCopy(tier)
+      };
+    }
+    if (levelUp.skillUpgraded) {
+      return {
+        eyebrow: 'Rival Rank Up',
+        title: `${levelUp.name} promoted!`,
+        message: `${levelUp.name} reached Lv ${levelUp.level} · ${tier.emoji} ${tier.title}.`,
+        quote: '"My next hand will be sharper than the last."',
+        milestone: true,
+        tierLabel: `${tier.emoji} ${tier.title}`,
+        skillNote: getSkillUpgradeCopy(tier)
+      };
+    }
+    if (isFirstPromotion) {
       return {
         eyebrow: 'Rival Promotion',
         title: `${levelUp.name} leveled up!`,
-        message: `${levelUp.name} just reached Level 2. This rival is growing stronger — rematch them soon.`,
+        message: `${levelUp.name} is now Lv ${levelUp.level} · ${tier.emoji} ${tier.title}.`,
         quote: '"Watch out… I am just getting warmed up."',
-        milestone: true
+        milestone: true,
+        tierLabel: `${tier.emoji} ${tier.title}`,
+        skillNote: ''
       };
     }
     return {
       eyebrow: 'Rival Promotion',
       title: `${levelUp.name} leveled up!`,
-      message: `${levelUp.name} reached Level ${levelUp.level}. The competition at Big2Go keeps heating up.`,
+      message: `${levelUp.name} reached Lv ${levelUp.level} · ${tier.emoji} ${tier.title}.`,
       quote: '"Next table, I play even harder."',
-      milestone: false
+      milestone: false,
+      tierLabel: `${tier.emoji} ${tier.title}`,
+      skillNote: ''
     };
   }
 
@@ -1770,7 +1879,8 @@
     if (!levelUp) return;
     const copy = getLevelUpCopy(levelUp);
     const progress = getProfileProgress(levelUp.totalWins || 0);
-    const winsToNext = Math.max(0, progress.target - progress.current);
+    const tier = levelUp.tier || getLevelTier(levelUp.level);
+    const winsToNext = progress.maxed ? 0 : Math.max(0, progress.target - progress.current);
 
     if (els.levelUpEyebrow) els.levelUpEyebrow.textContent = copy.eyebrow;
     if (els.levelUpTitle) els.levelUpTitle.textContent = copy.title;
@@ -1780,7 +1890,18 @@
 
     if (els.levelUpMilestone) {
       els.levelUpMilestone.classList.toggle('hidden', !copy.milestone);
-      els.levelUpMilestone.textContent = levelUp.kind === 'human' ? '⭐ First Promotion' : '⭐ Rival Milestone';
+      els.levelUpMilestone.textContent = copy.tierLabel || (levelUp.kind === 'human' ? '⭐ Rank Promotion' : '⭐ Rival Milestone');
+    }
+
+    if (els.levelUpTier) {
+      els.levelUpTier.textContent = copy.tierLabel || `${tier.emoji} ${tier.title}`;
+      els.levelUpTier.classList.remove('hidden');
+    }
+
+    if (els.levelUpSkill) {
+      const showSkill = Boolean(copy.skillNote);
+      els.levelUpSkill.classList.toggle('hidden', !showSkill);
+      els.levelUpSkill.textContent = showSkill ? `⚡ ${copy.skillNote}` : '';
     }
 
     if (els.levelUpQuote) {
@@ -1813,12 +1934,12 @@
           <strong>${levelUp.totalWins || 0}</strong>
         </div>
         <div class="level-up-stat">
-          <small>New Level</small>
-          <strong>Lv ${levelUp.level}</strong>
+          <small>Rank</small>
+          <strong>${tier.emoji} ${tier.title}</strong>
         </div>
         <div class="level-up-stat level-up-stat--wide">
           <small>Next Level In</small>
-          <strong>${winsToNext} more win${winsToNext === 1 ? '' : 's'}</strong>
+          <strong>${progress.maxed ? 'Legend Mode — MAX' : `${winsToNext} more win${winsToNext === 1 ? '' : 's'}`}</strong>
         </div>`;
     }
   }
@@ -2235,7 +2356,10 @@
       if (!state.liveRoom?.code) {
         const level = document.createElement('span');
         level.className = 'opponent-level';
-        level.textContent = `Lv${getProfileLevelForPlayer(player)}`;
+        const playerLevel = getProfileLevelForPlayer(player);
+        const playerTier = getLevelTier(playerLevel);
+        level.textContent = `${playerTier.emoji}Lv${playerLevel}`;
+        level.title = `${playerTier.title} · Lv ${playerLevel}`;
         nameRow.appendChild(level);
       }
       const stats = document.createElement('div');
@@ -3224,11 +3348,47 @@
     return sorted[0];
   }
 
-  function pickAIMove(hand, playingStyle = 'smart') {
+  function pickExpertBeatMove(candidates) {
+    return candidates.slice().sort((a, b) => {
+      const aKind = FIVE_KIND_ORDER[a.kind] || a.cards.length;
+      const bKind = FIVE_KIND_ORDER[b.kind] || b.cards.length;
+      const aWeight = a.cards.length * 50 + aKind * 24 + a.score[1] * 2 + a.score[0];
+      const bWeight = b.cards.length * 50 + bKind * 24 + b.score[1] * 2 + b.score[0];
+      if (aWeight !== bWeight) return aWeight - bWeight;
+      return compareScores(a.score, b.score);
+    })[0];
+  }
+
+  function pickStrategistLead(candidates, handSize) {
+    const bigThreshold = handSize <= 6 ? 0.42 : 0.7;
+    if (Math.random() > bigThreshold) return pickBigLead(candidates);
+    return pickSmallLead(candidates);
+  }
+
+  function pickMasterLead(candidates, handSize) {
+    if (handSize <= 5) return pickBigLead(candidates);
+    if (handSize >= 11) return pickSmallLead(candidates);
+    return Math.random() < 0.58 ? pickBigLead(candidates) : pickSmallLead(candidates);
+  }
+
+  function pickExpertLead(candidates, handSize) {
+    if (handSize <= 4) return pickBigLead(candidates);
+    if (handSize >= 9) return pickSmallLead(candidates);
+    const compact = candidates.filter(candidate => candidate.cards.length <= 3);
+    if (compact.length && handSize >= 7) return pickSmallLead(compact);
+    return pickSmallLead(candidates);
+  }
+
+  function pickAIMove(hand, playingStyle = 'smart', skillTier = 'rookie') {
     const candidates = legalCandidates(hand);
     if (!candidates.length) return null;
 
-    if (playingStyle === 'funny' && Math.random() < 0.24) {
+    const funnyChance = skillTier === 'legend' || skillTier === 'master'
+      ? 0
+      : skillTier === 'strategist'
+        ? 0.08
+        : (playingStyle === 'funny' ? 0.24 : 0);
+    if (playingStyle === 'funny' && Math.random() < funnyChance) {
       return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
@@ -3237,6 +3397,10 @@
     const style = playingStyle || 'smart';
 
     if (leadMode) {
+      if (skillTier === 'legend') return pickExpertLead(candidates, handSize);
+      if (skillTier === 'master') return pickMasterLead(candidates, handSize);
+      if (skillTier === 'strategist') return pickStrategistLead(candidates, handSize);
+
       const moodRoll = Math.random();
       const bigThreshold = style === 'aggressive'
         ? 0.5
@@ -3251,6 +3415,11 @@
       return pickSmallLead(candidates);
     }
 
+    if (skillTier === 'legend') return pickExpertBeatMove(candidates);
+    if (skillTier === 'master') return pickBeatMove(candidates, handSize, 'smart');
+    if (skillTier === 'strategist') {
+      return pickBeatMove(candidates, handSize, Math.random() < 0.78 ? 'smart' : style);
+    }
     return pickBeatMove(candidates, handSize, style);
   }
 
@@ -3273,14 +3442,23 @@
     state.aiTimer = setTimeout(() => {
       state.aiTimer = null;
       takeAiTurn();
-    }, 520 + Math.random() * 360);
+    }, getAiThinkDelay(state.players[state.currentPlayer]));
+  }
+
+  function getAiThinkDelay(player) {
+    const skillTier = getAiSkillTier(getProfileLevelForPlayer(player));
+    if (skillTier === 'legend') return 320 + Math.random() * 180;
+    if (skillTier === 'master') return 380 + Math.random() * 220;
+    if (skillTier === 'strategist') return 440 + Math.random() * 260;
+    return 520 + Math.random() * 360;
   }
 
   function takeAiTurn() {
     if (state.gameOver || state.busy || state.currentPlayer === state.humanIndex) return;
     const index = state.currentPlayer;
     const player = state.players[index];
-    const move = pickAIMove(player.hand, player.playingStyle);
+    const skillTier = getAiSkillTier(getProfileLevelForPlayer(player));
+    const move = pickAIMove(player.hand, player.playingStyle, skillTier);
     state.busy = true;
     render();
     setTimeout(() => {
