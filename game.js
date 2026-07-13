@@ -147,7 +147,8 @@
     victoryMusicMaster: null,
     victoryMusicActive: false,
     victoryTimer: null,
-    levelUpTimer: null
+    levelUpTimer: null,
+    contextStateHooked: false
   };
 
   const LEVEL_UP_MASTER_GAIN = 0.96;
@@ -388,6 +389,7 @@
       audio.victoryMusicMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * VICTORY_MUSIC_GAIN;
     }
     state.voice.peers?.forEach(entry => { if (entry.audio) entry.audio.volume = state.voiceVolume; });
+    if (state.sound && isLandingScreenVisible()) ensureLandingMusicPlaying();
   }
 
   function nextSortMode() {
@@ -1538,8 +1540,40 @@
       audio.master = audio.context.createGain();
       audio.master.gain.value = Math.max(0, Math.min(1, state.soundVolume || .72)) * 0.24;
       audio.master.connect(audio.context.destination);
+      hookAudioContextState();
     }
     return audio.context;
+  }
+
+  function hookAudioContextState() {
+    const ctx = audio.context;
+    if (!ctx || audio.contextStateHooked) return;
+    audio.contextStateHooked = true;
+    ctx.addEventListener('statechange', () => {
+      if (ctx.state !== 'running' || !state.sound) return;
+      if (isLandingScreenVisible() && !audio.landingMusicActive) beginLandingMusicLoop();
+    });
+  }
+
+  function primeAudioContextFromGesture(ctx) {
+    if (!ctx) return;
+    try {
+      const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+    } catch (_) {}
+    try {
+      const osc = ctx.createOscillator();
+      const amp = ctx.createGain();
+      amp.gain.value = 0.00001;
+      osc.connect(amp);
+      amp.connect(ctx.destination);
+      const start = ctx.currentTime;
+      osc.start(start);
+      osc.stop(start + 0.02);
+    } catch (_) {}
   }
 
   async function unlockAudio() {
@@ -1570,15 +1604,19 @@
     if (!state.sound || !isLandingScreenVisible()) return;
     const ctx = getAudioContext();
     if (!ctx) return;
-    const startIfReady = () => {
-      if (isAudioContextRunning() && isLandingScreenVisible()) beginLandingMusicLoop();
-    };
     if (ctx.state === 'running') {
-      startIfReady();
+      beginLandingMusicLoop();
       return;
     }
     if (ctx.state === 'suspended') {
-      ctx.resume().then(startIfReady).catch(() => {});
+      primeAudioContextFromGesture(ctx);
+      const resumeTask = ctx.resume();
+      if (resumeTask && typeof resumeTask.then === 'function') {
+        resumeTask.then(() => {
+          if (isAudioContextRunning() && isLandingScreenVisible()) beginLandingMusicLoop();
+        }).catch(() => {});
+      }
+      if (ctx.state === 'running') beginLandingMusicLoop();
     }
   }
 
@@ -2681,6 +2719,7 @@
   }
 
   function showSettingsPanel() {
+    ensureLandingMusicPlaying();
     showHelp('Big2Go Settings', `
       <div class="settings-modal">
         <label>Sound Volume <strong id="sound-volume-label">${Math.round(state.soundVolume * 100)}%</strong></label>
@@ -2692,7 +2731,12 @@
     setTimeout(() => {
       const soundRange = document.querySelector('#sound-volume-range');
       const voiceRange = document.querySelector('#voice-volume-range');
-      soundRange?.addEventListener('input', () => { state.soundVolume = Number(soundRange.value) / 100; document.querySelector('#sound-volume-label').textContent = `${soundRange.value}%`; saveSoundSettings(); });
+      soundRange?.addEventListener('input', () => {
+        state.soundVolume = Number(soundRange.value) / 100;
+        document.querySelector('#sound-volume-label').textContent = `${soundRange.value}%`;
+        saveSoundSettings();
+        ensureLandingMusicPlaying();
+      });
       voiceRange?.addEventListener('input', () => { state.voiceVolume = Number(voiceRange.value) / 100; document.querySelector('#voice-volume-label').textContent = `${voiceRange.value}%`; saveSoundSettings(); });
     }, 0);
   }
@@ -4882,11 +4926,18 @@
     });
   }
 
-  function bindEvents() {
-    els.start.addEventListener('click', newGame);
-    document.addEventListener('pointerdown', () => {
+  function bindLandingAudioUnlock() {
+    const unlockLandingAudio = () => {
       if (isLandingScreenVisible()) ensureLandingMusicPlaying();
-    }, { passive: true, capture: true });
+    };
+    ['pointerdown', 'touchstart', 'touchend', 'click'].forEach(type => {
+      document.addEventListener(type, unlockLandingAudio, { passive: true, capture: true });
+    });
+  }
+
+  function bindEvents() {
+    bindLandingAudioUnlock();
+    els.start.addEventListener('click', newGame);
     els.continue.addEventListener('click', () => {
       unlockAudio();
       if (!restoreGame()) newGame();
@@ -4937,7 +4988,10 @@
         showHelp(copy[0], copy[1]);
       });
     });
-    document.querySelector('#settings-button')?.addEventListener('click', showSettingsPanel);
+    document.querySelector('#settings-button')?.addEventListener('click', () => {
+      ensureLandingMusicPlaying();
+      showSettingsPanel();
+    });
     document.querySelector('#leaderboard-button')?.addEventListener('click', () => showHelp('Leaderboard', '<ul><li><strong>You</strong> are the table challenger.</li><li>Win by clearing every card first.</li><li>Online ranking can be added after launch.</li></ul>'));
     document.querySelector('#bonus-button')?.addEventListener('click', () => showHelp('Daily Bonus', '<ul><li>Come back and play a fresh Big2Go table.</li><li>Daily rewards can be connected later.</li></ul>'));
     document.querySelector('#achievements-button')?.addEventListener('click', () => showHelp('Goals', '<ul><li>Win with singles, pairs, and 5-card combos.</li><li>Try to beat the AI with fewer passes.</li></ul>'));
