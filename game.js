@@ -1526,7 +1526,44 @@
     if (ctx.state === 'suspended') {
       try { await ctx.resume(); } catch (_) {}
     }
-    return ctx;
+    return ctx.state === 'running' ? ctx : null;
+  }
+
+  function isAudioContextRunning() {
+    return Boolean(audio.context && audio.context.state === 'running');
+  }
+
+  function beginLandingMusicLoop() {
+    if (audio.landingMusicActive || !state.sound || !isLandingScreenVisible() || !isAudioContextRunning()) return;
+    stopLandingMusic();
+    audio.landingMusicActive = true;
+    document.body.classList.add('landing-music-active');
+    tickLandingMusicBeat();
+    const beatMs = Math.round(60000 / LANDING_MUSIC.bpm);
+    LANDING_MUSIC.timer = setInterval(tickLandingMusicBeat, beatMs);
+  }
+
+  function primeLandingMusicFromGesture() {
+    if (!state.sound || !isLandingScreenVisible()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const startIfReady = () => {
+      if (isAudioContextRunning() && isLandingScreenVisible()) beginLandingMusicLoop();
+    };
+    if (ctx.state === 'running') {
+      startIfReady();
+      return;
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(startIfReady).catch(() => {});
+    }
+  }
+
+  function ensureLandingMusicPlaying() {
+    if (!state.sound || !isLandingScreenVisible()) return;
+    if (audio.landingMusicActive && isAudioContextRunning()) return;
+    if (audio.landingMusicActive && !isAudioContextRunning()) stopLandingMusic();
+    primeLandingMusicFromGesture();
   }
 
   function getLandingMusicMaster() {
@@ -1556,7 +1593,7 @@
   }
 
   function tickLandingMusicBeat() {
-    if (!audio.landingMusicActive || !state.sound || !isLandingScreenVisible()) {
+    if (!audio.landingMusicActive || !state.sound || !isLandingScreenVisible() || !isAudioContextRunning()) {
       stopLandingMusic();
       return;
     }
@@ -1602,14 +1639,13 @@
 
   function startLandingMusic() {
     if (!state.sound || audio.landingMusicActive || !isLandingScreenVisible()) return;
+    if (isAudioContextRunning()) {
+      beginLandingMusicLoop();
+      return;
+    }
     unlockAudio().then(ctx => {
       if (!ctx || !isLandingScreenVisible()) return;
-      stopLandingMusic();
-      audio.landingMusicActive = true;
-      document.body.classList.add('landing-music-active');
-      tickLandingMusicBeat();
-      const beatMs = Math.round(60000 / LANDING_MUSIC.bpm);
-      LANDING_MUSIC.timer = setInterval(tickLandingMusicBeat, beatMs);
+      beginLandingMusicLoop();
     });
   }
 
@@ -4708,11 +4744,9 @@
 
   function bindEvents() {
     els.start.addEventListener('click', newGame);
-    els.home?.addEventListener('pointerdown', () => {
-      if (state.sound && isLandingScreenVisible() && !audio.landingMusicActive) {
-        startLandingMusic();
-      }
-    }, { passive: true });
+    document.addEventListener('pointerdown', () => {
+      if (isLandingScreenVisible()) ensureLandingMusicPlaying();
+    }, { passive: true, capture: true });
     els.continue.addEventListener('click', () => {
       unlockAudio();
       if (!restoreGame()) newGame();
@@ -4794,7 +4828,7 @@
       state.sound = !state.sound;
       els.sound.textContent = state.sound ? '🔊' : '🔇';
       if (!state.sound) stopLandingMusic();
-      else if (isLandingScreenVisible()) startLandingMusic();
+      else if (isLandingScreenVisible()) ensureLandingMusicPlaying();
       playUiSound('click');
       saveGame();
     });
