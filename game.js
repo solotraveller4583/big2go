@@ -200,11 +200,13 @@
   };
 
   const LEVEL_CONFETTI_PALETTES = {
-    rookie: ['#7ad7ff', '#63f0b0', '#ffd86b', '#9ed0ff', '#8ef5c8'],
-    strategist: ['#ffd24a', '#ff9f43', '#ffe68f', '#ffb347', '#fff0b8'],
-    master: ['#ff6bcb', '#b59cff', '#ffd24a', '#ff8ad8', '#d8b4ff'],
-    legend: ['#ffd700', '#fff4b0', '#ff9f1c', '#ffe566', '#ffffff']
+    rookie: ['#ffd24a', '#ff2d95', '#00e5ff', '#ff8a00', '#ff47d4'],
+    strategist: ['#ffd24a', '#ff9f43', '#ff2d95', '#ffb347', '#00e5ff'],
+    master: ['#ff6bcb', '#b59cff', '#ffd24a', '#ff8ad8', '#00e5ff'],
+    legend: ['#ffd700', '#fff4b0', '#ff9f1c', '#ff2d95', '#ffffff']
   };
+
+  const CARNIVAL_CELEBRATION_HUES = [42, 320, 280, 15, 195, 330];
 
   const els = {
     home: document.querySelector('#home-screen'),
@@ -2346,7 +2348,7 @@
       confettiIntensity: Math.min(88, 24 + level * 2 + (tierPromo ? 14 : 0)),
       burstCount: Math.min(14, 5 + Math.floor(level / 2) + (tierPromo ? 3 : 0)),
       ringCount: tier.skill === 'legend' ? 4 : tier.skill === 'master' ? 3 : tier.skill === 'strategist' ? 2 : 1,
-      hue: ((level - 1) * 12) % 360
+      hue: CARNIVAL_CELEBRATION_HUES[level % CARNIVAL_CELEBRATION_HUES.length]
     };
   }
 
@@ -2438,7 +2440,7 @@
     spark.className = 'level-up-spark';
     spark.style.setProperty('--sx', `${8 + Math.random() * 84}%`);
     spark.style.setProperty('--sy', `${10 + Math.random() * 72}%`);
-    spark.style.setProperty('--spark-hue', `${style.hue}deg`);
+    spark.style.setProperty('--spark-hue', `${CARNIVAL_CELEBRATION_HUES[Math.floor(Math.random() * CARNIVAL_CELEBRATION_HUES.length)]}deg`);
     spark.style.setProperty('--spark-dx', `${(Math.random() - 0.5) * 180}px`);
     spark.style.setProperty('--spark-dy', `${(Math.random() - 0.5) * 180}px`);
     els.levelUpFxLayer.appendChild(spark);
@@ -2516,10 +2518,10 @@
 
     if (isHuman && tier.skill === 'legend' && tierChanged) {
       return {
-        eyebrow: 'Legend Mode',
-        title: 'Congratulations!',
+        eyebrow: '🎪 Carnival Legend',
+        title: 'You Win!',
         message: 'You reached Level 30 — the highest rank in Big2Go. You are now in Legend Mode.',
-        quote: '"The arena bows to a true master of the cards."',
+        quote: '"The carnival crowns a true master of the cards."',
         milestone: true,
         tierLabel: `${tier.emoji} ${tier.title}`,
         skillNote: ''
@@ -2527,10 +2529,10 @@
     }
     if (isHuman && tierChanged) {
       return {
-        eyebrow: 'Rank Promotion',
-        title: 'Congratulations!',
+        eyebrow: '🎪 Carnival Rank Up',
+        title: 'You Win!',
         message: `You advanced to ${tier.emoji} ${tier.title}. New rivals will respect your table presence.`,
-        quote: '"Every tier climbed is another story at the Big2Go arena."',
+        quote: '"Every tier climbed lights up the Big2Go carnival."',
         milestone: true,
         tierLabel: `${tier.emoji} ${tier.title}`,
         skillNote: ''
@@ -2538,10 +2540,10 @@
     }
     if (isHuman && isFirstPromotion) {
       return {
-        eyebrow: 'First Promotion',
-        title: 'Congratulations!',
+        eyebrow: '🎪 First Carnival Win',
+        title: 'You Win!',
         message: 'You earned your stripes as a Rookie Challenger. Keep winning to reach Battle Strategist.',
-        quote: '"Twenty wins. The lanterns burn brighter when you rise."',
+        quote: '"Twenty wins — the carnival lights burn brighter when you rise."',
         milestone: true,
         tierLabel: `${tier.emoji} ${tier.title}`,
         skillNote: ''
@@ -2549,10 +2551,10 @@
     }
     if (isHuman) {
       return {
-        eyebrow: 'Level Up',
-        title: 'Congratulations!',
+        eyebrow: '🎪 Carnival Win',
+        title: 'You Win!',
         message: `You climbed to Lv ${levelUp.level} · ${tier.emoji} ${tier.title}.`,
-        quote: '"Every win sharpens your edge at the arena."',
+        quote: '"Every win sparks another light on the carnival strip."',
         milestone: false,
         tierLabel: `${tier.emoji} ${tier.title}`,
         skillNote: ''
