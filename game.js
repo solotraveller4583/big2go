@@ -142,6 +142,7 @@
     context: null,
     master: null,
     levelUpMaster: null,
+    lastCardMaster: null,
     landingMusicMaster: null,
     landingMusicActive: false,
     victoryMusicMaster: null,
@@ -152,6 +153,9 @@
   };
 
   const LEVEL_UP_MASTER_GAIN = 0.96;
+  const LAST_CARD_MASTER_GAIN = 0.78;
+  const LAST_CARD_SOUND_DELAY = 0.14;
+  const LAST_CARD_GAIN_BOOST = 2.4;
   const LANDING_MUSIC_GAIN = 0.3;
   const VICTORY_MUSIC_GAIN = 0.78;
   const LANDING_MUSIC = {
@@ -395,6 +399,9 @@
     if (audio.master) audio.master.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * 0.24;
     if (audio.levelUpMaster) {
       audio.levelUpMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * LEVEL_UP_MASTER_GAIN;
+    }
+    if (audio.lastCardMaster) {
+      audio.lastCardMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * LAST_CARD_MASTER_GAIN;
     }
     if (audio.landingMusicMaster) {
       audio.landingMusicMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume)) * LANDING_MUSIC_GAIN;
@@ -1940,6 +1947,17 @@
     return audio.levelUpMaster;
   }
 
+  function getLastCardAudioMaster() {
+    const ctx = getAudioContext();
+    if (!ctx) return null;
+    if (!audio.lastCardMaster) {
+      audio.lastCardMaster = ctx.createGain();
+      audio.lastCardMaster.connect(ctx.destination);
+    }
+    audio.lastCardMaster.gain.value = Math.max(0, Math.min(1, state.soundVolume || 0.72)) * LAST_CARD_MASTER_GAIN;
+    return audio.lastCardMaster;
+  }
+
   function playToneSweep(freqStart, freqEnd, duration, type = 'sine', gain = 0.035, when = 0, output = null) {
     const ctx = getAudioContext();
     if (!ctx || !state.sound) return;
@@ -3364,25 +3382,45 @@
     };
   }
 
-  function playAnimalSoundSteps(animalSound) {
+  function playAnimalSoundSteps(animalSound, output = null) {
+    const bus = output || getLastCardAudioMaster() || audio.master;
+    if (!bus) return;
     const steps = LAST_CARD_ANIMAL_SOUNDS[animalSound] || LAST_CARD_ANIMAL_SOUNDS.bird;
+    const baseWhen = LAST_CARD_SOUND_DELAY;
     steps.forEach(step => {
-      const when = step.w || 0;
+      const when = baseWhen + (step.w || 0);
+      const gain = (step.g || 0.03) * LAST_CARD_GAIN_BOOST;
       if (step.kind === 'sweep') {
-        playToneSweep(step.f0, step.f1, step.d, step.type || 'sine', step.g || 0.03, when);
+        playToneSweep(step.f0, step.f1, step.d, step.type || 'sine', gain, when, bus);
       } else if (step.kind === 'noise') {
-        playNoise(step.d, step.g || 0.025, when, step.ff || 900);
+        playNoise(step.d, gain, when, step.ff || 900, bus);
       } else {
-        playTone(step.f, step.d, step.type || 'sine', step.g || 0.03, when, step.detune || 0);
+        playTone(step.f, step.d, step.type || 'sine', gain, when, step.detune || 0, bus);
       }
     });
   }
 
   function playLastCardVoice(playerIndex) {
     if (!state.sound) return;
-    unlockAudioFromGesture();
     const profile = resolveLastCardVoiceProfile(playerIndex);
-    playAnimalSoundSteps(profile.animalSound || 'bird');
+    const animalSound = profile.animalSound || 'bird';
+    const deliver = () => {
+      const bus = getLastCardAudioMaster();
+      if (!bus || !isAudioContextRunning()) return false;
+      playAnimalSoundSteps(animalSound, bus);
+      return true;
+    };
+
+    unlockAudioFromGesture();
+    if (deliver()) return;
+
+    unlockAudio().then(() => {
+      if (deliver()) return;
+      window.setTimeout(() => {
+        if (deliver()) return;
+        playUiSound('lastCardPing');
+      }, 48);
+    });
   }
 
   function announceLastCard(playerIndex) {
