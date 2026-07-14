@@ -2963,7 +2963,7 @@
               <div class="demo-trick">
                 ${buildDemoCard('4', 'C')}
                 ${buildDemoCard('4', 'D')}
-                <span style="opacity:.5">→</span>
+                <span class="demo-trick-arrow" aria-hidden="true">→</span>
                 ${buildDemoCard('5', 'H', 'demo-card--play-in')}
                 ${buildDemoCard('5', 'S', 'demo-card--play-in')}
               </div>
