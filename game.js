@@ -149,13 +149,14 @@
     victoryMusicActive: false,
     victoryTimer: null,
     levelUpTimer: null,
-    contextStateHooked: false
+    contextStateHooked: false,
+    pendingLastCardAnimal: null
   };
 
   const LEVEL_UP_MASTER_GAIN = 0.96;
-  const LAST_CARD_MASTER_GAIN = 0.78;
-  const LAST_CARD_SOUND_DELAY = 0.14;
-  const LAST_CARD_GAIN_BOOST = 2.4;
+  const LAST_CARD_MASTER_GAIN = 0.98;
+  const LAST_CARD_SOUND_DELAY = 0.08;
+  const LAST_CARD_GAIN_BOOST = 4.2;
   const LANDING_MUSIC_GAIN = 0.3;
   const VICTORY_MUSIC_GAIN = 0.78;
   const LANDING_MUSIC = {
@@ -1657,6 +1658,7 @@
     audio.contextStateHooked = true;
     ctx.addEventListener('statechange', () => {
       if (ctx.state !== 'running' || !state.sound) return;
+      flushPendingLastCardSound();
       if (isLandingScreenVisible() && !audio.landingMusicActive) beginLandingMusicLoop();
     });
   }
@@ -2032,6 +2034,20 @@
     source.stop(start + duration + 0.02);
   }
 
+  function playSoundSteps(steps, output = null, baseWhen = 0) {
+    const bus = output || audio.master;
+    if (!bus || !getAudioContext() || !state.sound) return;
+    steps.forEach(step => {
+      const when = baseWhen + (step.w || 0);
+      const gain = step.g || 0.03;
+      if (step.noise) playNoise(step.d, gain, when, step.ff || 1200, bus);
+      else if (step.chord) playChord(step.chord, step.d, step.type || 'sine', gain, when, bus);
+      else if (step.sweep || (step.f0 && step.f1)) {
+        playToneSweep(step.f0, step.f1, step.d, step.type || 'sine', gain, when, bus);
+      } else playTone(step.f, step.d, step.type || 'sine', gain, when, step.detune || 0, bus);
+    });
+  }
+
   function playUiSound(kind) {
     if (!state.sound) return;
     if (!unlockAudioFromGesture()) return;
@@ -2132,11 +2148,7 @@
         ]
       };
     const plan = sequences[kind] || sequences.click;
-    plan.forEach(step => {
-      if (step.noise) playNoise(step.d, step.g, step.w, step.ff);
-      else if (step.chord) playChord(step.chord, step.d, step.type, step.g, step.w);
-      else playTone(step.f, step.d, step.type, step.g, step.w);
-    });
+    playSoundSteps(plan);
   }
 
   function comboScore(play) {
@@ -3314,6 +3326,66 @@
     row.appendChild(callout);
   }
 
+  const LAST_CARD_ANIMAL_UI = {
+    dog: [
+      { noise: true, d: 0.11, w: 0, g: 0.16, ff: 300 },
+      { f: 145, d: 0.14, type: 'sawtooth', g: 0.18, w: 0.03 },
+      { f: 118, d: 0.12, type: 'triangle', g: 0.15, w: 0.12 },
+      { noise: true, d: 0.09, w: 0.1, g: 0.12, ff: 240 }
+    ],
+    cat: [
+      { sweep: true, f0: 1280, f1: 540, d: 0.3, type: 'sine', g: 0.16, w: 0 },
+      { f: 760, d: 0.12, type: 'triangle', g: 0.14, w: 0.22 },
+      { noise: true, d: 0.04, w: 0.08, g: 0.08, ff: 2600 }
+    ],
+    bear: [
+      { f: 95, d: 0.18, type: 'sawtooth', g: 0.17, w: 0 },
+      { noise: true, d: 0.16, w: 0.04, g: 0.14, ff: 160 },
+      { sweep: true, f0: 150, f1: 88, d: 0.2, type: 'triangle', g: 0.13, w: 0.14 }
+    ],
+    rabbit: [
+      { f: 1560, d: 0.06, type: 'sine', g: 0.15, w: 0 },
+      { f: 1820, d: 0.06, type: 'sine', g: 0.14, w: 0.07 },
+      { f: 2100, d: 0.07, type: 'triangle', g: 0.13, w: 0.14 }
+    ],
+    parrot: [
+      { sweep: true, f0: 620, f1: 1280, d: 0.1, type: 'triangle', g: 0.15, w: 0 },
+      { sweep: true, f0: 1280, f1: 680, d: 0.11, type: 'sawtooth', g: 0.14, w: 0.1 },
+      { f: 1040, d: 0.09, type: 'square', g: 0.12, w: 0.2 }
+    ],
+    mouse: [
+      { f: 2480, d: 0.05, type: 'sine', g: 0.14, w: 0 },
+      { f: 2760, d: 0.05, type: 'sine', g: 0.13, w: 0.06 },
+      { f: 2320, d: 0.06, type: 'triangle', g: 0.12, w: 0.12 }
+    ],
+    seal: [
+      { sweep: true, f0: 460, f1: 280, d: 0.12, type: 'triangle', g: 0.15, w: 0 },
+      { noise: true, d: 0.07, w: 0.1, g: 0.1, ff: 500 },
+      { sweep: true, f0: 400, f1: 240, d: 0.1, type: 'sine', g: 0.12, w: 0.18 }
+    ],
+    panda: [
+      { sweep: true, f0: 280, f1: 180, d: 0.16, type: 'sine', g: 0.14, w: 0 },
+      { f: 220, d: 0.14, type: 'triangle', g: 0.13, w: 0.14 },
+      { noise: true, d: 0.09, w: 0.08, g: 0.1, ff: 320 }
+    ],
+    duck: [
+      { sweep: true, f0: 320, f1: 220, d: 0.1, type: 'triangle', g: 0.16, w: 0 },
+      { noise: true, d: 0.08, w: 0.05, g: 0.12, ff: 420 },
+      { sweep: true, f0: 360, f1: 250, d: 0.09, type: 'sine', g: 0.13, w: 0.14 }
+    ],
+    chick: [
+      { f: 2040, d: 0.05, type: 'sine', g: 0.15, w: 0 },
+      { f: 2360, d: 0.05, type: 'sine', g: 0.14, w: 0.06 },
+      { f: 2160, d: 0.06, type: 'triangle', g: 0.13, w: 0.12 },
+      { f: 2520, d: 0.06, type: 'sine', g: 0.12, w: 0.2 }
+    ],
+    bird: [
+      { f: 1880, d: 0.05, type: 'sine', g: 0.14, w: 0 },
+      { sweep: true, f0: 1880, f1: 2360, d: 0.08, type: 'triangle', g: 0.13, w: 0.07 },
+      { f: 2120, d: 0.08, type: 'sine', g: 0.12, w: 0.16 }
+    ]
+  };
+
   const LAST_CARD_ANIMAL_SOUNDS = {
     cat: [
       { kind: 'sweep', f0: 980, f1: 560, d: 0.24, type: 'sine', g: 0.038, w: 0 },
@@ -3384,6 +3456,27 @@
     };
   }
 
+  function flushPendingLastCardSound() {
+    const animalSound = audio.pendingLastCardAnimal;
+    if (!animalSound || !state.sound) return;
+    audio.pendingLastCardAnimal = null;
+    deliverLastCardAnimalSound(animalSound);
+  }
+
+  function deliverLastCardAnimalSound(animalSound) {
+    const ctx = getAudioContext();
+    const bus = getLastCardAudioMaster() || audio.master;
+    if (!ctx || !bus) return false;
+
+    playTone(1174.66, 0.05, 'triangle', 0.16, 0, 0, bus);
+    playTone(1567.98, 0.07, 'sine', 0.14, 0.04, 0, bus);
+
+    const uiSteps = LAST_CARD_ANIMAL_UI[animalSound] || LAST_CARD_ANIMAL_UI.bird;
+    playSoundSteps(uiSteps, bus, 0.06);
+    playAnimalSoundSteps(animalSound, bus);
+    return true;
+  }
+
   function playAnimalSoundSteps(animalSound, output = null) {
     const bus = output || getLastCardAudioMaster() || audio.master;
     if (!bus) return;
@@ -3406,23 +3499,39 @@
     if (!state.sound) return;
     const profile = resolveLastCardVoiceProfile(playerIndex);
     const animalSound = profile.animalSound || 'bird';
-    const deliver = () => {
-      const bus = getLastCardAudioMaster();
-      if (!bus || !isAudioContextRunning()) return false;
-      playAnimalSoundSteps(animalSound, bus);
-      return true;
+
+    const attempt = () => {
+      unlockAudioFromGesture();
+      return deliverLastCardAnimalSound(animalSound);
     };
 
-    unlockAudioFromGesture();
-    if (deliver()) return;
+    audio.pendingLastCardAnimal = animalSound;
+    if (attempt()) {
+      audio.pendingLastCardAnimal = null;
+      return;
+    }
 
-    unlockAudio().then(() => {
-      if (deliver()) return;
+    unlockAudio().then(ctx => {
+      if (!ctx) return;
+      if (attempt()) {
+        audio.pendingLastCardAnimal = null;
+        return;
+      }
       window.setTimeout(() => {
-        if (deliver()) return;
+        if (attempt()) audio.pendingLastCardAnimal = null;
+      }, 80);
+      window.setTimeout(() => {
+        if (attempt()) {
+          audio.pendingLastCardAnimal = null;
+          return;
+        }
         playUiSound('lastCardPing');
-      }, 48);
+      }, 220);
     });
+  }
+
+  function scheduleLastCardVoice(playerIndex) {
+    window.setTimeout(() => playLastCardVoice(playerIndex), 110);
   }
 
   function announceLastCard(playerIndex) {
@@ -3439,7 +3548,7 @@
       : `LAST CARD — ${animalLabel}`;
     logState(`⚠️ ${note}`);
     updateHeat(12, player.isHuman ? `Last card — ${animalLabel}` : `Last card — ${animalLabel}`);
-    playLastCardVoice(playerIndex);
+    scheduleLastCardVoice(playerIndex);
     queueLastCardFlash(playerIndex);
   }
 
@@ -3459,7 +3568,7 @@
         const animalLabel = profile?.label || 'Chirp!';
         logState(`⚠️ ${index === game.playerIndex ? `You are on your LAST CARD — ${animalLabel}` : `LAST CARD — ${animalLabel}`}`);
         updateHeat(12, `Last card — ${animalLabel}`);
-        playLastCardVoice(index);
+        scheduleLastCardVoice(index);
         queueLastCardFlash(index);
       }
       state.lastHandCounts[key] = count;
