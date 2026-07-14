@@ -3327,10 +3327,23 @@
 
   let lastCardVoiceCache = new Map();
 
+  const DEFAULT_BABY_SYLLABLES = [
+    { f: 580, f2: 900, d: 0.09, w: 0, g: 0.033 },
+    { f: 540, f2: 840, d: 0.08, w: 0.12, g: 0.031 },
+    { f: 660, f2: 1020, d: 0.1, w: 0.24, g: 0.033 },
+    { f: 720, f2: 1110, d: 0.12, w: 0.37, g: 0.03 }
+  ];
+
+  function pickLastCardPhrase(profile) {
+    return window.Big2GoAICharacters?.pickLastCardPhrase?.(profile)
+      || profile?.phrase
+      || 'Last cardie!';
+  }
+
   function pickLastCardSpeechVoice(profile) {
     const synth = window.speechSynthesis;
     if (!synth || !profile) return null;
-    const cacheKey = `cute:${profile.id || profile.phrase || 'default'}`;
+    const cacheKey = `cute:${profile.id || profile.voiceStyle || 'default'}`;
     if (lastCardVoiceCache.has(cacheKey)) return lastCardVoiceCache.get(cacheKey);
     const voices = synth.getVoices().filter(voice => /^en/i.test(voice.lang));
     if (!voices.length) return null;
@@ -3338,19 +3351,18 @@
     for (const hintSource of hintSources) {
       if (!hintSource) continue;
       const hint = new RegExp(hintSource, 'i');
-      const match = voices.find(voice => hint.test(voice.name));
-      if (match) {
-        lastCardVoiceCache.set(cacheKey, match);
-        return match;
+      const matches = voices.filter(voice => hint.test(voice.name));
+      if (matches.length) {
+        const hash = [...String(profile.id || profile.voiceStyle || 'default')].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+        const picked = matches[hash % matches.length];
+        lastCardVoiceCache.set(cacheKey, picked);
+        return picked;
       }
     }
-    const childish = voices.find(voice => /junior|child|kids|baby/i.test(voice.name));
-    if (childish) {
-      lastCardVoiceCache.set(cacheKey, childish);
-      return childish;
-    }
-    const hash = [...cacheKey].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
-    const picked = voices[hash % voices.length];
+    const childish = voices.filter(voice => /junior|child|kids|baby/i.test(voice.name));
+    const pool = childish.length ? childish : voices;
+    const hash = [...String(profile.id || profile.voiceStyle || 'default')].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+    const picked = pool[hash % pool.length];
     lastCardVoiceCache.set(cacheKey, picked);
     return picked;
   }
@@ -3364,13 +3376,16 @@
     const gender = getPlayerProfileMeta().gender;
     return window.Big2GoAICharacters?.getLastCardVoiceProfile?.(player, { gender }) || {
       id: 'default',
-      phrase: 'Last cardie!',
-      rate: 0.82,
+      voiceStyle: 'baby',
+      phrases: ['Last cardie!', 'Ooh, last cardie!'],
+      rate: 0.76,
       pitch: 2,
       animalStyle: 'baby',
       ping: [987.77, 1318.51],
       fallbackScale: 1.2,
-      chirpScale: 1.05
+      chirpScale: 1.05,
+      babbleScale: 1.08,
+      syllables: DEFAULT_BABY_SYLLABLES
     };
   }
 
@@ -3394,40 +3409,55 @@
     });
   }
 
+  function playBabyBabbleVoice(profile) {
+    const scale = profile?.babbleScale || 1;
+    const syllables = Array.isArray(profile?.syllables) && profile.syllables.length
+      ? profile.syllables
+      : DEFAULT_BABY_SYLLABLES;
+    syllables.forEach((syllable, index) => {
+      const when = syllable.w ?? index * 0.11;
+      const base = syllable.f * scale;
+      const formant = (syllable.f2 || syllable.f * 1.5) * scale;
+      const duration = syllable.d || 0.09;
+      const gain = syllable.g || 0.032;
+      playTone(base, duration, 'sine', gain, when);
+      playTone(formant, duration * 0.92, 'triangle', gain * 0.72, when, syllable.detune || 140);
+      playTone(base * 2.02, duration * 0.55, 'sine', gain * 0.22, when + 0.015, 80);
+    });
+  }
+
   function playLastCardVoiceFallback(profile) {
     playCuteAnimalChirp(profile);
-    const scale = profile?.fallbackScale || 1.2;
-    const babble = [987.77, 1174.66, 1318.51, 1567.98].map(freq => freq * scale);
-    babble.forEach((freq, index) => {
-      playTone(freq, 0.06 + index * 0.01, index % 2 ? 'sine' : 'triangle', 0.026 - index * 0.002, 0.28 + index * 0.07);
-    });
+    playBabyBabbleVoice(profile);
+  }
+
+  function speakLastCardBabyPhrase(profile, phrase) {
+    const synth = window.speechSynthesis;
+    if (!synth || typeof SpeechSynthesisUtterance === 'undefined') return false;
+    try {
+      synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(phrase);
+      utterance.rate = Math.min(1, profile.rate ?? 0.76);
+      utterance.pitch = Math.min(2, Math.max(1.75, profile.pitch ?? 2));
+      utterance.volume = Math.min(1, Math.max(0.75, (state.soundVolume || 0.72) * 1.22));
+      const voice = pickLastCardSpeechVoice(profile);
+      if (voice) utterance.voice = voice;
+      utterance.onerror = () => {};
+      synth.speak(utterance);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   function playLastCardVoice(playerIndex) {
     if (!state.sound) return;
     unlockAudioFromGesture();
     const profile = resolveLastCardVoiceProfile(playerIndex);
+    const phrase = pickLastCardPhrase(profile);
     playCuteAnimalChirp(profile);
-    const synth = window.speechSynthesis;
-    if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
-      playLastCardVoiceFallback(profile);
-      return;
-    }
-    try {
-      synth.cancel();
-      const utterance = new SpeechSynthesisUtterance(profile.phrase || 'Last cardie!');
-      utterance.rate = Math.min(1.1, profile.rate ?? 0.82);
-      utterance.pitch = Math.min(2, Math.max(1.6, profile.pitch ?? 2));
-      utterance.volume = Math.min(1, Math.max(0.72, (state.soundVolume || 0.72) * 1.2));
-      const voice = pickLastCardSpeechVoice(profile);
-      if (voice) utterance.voice = voice;
-      utterance.onerror = () => playLastCardVoiceFallback(profile);
-      window.setTimeout(() => {
-        try { synth.speak(utterance); } catch (_) { playLastCardVoiceFallback(profile); }
-      }, 180);
-    } catch (_) {
-      playLastCardVoiceFallback(profile);
-    }
+    window.setTimeout(() => playBabyBabbleVoice(profile), 120);
+    window.setTimeout(() => speakLastCardBabyPhrase(profile, phrase), 340);
   }
 
   function announceLastCard(playerIndex) {
