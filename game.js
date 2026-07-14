@@ -1940,6 +1940,28 @@
     return audio.levelUpMaster;
   }
 
+  function playToneSweep(freqStart, freqEnd, duration, type = 'sine', gain = 0.035, when = 0, output = null) {
+    const ctx = getAudioContext();
+    if (!ctx || !state.sound) return;
+    const bus = output || audio.master;
+    if (!bus) return;
+    const start = ctx.currentTime + when;
+    const osc = ctx.createOscillator();
+    const amp = ctx.createGain();
+    osc.type = type;
+    const safeEnd = Math.max(40, freqEnd);
+    const safeStart = Math.max(40, freqStart);
+    osc.frequency.setValueAtTime(safeStart, start);
+    osc.frequency.exponentialRampToValueAtTime(safeEnd, start + Math.max(0.03, duration));
+    amp.gain.setValueAtTime(0.0001, start);
+    amp.gain.exponentialRampToValueAtTime(gain, start + 0.012);
+    amp.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    osc.connect(amp);
+    amp.connect(bus);
+    osc.start(start);
+    osc.stop(start + duration + 0.05);
+  }
+
   function playTone(freq, duration, type = 'sine', gain = 0.04, when = 0, detune = 0, output = null) {
     const ctx = getAudioContext();
     if (!ctx || !state.sound) return;
@@ -3272,192 +3294,95 @@
     row.appendChild(callout);
   }
 
-  const LAST_CARD_ANIMAL_CHIRPS = {
-    baby: [
-      { f: 1046.5, d: 0.055, type: 'sine', g: 0.03 },
-      { f: 1318.51, d: 0.07, type: 'triangle', g: 0.028, w: 0.06 },
-      { f: 1174.66, d: 0.09, type: 'sine', g: 0.024, w: 0.13 }
+  const LAST_CARD_ANIMAL_SOUNDS = {
+    cat: [
+      { kind: 'sweep', f0: 980, f1: 560, d: 0.24, type: 'sine', g: 0.038, w: 0 },
+      { kind: 'tone', f: 760, d: 0.09, type: 'triangle', g: 0.024, w: 0.22 },
+      { kind: 'noise', d: 0.035, g: 0.014, ff: 2400, w: 0.08 }
+    ],
+    dog: [
+      { kind: 'noise', d: 0.08, g: 0.038, ff: 320, w: 0 },
+      { kind: 'tone', f: 155, d: 0.11, type: 'triangle', g: 0.038, w: 0.03 },
+      { kind: 'noise', d: 0.06, g: 0.024, ff: 260, w: 0.12 },
+      { kind: 'tone', f: 130, d: 0.08, type: 'sawtooth', g: 0.022, w: 0.2 }
     ],
     bear: [
-      { f: 220, d: 0.09, type: 'triangle', g: 0.03 },
-      { f: 277.18, d: 0.1, type: 'sine', g: 0.028, w: 0.1 },
-      { f: 329.63, d: 0.12, type: 'triangle', g: 0.024, w: 0.2 }
+      { kind: 'tone', f: 110, d: 0.16, type: 'sawtooth', g: 0.034, w: 0 },
+      { kind: 'noise', d: 0.14, g: 0.028, ff: 180, w: 0.04 },
+      { kind: 'sweep', f0: 140, f1: 95, d: 0.18, type: 'triangle', g: 0.03, w: 0.16 }
     ],
-    bunny: [
-      { f: 880, d: 0.045, type: 'sine', g: 0.031 },
-      { f: 1108.73, d: 0.045, type: 'sine', g: 0.029, w: 0.05 },
-      { f: 1318.51, d: 0.055, type: 'triangle', g: 0.027, w: 0.1 }
+    rabbit: [
+      { kind: 'tone', f: 1380, d: 0.05, type: 'sine', g: 0.032, w: 0 },
+      { kind: 'tone', f: 1560, d: 0.05, type: 'sine', g: 0.03, w: 0.07 },
+      { kind: 'tone', f: 1720, d: 0.06, type: 'triangle', g: 0.028, w: 0.14 }
     ],
-    giggle: [
-      { f: 740, d: 0.04, type: 'sine', g: 0.028 },
-      { f: 988, d: 0.04, type: 'triangle', g: 0.027, w: 0.04 },
-      { f: 1174.66, d: 0.05, type: 'sine', g: 0.026, w: 0.08 },
-      { f: 1318.51, d: 0.06, type: 'triangle', g: 0.024, w: 0.14 }
+    parrot: [
+      { kind: 'sweep', f0: 620, f1: 1180, d: 0.08, type: 'triangle', g: 0.034, w: 0 },
+      { kind: 'sweep', f0: 1180, f1: 700, d: 0.09, type: 'sawtooth', g: 0.032, w: 0.1 },
+      { kind: 'tone', f: 980, d: 0.07, type: 'square', g: 0.022, w: 0.2 }
     ],
-    cookie: [
-      { f: 523.25, d: 0.05, type: 'triangle', g: 0.028 },
-      { f: 659.25, d: 0.06, type: 'sine', g: 0.026, w: 0.06 },
-      { f: 784, d: 0.07, type: 'triangle', g: 0.024, w: 0.12 }
+    mouse: [
+      { kind: 'tone', f: 2280, d: 0.04, type: 'sine', g: 0.03, w: 0 },
+      { kind: 'tone', f: 2520, d: 0.04, type: 'sine', g: 0.028, w: 0.06 },
+      { kind: 'tone', f: 2100, d: 0.05, type: 'triangle', g: 0.024, w: 0.12 }
     ],
-    mochi: [
-      { f: 987.77, d: 0.06, type: 'sine', g: 0.03 },
-      { f: 1244.51, d: 0.08, type: 'triangle', g: 0.028, w: 0.07 },
-      { f: 1480, d: 0.1, type: 'sine', g: 0.024, w: 0.15 }
+    seal: [
+      { kind: 'sweep', f0: 420, f1: 280, d: 0.1, type: 'triangle', g: 0.034, w: 0 },
+      { kind: 'noise', d: 0.06, g: 0.02, ff: 520, w: 0.1 },
+      { kind: 'sweep', f0: 380, f1: 250, d: 0.09, type: 'sine', g: 0.028, w: 0.18 }
     ],
     panda: [
-      { f: 196, d: 0.1, type: 'sine', g: 0.028 },
-      { f: 246.94, d: 0.11, type: 'triangle', g: 0.026, w: 0.1 },
-      { f: 293.66, d: 0.12, type: 'sine', g: 0.024, w: 0.2 }
+      { kind: 'sweep', f0: 260, f1: 190, d: 0.14, type: 'sine', g: 0.03, w: 0 },
+      { kind: 'tone', f: 220, d: 0.12, type: 'triangle', g: 0.026, w: 0.14 },
+      { kind: 'noise', d: 0.08, g: 0.016, ff: 340, w: 0.08 }
     ],
-    boba: [
-      { f: 587.33, d: 0.04, type: 'sine', g: 0.029 },
-      { f: 739.99, d: 0.045, type: 'triangle', g: 0.027, w: 0.05 },
-      { f: 880, d: 0.05, type: 'sine', g: 0.025, w: 0.1 },
-      { f: 1046.5, d: 0.055, type: 'triangle', g: 0.023, w: 0.16 }
+    duck: [
+      { kind: 'sweep', f0: 280, f1: 210, d: 0.09, type: 'triangle', g: 0.036, w: 0 },
+      { kind: 'noise', d: 0.07, g: 0.028, ff: 420, w: 0.05 },
+      { kind: 'sweep', f0: 320, f1: 240, d: 0.08, type: 'sine', g: 0.03, w: 0.14 }
     ],
     chick: [
-      { f: 1567.98, d: 0.035, type: 'sine', g: 0.032 },
-      { f: 1975.53, d: 0.035, type: 'sine', g: 0.03, w: 0.04 },
-      { f: 1760, d: 0.04, type: 'triangle', g: 0.028, w: 0.08 },
-      { f: 2093, d: 0.045, type: 'sine', g: 0.026, w: 0.13 }
+      { kind: 'tone', f: 1880, d: 0.04, type: 'sine', g: 0.034, w: 0 },
+      { kind: 'tone', f: 2140, d: 0.04, type: 'sine', g: 0.032, w: 0.06 },
+      { kind: 'tone', f: 1960, d: 0.05, type: 'triangle', g: 0.03, w: 0.12 },
+      { kind: 'tone', f: 2280, d: 0.05, type: 'sine', g: 0.028, w: 0.2 }
+    ],
+    bird: [
+      { kind: 'tone', f: 1760, d: 0.05, type: 'sine', g: 0.03, w: 0 },
+      { kind: 'sweep', f0: 1760, f1: 2200, d: 0.06, type: 'triangle', g: 0.028, w: 0.08 },
+      { kind: 'tone', f: 1980, d: 0.06, type: 'sine', g: 0.024, w: 0.16 }
     ]
   };
-
-  const CUTE_BABY_VOICE_HINTS = 'junior|child|kids|baby|paulina|samantha|karen|zira|flo|female';
-
-  let lastCardVoiceCache = new Map();
-
-  const DEFAULT_BABY_SYLLABLES = [
-    { f: 580, f2: 900, d: 0.09, w: 0, g: 0.033 },
-    { f: 540, f2: 840, d: 0.08, w: 0.12, g: 0.031 },
-    { f: 660, f2: 1020, d: 0.1, w: 0.24, g: 0.033 },
-    { f: 720, f2: 1110, d: 0.12, w: 0.37, g: 0.03 }
-  ];
-
-  function pickLastCardPhrase(profile) {
-    return window.Big2GoAICharacters?.pickLastCardPhrase?.(profile)
-      || profile?.phrase
-      || 'Last cardie!';
-  }
-
-  function pickLastCardSpeechVoice(profile) {
-    const synth = window.speechSynthesis;
-    if (!synth || !profile) return null;
-    const cacheKey = `cute:${profile.id || profile.voiceStyle || 'default'}`;
-    if (lastCardVoiceCache.has(cacheKey)) return lastCardVoiceCache.get(cacheKey);
-    const voices = synth.getVoices().filter(voice => /^en/i.test(voice.lang));
-    if (!voices.length) return null;
-    const hintSources = [profile.voiceHint, CUTE_BABY_VOICE_HINTS];
-    for (const hintSource of hintSources) {
-      if (!hintSource) continue;
-      const hint = new RegExp(hintSource, 'i');
-      const matches = voices.filter(voice => hint.test(voice.name));
-      if (matches.length) {
-        const hash = [...String(profile.id || profile.voiceStyle || 'default')].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
-        const picked = matches[hash % matches.length];
-        lastCardVoiceCache.set(cacheKey, picked);
-        return picked;
-      }
-    }
-    const childish = voices.filter(voice => /junior|child|kids|baby/i.test(voice.name));
-    const pool = childish.length ? childish : voices;
-    const hash = [...String(profile.id || profile.voiceStyle || 'default')].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
-    const picked = pool[hash % pool.length];
-    lastCardVoiceCache.set(cacheKey, picked);
-    return picked;
-  }
-
-  if (typeof window !== 'undefined' && window.speechSynthesis) {
-    window.speechSynthesis.addEventListener('voiceschanged', () => { lastCardVoiceCache = new Map(); });
-  }
 
   function resolveLastCardVoiceProfile(playerIndex) {
     const player = Number.isFinite(playerIndex) ? state.players[playerIndex] : null;
     const gender = getPlayerProfileMeta().gender;
     return window.Big2GoAICharacters?.getLastCardVoiceProfile?.(player, { gender }) || {
       id: 'default',
-      voiceStyle: 'baby',
-      phrases: ['Last cardie!', 'Ooh, last cardie!'],
-      rate: 0.76,
-      pitch: 2,
-      animalStyle: 'baby',
-      ping: [987.77, 1318.51],
-      fallbackScale: 1.2,
-      chirpScale: 1.05,
-      babbleScale: 1.08,
-      syllables: DEFAULT_BABY_SYLLABLES
+      animalSound: 'bird',
+      label: 'Chirp!'
     };
   }
 
-  function playCuteAnimalChirp(profile) {
-    const style = profile?.animalStyle || 'baby';
-    const scale = profile?.chirpScale || 1;
-    const chirps = LAST_CARD_ANIMAL_CHIRPS[style] || LAST_CARD_ANIMAL_CHIRPS.baby;
-    chirps.forEach((chirp, index) => {
-      playTone(
-        chirp.f * scale,
-        chirp.d,
-        chirp.type || 'sine',
-        chirp.g || 0.028,
-        chirp.w || index * 0.06,
-        chirp.detune || 0
-      );
+  function playAnimalSoundSteps(animalSound) {
+    const steps = LAST_CARD_ANIMAL_SOUNDS[animalSound] || LAST_CARD_ANIMAL_SOUNDS.bird;
+    steps.forEach(step => {
+      const when = step.w || 0;
+      if (step.kind === 'sweep') {
+        playToneSweep(step.f0, step.f1, step.d, step.type || 'sine', step.g || 0.03, when);
+      } else if (step.kind === 'noise') {
+        playNoise(step.d, step.g || 0.025, when, step.ff || 900);
+      } else {
+        playTone(step.f, step.d, step.type || 'sine', step.g || 0.03, when, step.detune || 0);
+      }
     });
-    const ping = Array.isArray(profile?.ping) ? profile.ping : [];
-    ping.forEach((freq, index) => {
-      playTone(freq * scale, 0.045, 'sine', 0.02, 0.18 + index * 0.05);
-    });
-  }
-
-  function playBabyBabbleVoice(profile) {
-    const scale = profile?.babbleScale || 1;
-    const syllables = Array.isArray(profile?.syllables) && profile.syllables.length
-      ? profile.syllables
-      : DEFAULT_BABY_SYLLABLES;
-    syllables.forEach((syllable, index) => {
-      const when = syllable.w ?? index * 0.11;
-      const base = syllable.f * scale;
-      const formant = (syllable.f2 || syllable.f * 1.5) * scale;
-      const duration = syllable.d || 0.09;
-      const gain = syllable.g || 0.032;
-      playTone(base, duration, 'sine', gain, when);
-      playTone(formant, duration * 0.92, 'triangle', gain * 0.72, when, syllable.detune || 140);
-      playTone(base * 2.02, duration * 0.55, 'sine', gain * 0.22, when + 0.015, 80);
-    });
-  }
-
-  function playLastCardVoiceFallback(profile) {
-    playCuteAnimalChirp(profile);
-    playBabyBabbleVoice(profile);
-  }
-
-  function speakLastCardBabyPhrase(profile, phrase) {
-    const synth = window.speechSynthesis;
-    if (!synth || typeof SpeechSynthesisUtterance === 'undefined') return false;
-    try {
-      synth.cancel();
-      const utterance = new SpeechSynthesisUtterance(phrase);
-      utterance.rate = Math.min(1, profile.rate ?? 0.76);
-      utterance.pitch = Math.min(2, Math.max(1.75, profile.pitch ?? 2));
-      utterance.volume = Math.min(1, Math.max(0.75, (state.soundVolume || 0.72) * 1.22));
-      const voice = pickLastCardSpeechVoice(profile);
-      if (voice) utterance.voice = voice;
-      utterance.onerror = () => {};
-      synth.speak(utterance);
-      return true;
-    } catch (_) {
-      return false;
-    }
   }
 
   function playLastCardVoice(playerIndex) {
     if (!state.sound) return;
     unlockAudioFromGesture();
     const profile = resolveLastCardVoiceProfile(playerIndex);
-    const phrase = pickLastCardPhrase(profile);
-    playCuteAnimalChirp(profile);
-    window.setTimeout(() => playBabyBabbleVoice(profile), 120);
-    window.setTimeout(() => speakLastCardBabyPhrase(profile, phrase), 340);
+    playAnimalSoundSteps(profile.animalSound || 'bird');
   }
 
   function announceLastCard(playerIndex) {
@@ -3467,11 +3392,13 @@
     const key = playerLastCardKey(player, playerIndex);
     if (state.lastCardNotified.has(key)) return;
     state.lastCardNotified.add(key);
+    const profile = resolveLastCardVoiceProfile(playerIndex);
+    const animalLabel = profile?.label || 'Chirp!';
     const note = player.isHuman
-      ? 'You are on your LAST CARD — be careful!'
-      : 'LAST CARD!';
+      ? `You are on your LAST CARD — ${animalLabel}`
+      : `LAST CARD — ${animalLabel}`;
     logState(`⚠️ ${note}`);
-    updateHeat(12, player.isHuman ? 'Last card — finish strong!' : 'Last card!');
+    updateHeat(12, player.isHuman ? `Last card — ${animalLabel}` : `Last card — ${animalLabel}`);
     playLastCardVoice(playerIndex);
     queueLastCardFlash(playerIndex);
   }
@@ -3488,8 +3415,10 @@
       const prev = state.lastHandCounts[key];
       if (count === 1 && prev !== 1 && !player.finished) {
         state.lastCardNotified.add(key);
-        logState(`⚠️ ${index === game.playerIndex ? 'You are on your LAST CARD!' : 'LAST CARD!'}`);
-        updateHeat(12, index === game.playerIndex ? 'Last card — finish strong!' : 'Last card!');
+        const profile = resolveLastCardVoiceProfile(index);
+        const animalLabel = profile?.label || 'Chirp!';
+        logState(`⚠️ ${index === game.playerIndex ? `You are on your LAST CARD — ${animalLabel}` : `LAST CARD — ${animalLabel}`}`);
+        updateHeat(12, `Last card — ${animalLabel}`);
         playLastCardVoice(index);
         queueLastCardFlash(index);
       }

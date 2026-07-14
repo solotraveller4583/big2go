@@ -624,199 +624,26 @@
   const HUMAN_LAST_CARD_VOICES = {
     male: {
       id: 'player-male',
-      voiceStyle: 'baby-boy',
-      phrases: ['Waaah, wast cardie!', 'Ooh ooh, last cardie!', 'Baby says last cardie!'],
-      rate: 0.72,
-      pitch: 2,
-      animalStyle: 'baby',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen|zira|flo',
-      ping: [880, 1174.66],
-      fallbackScale: 1.35,
-      chirpScale: 1.08,
-      babbleScale: 1.02,
-      syllables: [
-        { f: 420, f2: 680, d: 0.1, w: 0, g: 0.034 },
-        { f: 390, f2: 620, d: 0.09, w: 0.13, g: 0.032 },
-        { f: 510, f2: 760, d: 0.11, w: 0.26, g: 0.033 },
-        { f: 560, f2: 840, d: 0.13, w: 0.4, g: 0.031 }
-      ]
+      animalSound: 'dog',
+      label: 'Woof!'
     },
     female: {
       id: 'player-female',
-      voiceStyle: 'baby-girl',
-      phrases: ['Last cardie!', 'Ooh, last cardie!', 'Wee! Last cardie!'],
-      rate: 0.76,
-      pitch: 2,
-      animalStyle: 'baby',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen|zira|flo',
-      ping: [987.77, 1318.51],
-      fallbackScale: 1.42,
-      chirpScale: 1.12,
-      babbleScale: 1.18,
-      syllables: [
-        { f: 620, f2: 980, d: 0.09, w: 0, g: 0.035 },
-        { f: 580, f2: 920, d: 0.08, w: 0.12, g: 0.033 },
-        { f: 700, f2: 1100, d: 0.1, w: 0.24, g: 0.034 },
-        { f: 760, f2: 1180, d: 0.12, w: 0.37, g: 0.032 }
-      ]
+      animalSound: 'cat',
+      label: 'Meow!'
     }
   };
 
   const AI_LAST_CARD_VOICES = {
-    brownie: {
-      voiceStyle: 'bear-cub',
-      phrases: ['Aww, wast card!', 'Grr-baby last cardie!', 'Cub says last cardie!'],
-      rate: 0.7,
-      pitch: 2,
-      animalStyle: 'bear',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen',
-      ping: [246.94, 329.63],
-      fallbackScale: 0.95,
-      chirpScale: 0.92,
-      babbleScale: 0.88,
-      syllables: [
-        { f: 260, f2: 390, d: 0.11, w: 0, g: 0.033 },
-        { f: 240, f2: 360, d: 0.1, w: 0.14, g: 0.031 },
-        { f: 300, f2: 450, d: 0.12, w: 0.28, g: 0.032 },
-        { f: 330, f2: 500, d: 0.14, w: 0.43, g: 0.03 }
-      ]
-    },
-    bunny: {
-      voiceStyle: 'bunny-baby',
-      phrases: ['Hop hop, last cardie!', 'Bunny says last cardie!', 'Eek! Last cardie!'],
-      rate: 0.8,
-      pitch: 2,
-      animalStyle: 'bunny',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen|zira',
-      ping: [784, 1046.5],
-      fallbackScale: 1.38,
-      chirpScale: 1.18,
-      babbleScale: 1.22,
-      syllables: [
-        { f: 760, f2: 1180, d: 0.07, w: 0, g: 0.034 },
-        { f: 820, f2: 1260, d: 0.07, w: 0.1, g: 0.033 },
-        { f: 900, f2: 1380, d: 0.08, w: 0.2, g: 0.034 },
-        { f: 980, f2: 1480, d: 0.1, w: 0.31, g: 0.032 }
-      ]
-    },
-    sally: {
-      voiceStyle: 'giggle-baby',
-      phrases: ['Wheee, last cardie!', 'Hee hee, last cardie!', 'Ta-da last cardie!'],
-      rate: 0.82,
-      pitch: 2,
-      animalStyle: 'giggle',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen',
-      ping: [659.25, 880],
-      fallbackScale: 1.28,
-      chirpScale: 1.1,
-      babbleScale: 1.14,
-      syllables: [
-        { f: 680, f2: 1020, d: 0.06, w: 0, g: 0.033 },
-        { f: 740, f2: 1110, d: 0.06, w: 0.09, g: 0.032 },
-        { f: 820, f2: 1230, d: 0.07, w: 0.18, g: 0.034 },
-        { f: 900, f2: 1350, d: 0.09, w: 0.28, g: 0.031 },
-        { f: 980, f2: 1470, d: 0.08, w: 0.4, g: 0.03 }
-      ]
-    },
-    cookie: {
-      voiceStyle: 'cookie-baby',
-      phrases: ['Nom nom, last cardie!', 'Yum yum last cardie!', 'Cookie says last cardie!'],
-      rate: 0.74,
-      pitch: 2,
-      animalStyle: 'cookie',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen',
-      ping: [523.25, 698.46],
-      fallbackScale: 1.15,
-      chirpScale: 1.02,
-      babbleScale: 1.05,
-      syllables: [
-        { f: 540, f2: 810, d: 0.08, w: 0, g: 0.032 },
-        { f: 500, f2: 760, d: 0.08, w: 0.12, g: 0.031 },
-        { f: 620, f2: 930, d: 0.1, w: 0.24, g: 0.033 },
-        { f: 680, f2: 1020, d: 0.11, w: 0.37, g: 0.03 }
-      ]
-    },
-    mochi: {
-      voiceStyle: 'mochi-baby',
-      phrases: ['Squish squish, last cardie!', 'Soft soft last cardie!', 'Mochi says last cardie!'],
-      rate: 0.68,
-      pitch: 2,
-      animalStyle: 'mochi',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen|zira',
-      ping: [880, 1174.66],
-      fallbackScale: 1.48,
-      chirpScale: 1.22,
-      babbleScale: 1.28,
-      syllables: [
-        { f: 880, f2: 1320, d: 0.1, w: 0, g: 0.034 },
-        { f: 920, f2: 1380, d: 0.09, w: 0.14, g: 0.033 },
-        { f: 1000, f2: 1500, d: 0.11, w: 0.28, g: 0.034 },
-        { f: 1080, f2: 1620, d: 0.13, w: 0.42, g: 0.032 }
-      ]
-    },
-    panda: {
-      voiceStyle: 'panda-cub',
-      phrases: ['Mew mew, last cardie.', 'Panda cub last cardie.', 'Aww, last cardie.'],
-      rate: 0.66,
-      pitch: 2,
-      animalStyle: 'panda',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen',
-      ping: [196, 261.63],
-      fallbackScale: 0.98,
-      chirpScale: 0.88,
-      babbleScale: 0.9,
-      syllables: [
-        { f: 220, f2: 330, d: 0.12, w: 0, g: 0.031 },
-        { f: 200, f2: 300, d: 0.11, w: 0.15, g: 0.03 },
-        { f: 260, f2: 390, d: 0.13, w: 0.3, g: 0.031 },
-        { f: 280, f2: 420, d: 0.14, w: 0.46, g: 0.029 }
-      ]
-    },
-    boba: {
-      voiceStyle: 'boba-baby',
-      phrases: ['Bubble bubble last cardie!', 'Pop pop last cardie!', 'Boba says last cardie!'],
-      rate: 0.78,
-      pitch: 2,
-      animalStyle: 'boba',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen|zira',
-      ping: [587.33, 784],
-      fallbackScale: 1.22,
-      chirpScale: 1.08,
-      babbleScale: 1.1,
-      syllables: [
-        { f: 620, f2: 930, d: 0.07, w: 0, g: 0.033 },
-        { f: 680, f2: 1020, d: 0.07, w: 0.1, g: 0.032 },
-        { f: 740, f2: 1110, d: 0.08, w: 0.2, g: 0.034 },
-        { f: 800, f2: 1200, d: 0.1, w: 0.31, g: 0.031 }
-      ]
-    },
-    pip: {
-      voiceStyle: 'chick-baby',
-      phrases: ['Peep peep last cardie!', 'Chirp chirp last cardie!', 'Pip says last cardie!'],
-      rate: 0.86,
-      pitch: 2,
-      animalStyle: 'chick',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen',
-      ping: [1174.66, 1567.98],
-      fallbackScale: 1.55,
-      chirpScale: 1.28,
-      babbleScale: 1.35,
-      syllables: [
-        { f: 1200, f2: 1800, d: 0.05, w: 0, g: 0.035 },
-        { f: 1300, f2: 1950, d: 0.05, w: 0.08, g: 0.034 },
-        { f: 1400, f2: 2100, d: 0.06, w: 0.16, g: 0.035 },
-        { f: 1500, f2: 2250, d: 0.07, w: 0.25, g: 0.033 },
-        { f: 1600, f2: 2400, d: 0.08, w: 0.35, g: 0.032 }
-      ]
-    }
+    brownie: { animalSound: 'bear', label: 'Grr!' },
+    bunny: { animalSound: 'rabbit', label: 'Squeak!' },
+    sally: { animalSound: 'parrot', label: 'Squawk!' },
+    cookie: { animalSound: 'mouse', label: 'Squeak!' },
+    mochi: { animalSound: 'seal', label: 'Arf!' },
+    panda: { animalSound: 'panda', label: 'Bleat!' },
+    boba: { animalSound: 'duck', label: 'Quack!' },
+    pip: { animalSound: 'chick', label: 'Peep!' }
   };
-
-  function pickLastCardPhrase(profile) {
-    const phrases = Array.isArray(profile?.phrases) && profile.phrases.length
-      ? profile.phrases
-      : [profile?.phrase || 'Last cardie!'];
-    return phrases[Math.floor(Math.random() * phrases.length)];
-  }
 
   function getLastCardVoiceProfile(player, options = {}) {
     if (!player) return HUMAN_LAST_CARD_VOICES.male;
@@ -829,22 +656,8 @@
     if (voice) return { id: character.id, ...voice };
     return {
       id: character?.id || player.characterId || player.name || 'ai',
-      voiceStyle: 'baby',
-      phrases: ['Last cardie!', 'Ooh, last cardie!', 'Baby says last cardie!'],
-      rate: 0.76,
-      pitch: 2,
-      animalStyle: 'baby',
-      voiceHint: 'junior|child|kids|paulina|samantha|karen',
-      ping: [880, 1174.66],
-      fallbackScale: 1.2,
-      chirpScale: 1.05,
-      babbleScale: 1.08,
-      syllables: [
-        { f: 580, f2: 900, d: 0.09, w: 0, g: 0.033 },
-        { f: 540, f2: 840, d: 0.08, w: 0.12, g: 0.031 },
-        { f: 660, f2: 1020, d: 0.1, w: 0.24, g: 0.033 },
-        { f: 720, f2: 1110, d: 0.12, w: 0.37, g: 0.03 }
-      ]
+      animalSound: 'bird',
+      label: 'Chirp!'
     };
   }
 
@@ -858,7 +671,6 @@
     getRivalVictoryCopy,
     getSessionFarewells,
     renderAvatar,
-    getLastCardVoiceProfile,
-    pickLastCardPhrase
+    getLastCardVoiceProfile
   };
 })();
