@@ -624,88 +624,108 @@
   const HUMAN_LAST_CARD_VOICES = {
     male: {
       id: 'player-male',
-      phrase: 'Last card!',
-      rate: 1.0,
-      pitch: 0.9,
-      voiceHint: 'david|mark|daniel|james|male|google uk english male|microsoft david',
-      ping: [196, 261.63],
-      fallbackScale: 0.82
+      phrase: 'Wast cardie!',
+      rate: 0.8,
+      pitch: 2,
+      animalStyle: 'baby',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen|zira|flo',
+      ping: [880, 1174.66],
+      fallbackScale: 1.35,
+      chirpScale: 1.08
     },
     female: {
       id: 'player-female',
-      phrase: 'Last card!',
-      rate: 1.12,
-      pitch: 1.68,
-      voiceHint: 'samantha|karen|zira|flo|female|google us english|microsoft zira',
-      ping: [440, 554.37],
-      fallbackScale: 1.18
+      phrase: 'Last cardie!',
+      rate: 0.82,
+      pitch: 2,
+      animalStyle: 'baby',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen|zira|flo',
+      ping: [987.77, 1318.51],
+      fallbackScale: 1.42,
+      chirpScale: 1.12
     }
   };
 
   const AI_LAST_CARD_VOICES = {
     brownie: {
-      phrase: 'Last card.',
-      rate: 0.92,
-      pitch: 0.74,
-      voiceHint: 'fred|daniel|david|jorge|male|google uk english male',
-      ping: [146.83, 196],
-      fallbackScale: 0.72
+      phrase: 'Aww, wast card!',
+      rate: 0.78,
+      pitch: 2,
+      animalStyle: 'bear',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen',
+      ping: [246.94, 329.63],
+      fallbackScale: 0.95,
+      chirpScale: 0.92
     },
     bunny: {
-      phrase: 'Last card!',
-      rate: 1.2,
-      pitch: 1.95,
-      voiceHint: 'samantha|karen|zira|flo|female|google us english',
-      ping: [587.33, 784],
-      fallbackScale: 1.42
+      phrase: 'Last cardie!',
+      rate: 0.84,
+      pitch: 2,
+      animalStyle: 'bunny',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen|zira',
+      ping: [784, 1046.5],
+      fallbackScale: 1.38,
+      chirpScale: 1.18
     },
     sally: {
-      phrase: 'Last caard!',
-      rate: 1.28,
-      pitch: 1.58,
-      voiceHint: 'samantha|karen|victoria|female|google uk english female',
+      phrase: 'Wheee, last cardie!',
+      rate: 0.86,
+      pitch: 2,
+      animalStyle: 'giggle',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen',
       ping: [659.25, 880],
-      fallbackScale: 1.22
+      fallbackScale: 1.28,
+      chirpScale: 1.1
     },
     cookie: {
-      phrase: 'Last card.',
-      rate: 1.02,
-      pitch: 1.08,
-      voiceHint: 'daniel|alex|tom|male|google us english',
-      ping: [329.63, 440],
-      fallbackScale: 0.96
+      phrase: 'Nom, last cardie!',
+      rate: 0.8,
+      pitch: 2,
+      animalStyle: 'cookie',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen',
+      ping: [523.25, 698.46],
+      fallbackScale: 1.15,
+      chirpScale: 1.02
     },
     mochi: {
-      phrase: 'Last card!',
-      rate: 0.9,
-      pitch: 2.0,
-      voiceHint: 'samantha|karen|zira|female|junior|paulina',
-      ping: [698.46, 932.33],
-      fallbackScale: 1.48
+      phrase: 'Squish, last cardie!',
+      rate: 0.76,
+      pitch: 2,
+      animalStyle: 'mochi',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen|zira',
+      ping: [880, 1174.66],
+      fallbackScale: 1.48,
+      chirpScale: 1.22
     },
     panda: {
-      phrase: 'Last card.',
-      rate: 0.82,
-      pitch: 0.8,
-      voiceHint: 'daniel|david|lee|male|google uk english male',
-      ping: [130.81, 174.61],
-      fallbackScale: 0.68
+      phrase: 'Mew, last cardie.',
+      rate: 0.74,
+      pitch: 2,
+      animalStyle: 'panda',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen',
+      ping: [196, 261.63],
+      fallbackScale: 0.98,
+      chirpScale: 0.88
     },
     boba: {
-      phrase: 'Last card!',
-      rate: 1.16,
-      pitch: 1.42,
-      voiceHint: 'karen|samantha|zira|female|google us english',
-      ping: [523.25, 698.46],
-      fallbackScale: 1.12
+      phrase: 'Bubble last cardie!',
+      rate: 0.83,
+      pitch: 2,
+      animalStyle: 'boba',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen|zira',
+      ping: [587.33, 784],
+      fallbackScale: 1.22,
+      chirpScale: 1.08
     },
     pip: {
-      phrase: 'Last card last card!',
-      rate: 1.38,
-      pitch: 2.0,
-      voiceHint: 'junior|paulina|samantha|female|google us english',
-      ping: [880, 1174.66],
-      fallbackScale: 1.55
+      phrase: 'Peep peep, last cardie!',
+      rate: 0.88,
+      pitch: 2,
+      animalStyle: 'chick',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen',
+      ping: [1174.66, 1567.98],
+      fallbackScale: 1.55,
+      chirpScale: 1.28
     }
   };
 
@@ -720,12 +740,14 @@
     if (voice) return { id: character.id, ...voice };
     return {
       id: character?.id || player.characterId || player.name || 'ai',
-      phrase: 'Last card!',
-      rate: 1.05,
-      pitch: 1.35,
-      voiceHint: 'english',
-      ping: [440, 554.37],
-      fallbackScale: 1
+      phrase: 'Last cardie!',
+      rate: 0.82,
+      pitch: 2,
+      animalStyle: 'baby',
+      voiceHint: 'junior|child|kids|paulina|samantha|karen',
+      ping: [880, 1174.66],
+      fallbackScale: 1.2,
+      chirpScale: 1.05
     };
   }
 

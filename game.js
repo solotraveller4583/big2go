@@ -3272,22 +3272,82 @@
     row.appendChild(callout);
   }
 
+  const LAST_CARD_ANIMAL_CHIRPS = {
+    baby: [
+      { f: 1046.5, d: 0.055, type: 'sine', g: 0.03 },
+      { f: 1318.51, d: 0.07, type: 'triangle', g: 0.028, w: 0.06 },
+      { f: 1174.66, d: 0.09, type: 'sine', g: 0.024, w: 0.13 }
+    ],
+    bear: [
+      { f: 220, d: 0.09, type: 'triangle', g: 0.03 },
+      { f: 277.18, d: 0.1, type: 'sine', g: 0.028, w: 0.1 },
+      { f: 329.63, d: 0.12, type: 'triangle', g: 0.024, w: 0.2 }
+    ],
+    bunny: [
+      { f: 880, d: 0.045, type: 'sine', g: 0.031 },
+      { f: 1108.73, d: 0.045, type: 'sine', g: 0.029, w: 0.05 },
+      { f: 1318.51, d: 0.055, type: 'triangle', g: 0.027, w: 0.1 }
+    ],
+    giggle: [
+      { f: 740, d: 0.04, type: 'sine', g: 0.028 },
+      { f: 988, d: 0.04, type: 'triangle', g: 0.027, w: 0.04 },
+      { f: 1174.66, d: 0.05, type: 'sine', g: 0.026, w: 0.08 },
+      { f: 1318.51, d: 0.06, type: 'triangle', g: 0.024, w: 0.14 }
+    ],
+    cookie: [
+      { f: 523.25, d: 0.05, type: 'triangle', g: 0.028 },
+      { f: 659.25, d: 0.06, type: 'sine', g: 0.026, w: 0.06 },
+      { f: 784, d: 0.07, type: 'triangle', g: 0.024, w: 0.12 }
+    ],
+    mochi: [
+      { f: 987.77, d: 0.06, type: 'sine', g: 0.03 },
+      { f: 1244.51, d: 0.08, type: 'triangle', g: 0.028, w: 0.07 },
+      { f: 1480, d: 0.1, type: 'sine', g: 0.024, w: 0.15 }
+    ],
+    panda: [
+      { f: 196, d: 0.1, type: 'sine', g: 0.028 },
+      { f: 246.94, d: 0.11, type: 'triangle', g: 0.026, w: 0.1 },
+      { f: 293.66, d: 0.12, type: 'sine', g: 0.024, w: 0.2 }
+    ],
+    boba: [
+      { f: 587.33, d: 0.04, type: 'sine', g: 0.029 },
+      { f: 739.99, d: 0.045, type: 'triangle', g: 0.027, w: 0.05 },
+      { f: 880, d: 0.05, type: 'sine', g: 0.025, w: 0.1 },
+      { f: 1046.5, d: 0.055, type: 'triangle', g: 0.023, w: 0.16 }
+    ],
+    chick: [
+      { f: 1567.98, d: 0.035, type: 'sine', g: 0.032 },
+      { f: 1975.53, d: 0.035, type: 'sine', g: 0.03, w: 0.04 },
+      { f: 1760, d: 0.04, type: 'triangle', g: 0.028, w: 0.08 },
+      { f: 2093, d: 0.045, type: 'sine', g: 0.026, w: 0.13 }
+    ]
+  };
+
+  const CUTE_BABY_VOICE_HINTS = 'junior|child|kids|baby|paulina|samantha|karen|zira|flo|female';
+
   let lastCardVoiceCache = new Map();
 
   function pickLastCardSpeechVoice(profile) {
     const synth = window.speechSynthesis;
     if (!synth || !profile) return null;
-    const cacheKey = String(profile.id || profile.phrase || 'default');
+    const cacheKey = `cute:${profile.id || profile.phrase || 'default'}`;
     if (lastCardVoiceCache.has(cacheKey)) return lastCardVoiceCache.get(cacheKey);
     const voices = synth.getVoices().filter(voice => /^en/i.test(voice.lang));
     if (!voices.length) return null;
-    if (profile.voiceHint) {
-      const hint = new RegExp(profile.voiceHint, 'i');
-      const hinted = voices.find(voice => hint.test(voice.name));
-      if (hinted) {
-        lastCardVoiceCache.set(cacheKey, hinted);
-        return hinted;
+    const hintSources = [profile.voiceHint, CUTE_BABY_VOICE_HINTS];
+    for (const hintSource of hintSources) {
+      if (!hintSource) continue;
+      const hint = new RegExp(hintSource, 'i');
+      const match = voices.find(voice => hint.test(voice.name));
+      if (match) {
+        lastCardVoiceCache.set(cacheKey, match);
+        return match;
       }
+    }
+    const childish = voices.find(voice => /junior|child|kids|baby/i.test(voice.name));
+    if (childish) {
+      lastCardVoiceCache.set(cacheKey, childish);
+      return childish;
     }
     const hash = [...cacheKey].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
     const picked = voices[hash % voices.length];
@@ -3304,25 +3364,42 @@
     const gender = getPlayerProfileMeta().gender;
     return window.Big2GoAICharacters?.getLastCardVoiceProfile?.(player, { gender }) || {
       id: 'default',
-      phrase: 'Last card!',
-      rate: 1.05,
-      pitch: 1.5,
+      phrase: 'Last cardie!',
+      rate: 0.82,
+      pitch: 2,
+      animalStyle: 'baby',
       ping: [987.77, 1318.51],
-      fallbackScale: 1
+      fallbackScale: 1.2,
+      chirpScale: 1.05
     };
   }
 
-  function playLastCardPing(profile) {
-    const ping = Array.isArray(profile?.ping) ? profile.ping : [987.77, 1318.51];
-    playTone(ping[0], 0.04, 'triangle', 0.026, 0);
-    if (ping[1]) playTone(ping[1], 0.05, 'sine', 0.022, 0.02);
+  function playCuteAnimalChirp(profile) {
+    const style = profile?.animalStyle || 'baby';
+    const scale = profile?.chirpScale || 1;
+    const chirps = LAST_CARD_ANIMAL_CHIRPS[style] || LAST_CARD_ANIMAL_CHIRPS.baby;
+    chirps.forEach((chirp, index) => {
+      playTone(
+        chirp.f * scale,
+        chirp.d,
+        chirp.type || 'sine',
+        chirp.g || 0.028,
+        chirp.w || index * 0.06,
+        chirp.detune || 0
+      );
+    });
+    const ping = Array.isArray(profile?.ping) ? profile.ping : [];
+    ping.forEach((freq, index) => {
+      playTone(freq * scale, 0.045, 'sine', 0.02, 0.18 + index * 0.05);
+    });
   }
 
   function playLastCardVoiceFallback(profile) {
-    const scale = profile?.fallbackScale || 1;
-    const freqs = [440, 554.37, 659.25, 880, 1046.5].map(freq => freq * scale);
-    freqs.forEach((freq, index) => {
-      playTone(freq, 0.07 + index * 0.01, index % 2 ? 'sine' : 'triangle', 0.028 - index * 0.002, index * 0.05);
+    playCuteAnimalChirp(profile);
+    const scale = profile?.fallbackScale || 1.2;
+    const babble = [987.77, 1174.66, 1318.51, 1567.98].map(freq => freq * scale);
+    babble.forEach((freq, index) => {
+      playTone(freq, 0.06 + index * 0.01, index % 2 ? 'sine' : 'triangle', 0.026 - index * 0.002, 0.28 + index * 0.07);
     });
   }
 
@@ -3330,7 +3407,7 @@
     if (!state.sound) return;
     unlockAudioFromGesture();
     const profile = resolveLastCardVoiceProfile(playerIndex);
-    playLastCardPing(profile);
+    playCuteAnimalChirp(profile);
     const synth = window.speechSynthesis;
     if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
       playLastCardVoiceFallback(profile);
@@ -3338,16 +3415,16 @@
     }
     try {
       synth.cancel();
-      const utterance = new SpeechSynthesisUtterance(profile.phrase || 'Last card!');
-      utterance.rate = profile.rate ?? 1.05;
-      utterance.pitch = profile.pitch ?? 1.5;
-      utterance.volume = Math.min(1, Math.max(0.6, (state.soundVolume || 0.72) * 1.15));
+      const utterance = new SpeechSynthesisUtterance(profile.phrase || 'Last cardie!');
+      utterance.rate = Math.min(1.1, profile.rate ?? 0.82);
+      utterance.pitch = Math.min(2, Math.max(1.6, profile.pitch ?? 2));
+      utterance.volume = Math.min(1, Math.max(0.72, (state.soundVolume || 0.72) * 1.2));
       const voice = pickLastCardSpeechVoice(profile);
       if (voice) utterance.voice = voice;
       utterance.onerror = () => playLastCardVoiceFallback(profile);
       window.setTimeout(() => {
         try { synth.speak(utterance); } catch (_) { playLastCardVoiceFallback(profile); }
-      }, 110);
+      }, 180);
     } catch (_) {
       playLastCardVoiceFallback(profile);
     }
