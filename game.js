@@ -236,7 +236,17 @@
     start: document.querySelector('#start-button'),
     continue: document.querySelector('#continue-button'),
     privateRoom: document.querySelector('#private-room-button'),
-    rules: document.querySelector('#rules-button'),
+    rules: document.querySelector('#demo-button'),
+    demo: document.querySelector('#demo-button'),
+    playDemoDialog: document.querySelector('#play-demo-dialog'),
+    playDemoScreen: document.querySelector('#play-demo-screen'),
+    playDemoToggle: document.querySelector('#play-demo-toggle'),
+    playDemoBarFill: document.querySelector('#play-demo-bar-fill'),
+    playDemoTime: document.querySelector('#play-demo-time'),
+    playDemoSteps: document.querySelector('#play-demo-steps'),
+    playDemoRecDot: document.querySelector('#play-demo-rec-dot'),
+    playDemoRulesButton: document.querySelector('#play-demo-rules-button'),
+    playDemoStartButton: document.querySelector('#play-demo-start-button'),
     share: document.querySelector('#share-button'),
     profileButton: document.querySelector('#profile-button'),
     playerProfileAvatar: document.querySelector('#player-profile-avatar'),
@@ -2802,6 +2812,295 @@
     els.helpDialog.showModal();
   }
 
+  const playDemo = {
+    sceneIndex: 0,
+    playing: false,
+    timer: null,
+    progressTimer: null,
+    sceneStartedAt: 0,
+    elapsedBeforeScene: 0,
+    totalDuration: 0
+  };
+
+  function buildDemoCard(rank, suitKey, extraClass = '') {
+    const suit = SUITS.find(entry => entry.key === suitKey) || SUITS[0];
+    return `<div class="demo-card demo-card--${suit.color}${extraClass ? ` ${extraClass}` : ''}"><strong>${rank}</strong><span>${suit.symbol}</span></div>`;
+  }
+
+  function getPlayDemoScenes() {
+    return [
+      {
+        duration: 4200,
+        title: 'Welcome to Big2Go',
+        caption: 'Big Two is a shedding card game. Be the first player to play every card in your hand.',
+        html: `
+          <div class="demo-stage demo-stage--intro">
+            <div class="demo-brand-mark">B2</div>
+            <h3 class="demo-stage-title">Fast mobile Big Two</h3>
+            <p class="demo-stage-caption">This demo walks you through one full round so you know what to tap.</p>
+          </div>`
+      },
+      {
+        duration: 4200,
+        title: 'Step 1: Pick your table',
+        caption: 'On the landing page, choose 4-player Classic, 3-player Fast, or a 2-player duel.',
+        html: `
+          <div class="demo-stage">
+            <h3 class="demo-stage-title">Choose match mode</h3>
+            <div class="demo-modes">
+              <span class="demo-mode-chip is-active">4P Classic</span>
+              <span class="demo-mode-chip">3P Fast</span>
+              <span class="demo-mode-chip">2P Duel</span>
+            </div>
+            <p class="demo-stage-caption">Then tap the gold PLAY NOW button to start.</p>
+          </div>`
+      },
+      {
+        duration: 4600,
+        title: 'Step 2: Cards are dealt',
+        caption: 'Everyone gets a hand. The player holding 3♦ always opens the game.',
+        html: `
+          <div class="demo-stage">
+            <h3 class="demo-stage-title">Find 3♦</h3>
+            <div class="demo-hand">
+              ${buildDemoCard('5', 'H')}
+              ${buildDemoCard('9', 'C')}
+              ${buildDemoCard('3', 'D', 'demo-card--glow')}
+              ${buildDemoCard('J', 'S')}
+              ${buildDemoCard('A', 'H')}
+            </div>
+            <p class="demo-stage-caption">Your opening play must include 3♦ on the first trick.</p>
+          </div>`
+      },
+      {
+        duration: 4600,
+        title: 'Step 3: Lead the first trick',
+        caption: 'Tap cards to select them, then tap Play. Singles, pairs, triples, and five-card combos each have their own rules.',
+        html: `
+          <div class="demo-stage">
+            <h3 class="demo-stage-title">Open with a valid hand</h3>
+            <div class="demo-table">
+              <div class="demo-trick">${buildDemoCard('3', 'D', 'demo-card--play-in')}</div>
+            </div>
+            <div class="demo-actions"><span class="demo-play-btn">Play</span></div>
+            <p class="demo-stage-caption">Higher rank wins. Suit order: ♦ ♣ ♥ ♠. 2 is the strongest rank.</p>
+          </div>`
+      },
+      {
+        duration: 4800,
+        title: 'Step 4: Beat the current trick',
+        caption: 'Match the trick type: beat a single with a higher single, a pair with a higher pair, and so on.',
+        html: `
+          <div class="demo-stage">
+            <h3 class="demo-stage-title">Play higher than the table</h3>
+            <div class="demo-table">
+              <div class="demo-trick">
+                ${buildDemoCard('4', 'C')}
+                ${buildDemoCard('4', 'D')}
+                <span style="opacity:.5">→</span>
+                ${buildDemoCard('5', 'H', 'demo-card--play-in')}
+                ${buildDemoCard('5', 'S', 'demo-card--play-in')}
+              </div>
+            </div>
+            <p class="demo-stage-caption">This pair of 5s beats the pair of 4s.</p>
+          </div>`
+      },
+      {
+        duration: 4400,
+        title: 'Step 5: Pass when you cannot beat',
+        caption: 'If you have no legal higher play, tap Pass. After enough passes, the last winner leads again.',
+        html: `
+          <div class="demo-stage">
+            <h3 class="demo-stage-title">No good play? Pass.</h3>
+            <div class="demo-table">
+              <div class="demo-trick">
+                ${buildDemoCard('K', 'S')}
+                ${buildDemoCard('K', 'H')}
+              </div>
+            </div>
+            <div class="demo-actions"><span class="demo-pass-btn">Pass</span></div>
+            <p class="demo-stage-caption">Passing is normal. Wait for a fresh trick you can attack.</p>
+          </div>`
+      },
+      {
+        duration: 4800,
+        title: 'Step 6: Five-card power plays',
+        caption: 'Straights, flushes, full houses, four of a kind, and straight flushes can turn the table.',
+        html: `
+          <div class="demo-stage">
+            <h3 class="demo-stage-title">Five-card combos</h3>
+            <div class="demo-table">
+              <div class="demo-trick">
+                ${buildDemoCard('7', 'D', 'demo-card--play-in')}
+                ${buildDemoCard('8', 'D', 'demo-card--play-in')}
+                ${buildDemoCard('9', 'D', 'demo-card--play-in')}
+                ${buildDemoCard('10', 'D', 'demo-card--play-in')}
+                ${buildDemoCard('J', 'D', 'demo-card--play-in')}
+              </div>
+            </div>
+            <p class="demo-stage-caption">A straight flush is one of the strongest five-card hands.</p>
+          </div>`
+      },
+      {
+        duration: 5000,
+        title: 'Step 7: Win the match',
+        caption: 'Empty your hand before the AI rivals to win coins, rank up, and climb the Big2Go ladder.',
+        html: `
+          <div class="demo-stage">
+            <span class="demo-win-badge">YOU WIN!</span>
+            <h3 class="demo-stage-title">Clear your hand first</h3>
+            <p class="demo-stage-caption">Ready to try it? Tap PLAY NOW and use Hint if you get stuck.</p>
+          </div>`
+      }
+    ];
+  }
+
+  function formatDemoTime(ms) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  function renderPlayDemoSteps(scenes) {
+    if (!els.playDemoSteps) return;
+    els.playDemoSteps.innerHTML = scenes.map((scene, index) => `
+      <button type="button" class="play-demo-step${index === playDemo.sceneIndex ? ' is-active' : ''}" data-demo-step="${index}" aria-label="${scene.title}" aria-selected="${index === playDemo.sceneIndex ? 'true' : 'false'}"></button>
+    `).join('');
+    els.playDemoSteps.querySelectorAll('[data-demo-step]').forEach(button => {
+      button.addEventListener('click', () => {
+        jumpPlayDemoScene(Number(button.dataset.demoStep) || 0);
+      });
+    });
+  }
+
+  function renderPlayDemoScene(index) {
+    const scenes = getPlayDemoScenes();
+    const scene = scenes[index];
+    if (!scene || !els.playDemoScreen) return;
+    playDemo.sceneIndex = index;
+    playDemo.sceneStartedAt = Date.now();
+    els.playDemoScreen.innerHTML = scene.html;
+    renderPlayDemoSteps(scenes);
+    updatePlayDemoToggle();
+  }
+
+  function updatePlayDemoProgress() {
+    const scenes = getPlayDemoScenes();
+    const scene = scenes[playDemo.sceneIndex];
+    if (!scene) return;
+    const sceneElapsed = playDemo.playing ? Math.min(scene.duration, Date.now() - playDemo.sceneStartedAt) : 0;
+    const totalElapsed = playDemo.elapsedBeforeScene + sceneElapsed;
+    if (els.playDemoBarFill) els.playDemoBarFill.style.width = `${Math.min(100, (totalElapsed / playDemo.totalDuration) * 100)}%`;
+    if (els.playDemoTime) els.playDemoTime.textContent = formatDemoTime(totalElapsed);
+  }
+
+  function updatePlayDemoToggle() {
+    if (!els.playDemoToggle) return;
+    const playing = playDemo.playing;
+    els.playDemoToggle.textContent = playing ? '⏸' : '▶';
+    els.playDemoToggle.setAttribute('aria-label', playing ? 'Pause demo' : 'Play demo');
+    els.playDemoRecDot?.classList.toggle('is-paused', !playing);
+  }
+
+  function stopPlayDemo() {
+    playDemo.playing = false;
+    if (playDemo.timer) {
+      clearTimeout(playDemo.timer);
+      playDemo.timer = null;
+    }
+    if (playDemo.progressTimer) {
+      clearInterval(playDemo.progressTimer);
+      playDemo.progressTimer = null;
+    }
+    updatePlayDemoToggle();
+  }
+
+  function schedulePlayDemoAdvance() {
+    const scenes = getPlayDemoScenes();
+    const scene = scenes[playDemo.sceneIndex];
+    if (!scene) return;
+    if (playDemo.timer) clearTimeout(playDemo.timer);
+    playDemo.timer = setTimeout(() => {
+      const nextIndex = (playDemo.sceneIndex + 1) % scenes.length;
+      if (nextIndex === 0) playDemo.elapsedBeforeScene = 0;
+      else playDemo.elapsedBeforeScene += scene.duration;
+      renderPlayDemoScene(nextIndex);
+      if (playDemo.playing) schedulePlayDemoAdvance();
+    }, scene.duration);
+  }
+
+  function startPlayDemoPlayback() {
+    const scenes = getPlayDemoScenes();
+    playDemo.totalDuration = scenes.reduce((sum, scene) => sum + scene.duration, 0);
+    playDemo.playing = true;
+    playDemo.sceneStartedAt = Date.now();
+    updatePlayDemoToggle();
+    if (playDemo.progressTimer) clearInterval(playDemo.progressTimer);
+    playDemo.progressTimer = setInterval(updatePlayDemoProgress, 120);
+    schedulePlayDemoAdvance();
+    updatePlayDemoProgress();
+  }
+
+  function pausePlayDemoPlayback() {
+    const scenes = getPlayDemoScenes();
+    const scene = scenes[playDemo.sceneIndex];
+    if (scene) {
+      playDemo.elapsedBeforeScene += Math.min(scene.duration, Date.now() - playDemo.sceneStartedAt);
+    }
+    stopPlayDemo();
+    updatePlayDemoProgress();
+  }
+
+  function jumpPlayDemoScene(index) {
+    const scenes = getPlayDemoScenes();
+    const safeIndex = Math.max(0, Math.min(scenes.length - 1, index));
+    playDemo.elapsedBeforeScene = scenes.slice(0, safeIndex).reduce((sum, scene) => sum + scene.duration, 0);
+    renderPlayDemoScene(safeIndex);
+    if (playDemo.playing) schedulePlayDemoAdvance();
+    updatePlayDemoProgress();
+  }
+
+  function resetPlayDemo() {
+    stopPlayDemo();
+    playDemo.sceneIndex = 0;
+    playDemo.elapsedBeforeScene = 0;
+    renderPlayDemoScene(0);
+    if (els.playDemoBarFill) els.playDemoBarFill.style.width = '0%';
+    if (els.playDemoTime) els.playDemoTime.textContent = '0:00';
+  }
+
+  function bindPlayDemoEvents() {
+    if (!els.playDemoDialog || els.playDemoDialog.dataset.bound === 'true') return;
+    els.playDemoDialog.dataset.bound = 'true';
+    els.playDemoToggle?.addEventListener('click', () => {
+      if (playDemo.playing) pausePlayDemoPlayback();
+      else startPlayDemoPlayback();
+    });
+    els.playDemoRulesButton?.addEventListener('click', () => {
+      els.playDemoDialog.close();
+      showHelp('How to Play', RULES_HTML);
+    });
+    els.playDemoStartButton?.addEventListener('click', () => {
+      els.playDemoDialog.close();
+      els.start?.focus();
+      els.start?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    els.playDemoDialog.addEventListener('close', stopPlayDemo);
+  }
+
+  function showPlayDemo() {
+    if (!els.playDemoDialog) {
+      showHelp('How to Play', RULES_HTML);
+      return;
+    }
+    bindPlayDemoEvents();
+    resetPlayDemo();
+    els.playDemoDialog.showModal();
+    startPlayDemoPlayback();
+    playUiSound('click');
+  }
+
   function showOracle(title, message) {
     showHelp(title, message);
   }
@@ -5036,7 +5335,7 @@
       unlockAudioFromGesture();
       if (!restoreGame()) newGame();
     });
-    els.rules.addEventListener('click', () => showHelp('How to Play', RULES_HTML));
+    els.demo?.addEventListener('click', showPlayDemo);
     els.privateRoom?.addEventListener('click', () => showPrivateRoom());
     els.roomRejoin?.addEventListener('click', rejoinSavedRoom);
     els.roomExitSession?.addEventListener('click', exitSavedRoom);
