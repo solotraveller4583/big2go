@@ -2069,6 +2069,17 @@
           { f: 523.25, d: .06, w: 0, type: 'sine', g: .022 },
           { f: 784, d: .08, w: .07, type: 'triangle', g: .022 }
         ],
+        lastCardPing: [
+          { f: 987.77, d: .04, w: 0, type: 'triangle', g: .026 },
+          { f: 1318.51, d: .05, w: .02, type: 'sine', g: .022 }
+        ],
+        lastCardVoice: [
+          { f: 440, d: .07, w: 0, type: 'triangle', g: .03 },
+          { f: 554.37, d: .08, w: .05, type: 'triangle', g: .028 },
+          { f: 659.25, d: .09, w: .1, type: 'sine', g: .026 },
+          { f: 880, d: .11, w: .18, type: 'triangle', g: .024 },
+          { f: 1046.5, d: .13, w: .28, type: 'sine', g: .02 }
+        ],
         win: [
           { noise: true, d: .1, w: 0, g: .028, ff: 2800 },
           { f: 523.25, d: .12, w: .02, type: 'triangle', g: .038 },
@@ -3238,18 +3249,108 @@
     if (playerIndex == null) return;
     state.lastCardFlashIndex = null;
     const row = document.querySelector(`.opponent-row[data-player-index="${playerIndex}"]`);
-    if (!row) return;
-    row.classList.add('last-card-flash');
-    window.setTimeout(() => row.classList.remove('last-card-flash'), 3200);
+    if (row) {
+      row.classList.add('last-card-flash');
+      window.setTimeout(() => row.classList.remove('last-card-flash'), 3200);
+      return;
+    }
+    const player = state.players[playerIndex];
+    if (player?.isHuman) {
+      const handCard = document.querySelector('.hand-card');
+      if (!handCard) return;
+      handCard.classList.add('last-card-flash');
+      window.setTimeout(() => handCard.classList.remove('last-card-flash'), 3200);
+    }
   }
 
-  function mountLastCardCallout(row, playerName) {
+  function mountLastCardCallout(row) {
     if (!row) return;
     const callout = document.createElement('div');
     callout.className = 'last-card-callout';
-    callout.setAttribute('aria-label', `${playerName} has one card left`);
-    callout.innerHTML = `<strong aria-hidden="true">⚠</strong><span>${playerName} · LAST CARD</span>`;
+    callout.setAttribute('aria-label', 'Last card');
+    callout.textContent = 'LAST CARD';
     row.appendChild(callout);
+  }
+
+  let lastCardVoiceCache = new Map();
+
+  function pickLastCardSpeechVoice(profile) {
+    const synth = window.speechSynthesis;
+    if (!synth || !profile) return null;
+    const cacheKey = String(profile.id || profile.phrase || 'default');
+    if (lastCardVoiceCache.has(cacheKey)) return lastCardVoiceCache.get(cacheKey);
+    const voices = synth.getVoices().filter(voice => /^en/i.test(voice.lang));
+    if (!voices.length) return null;
+    if (profile.voiceHint) {
+      const hint = new RegExp(profile.voiceHint, 'i');
+      const hinted = voices.find(voice => hint.test(voice.name));
+      if (hinted) {
+        lastCardVoiceCache.set(cacheKey, hinted);
+        return hinted;
+      }
+    }
+    const hash = [...cacheKey].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+    const picked = voices[hash % voices.length];
+    lastCardVoiceCache.set(cacheKey, picked);
+    return picked;
+  }
+
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    window.speechSynthesis.addEventListener('voiceschanged', () => { lastCardVoiceCache = new Map(); });
+  }
+
+  function resolveLastCardVoiceProfile(playerIndex) {
+    const player = Number.isFinite(playerIndex) ? state.players[playerIndex] : null;
+    const gender = getPlayerProfileMeta().gender;
+    return window.Big2GoAICharacters?.getLastCardVoiceProfile?.(player, { gender }) || {
+      id: 'default',
+      phrase: 'Last card!',
+      rate: 1.05,
+      pitch: 1.5,
+      ping: [987.77, 1318.51],
+      fallbackScale: 1
+    };
+  }
+
+  function playLastCardPing(profile) {
+    const ping = Array.isArray(profile?.ping) ? profile.ping : [987.77, 1318.51];
+    playTone(ping[0], 0.04, 'triangle', 0.026, 0);
+    if (ping[1]) playTone(ping[1], 0.05, 'sine', 0.022, 0.02);
+  }
+
+  function playLastCardVoiceFallback(profile) {
+    const scale = profile?.fallbackScale || 1;
+    const freqs = [440, 554.37, 659.25, 880, 1046.5].map(freq => freq * scale);
+    freqs.forEach((freq, index) => {
+      playTone(freq, 0.07 + index * 0.01, index % 2 ? 'sine' : 'triangle', 0.028 - index * 0.002, index * 0.05);
+    });
+  }
+
+  function playLastCardVoice(playerIndex) {
+    if (!state.sound) return;
+    unlockAudioFromGesture();
+    const profile = resolveLastCardVoiceProfile(playerIndex);
+    playLastCardPing(profile);
+    const synth = window.speechSynthesis;
+    if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
+      playLastCardVoiceFallback(profile);
+      return;
+    }
+    try {
+      synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(profile.phrase || 'Last card!');
+      utterance.rate = profile.rate ?? 1.05;
+      utterance.pitch = profile.pitch ?? 1.5;
+      utterance.volume = Math.min(1, Math.max(0.6, (state.soundVolume || 0.72) * 1.15));
+      const voice = pickLastCardSpeechVoice(profile);
+      if (voice) utterance.voice = voice;
+      utterance.onerror = () => playLastCardVoiceFallback(profile);
+      window.setTimeout(() => {
+        try { synth.speak(utterance); } catch (_) { playLastCardVoiceFallback(profile); }
+      }, 110);
+    } catch (_) {
+      playLastCardVoiceFallback(profile);
+    }
   }
 
   function announceLastCard(playerIndex) {
@@ -3261,11 +3362,11 @@
     state.lastCardNotified.add(key);
     const note = player.isHuman
       ? 'You are on your LAST CARD — be careful!'
-      : `${player.name} is on their LAST CARD!`;
+      : 'LAST CARD!';
     logState(`⚠️ ${note}`);
-    updateHeat(12, player.isHuman ? 'Last card — finish strong!' : `${player.name} has 1 card left — watch out!`);
-    playUiSound('turn');
-    if (!player.isHuman) queueLastCardFlash(playerIndex);
+    updateHeat(12, player.isHuman ? 'Last card — finish strong!' : 'Last card!');
+    playLastCardVoice(playerIndex);
+    queueLastCardFlash(playerIndex);
   }
 
   function syncLiveLastCardFromGame(game) {
@@ -3280,11 +3381,10 @@
       const prev = state.lastHandCounts[key];
       if (count === 1 && prev !== 1 && !player.finished) {
         state.lastCardNotified.add(key);
-        const label = index === game.playerIndex ? 'You' : player.name;
-        logState(`⚠️ ${label} ${index === game.playerIndex ? 'are' : 'is'} on their LAST CARD!`);
-        updateHeat(12, `${label} ${index === game.playerIndex ? 'have' : 'has'} 1 card left — watch out!`);
-        playUiSound('turn');
-        if (index !== state.humanIndex) queueLastCardFlash(index);
+        logState(`⚠️ ${index === game.playerIndex ? 'You are on your LAST CARD!' : 'LAST CARD!'}`);
+        updateHeat(12, index === game.playerIndex ? 'Last card — finish strong!' : 'Last card!');
+        playLastCardVoice(index);
+        queueLastCardFlash(index);
       }
       state.lastHandCounts[key] = count;
     });
@@ -3370,7 +3470,11 @@
       coins.textContent = `🪙 ${playerCoins(player, index)}`;
       const cards = document.createElement('span');
       cards.className = 'opponent-cards';
-      cards.textContent = player.finished ? 'Out' : `${player.hand.length} cards`;
+      if (isLastCard) {
+        cards.hidden = true;
+      } else {
+        cards.textContent = player.finished ? 'Out' : `${player.hand.length} cards`;
+      }
       const online = document.createElement('span');
       online.className = 'opponent-online';
       online.setAttribute('aria-label', player.connected === false ? 'Offline' : 'Online');
@@ -3378,10 +3482,7 @@
       stats.appendChild(cards);
       stack.appendChild(nameRow);
       stack.appendChild(stats);
-      if (isLastCard) {
-        renderLastCardBadge(stack, '1 LEFT');
-        if (!isSelf) mountLastCardCallout(row, player.name);
-      }
+      if (isLastCard) mountLastCardCallout(row);
       row.appendChild(avatar);
       row.appendChild(stack);
       row.appendChild(online);

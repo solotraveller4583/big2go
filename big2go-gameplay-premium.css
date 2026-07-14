@@ -383,43 +383,35 @@
 
 #game-screen.gameplay-premium .last-card-callout {
   position: absolute;
-  top: -11px;
+  top: -12px;
   left: 50%;
   z-index: 6;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  max-width: calc(100% - 8px);
-  padding: 3px 9px;
+  justify-content: center;
+  min-width: 84px;
+  padding: 4px 12px;
   border-radius: 999px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 1000;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   line-height: 1.1;
   text-transform: uppercase;
   color: #1a0800;
   background: linear-gradient(180deg, #ffe566 0%, #ff9f1a 100%);
-  border: 1px solid rgba(255, 230, 120, 0.95);
+  border: 2px solid rgba(255, 240, 160, 0.98);
   box-shadow:
-    0 4px 14px rgba(255, 159, 26, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    0 4px 16px rgba(255, 159, 26, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
   transform: translateX(-50%);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   pointer-events: none;
-  animation: gpLastCardCalloutPop 0.45s cubic-bezier(0.2, 0.9, 0.2, 1.2) both;
+  animation: gpLastCardCalloutPop 0.45s cubic-bezier(0.2, 0.9, 0.2, 1.2) both, gpLastCardCalloutPulse 1.2s ease-in-out 0.45s infinite;
 }
 
-#game-screen.gameplay-premium .last-card-callout strong {
-  font-size: 10px;
-  line-height: 1;
-}
-
-#game-screen.gameplay-premium .last-card-callout span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+@keyframes gpLastCardCalloutPulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.06); }
 }
 
 @keyframes gpLastCardRowPulse {
@@ -457,6 +449,10 @@
   box-shadow:
     inset 0 0 0 1px rgba(255, 200, 61, 0.28),
     0 0 18px rgba(255, 200, 61, 0.16) !important;
+}
+
+#game-screen.gameplay-premium .hand-card.last-card.last-card-flash {
+  animation: gpLastCardRowFlash 0.7s ease-in-out 3;
 }
 
 #game-screen.gameplay-premium .hand-head {

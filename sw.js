@@ -1,4 +1,4 @@
-const CACHE_NAME = 'big2go-v160';
+const CACHE_NAME = 'big2go-v162';
 const ASSETS = [
   './',
   './index.html',
@@ -18,7 +18,7 @@ const ASSETS = [
   './big2go-room.css?v=10',
   './big2go-voice.css?v=4',
   './big2go-rejoin.css?v=3',
-  './big2go-coins.css?v=9',
+  './big2go-coins.css?v=10',
   './big2go-mobile-redesign.css?v=9',
   './big2go-voice-mobile-override.css?v=3',
   './big2go-session-complete.css?v=1',
@@ -26,8 +26,8 @@ const ASSETS = [
   './big2go-level-up.css?v=4',
   './big2go-landing-v3.css?v=23',
   './big2go-play-demo.css?v=1',
-  './big2go-gameplay-premium.css?v=28',
-  './aiCharacters.js?v=6',
+  './big2go-gameplay-premium.css?v=30',
+  './aiCharacters.js?v=7',
   './aiReactions.js?v=5',
   './assets/characters/brownie.svg',
   './assets/characters/bunny.svg',
@@ -39,7 +39,7 @@ const ASSETS = [
   './assets/characters/pip.svg',
   './assets/player/captain-shield.svg',
   './assets/player/wonder-woman.svg',
-  './game.js?v=93',
+  './game.js?v=95',
   './manifest.webmanifest',
   './icon.svg',
   './privacy.html',

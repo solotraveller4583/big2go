@@ -621,6 +621,114 @@
     return true;
   }
 
+  const HUMAN_LAST_CARD_VOICES = {
+    male: {
+      id: 'player-male',
+      phrase: 'Last card!',
+      rate: 1.0,
+      pitch: 0.9,
+      voiceHint: 'david|mark|daniel|james|male|google uk english male|microsoft david',
+      ping: [196, 261.63],
+      fallbackScale: 0.82
+    },
+    female: {
+      id: 'player-female',
+      phrase: 'Last card!',
+      rate: 1.12,
+      pitch: 1.68,
+      voiceHint: 'samantha|karen|zira|flo|female|google us english|microsoft zira',
+      ping: [440, 554.37],
+      fallbackScale: 1.18
+    }
+  };
+
+  const AI_LAST_CARD_VOICES = {
+    brownie: {
+      phrase: 'Last card.',
+      rate: 0.92,
+      pitch: 0.74,
+      voiceHint: 'fred|daniel|david|jorge|male|google uk english male',
+      ping: [146.83, 196],
+      fallbackScale: 0.72
+    },
+    bunny: {
+      phrase: 'Last card!',
+      rate: 1.2,
+      pitch: 1.95,
+      voiceHint: 'samantha|karen|zira|flo|female|google us english',
+      ping: [587.33, 784],
+      fallbackScale: 1.42
+    },
+    sally: {
+      phrase: 'Last caard!',
+      rate: 1.28,
+      pitch: 1.58,
+      voiceHint: 'samantha|karen|victoria|female|google uk english female',
+      ping: [659.25, 880],
+      fallbackScale: 1.22
+    },
+    cookie: {
+      phrase: 'Last card.',
+      rate: 1.02,
+      pitch: 1.08,
+      voiceHint: 'daniel|alex|tom|male|google us english',
+      ping: [329.63, 440],
+      fallbackScale: 0.96
+    },
+    mochi: {
+      phrase: 'Last card!',
+      rate: 0.9,
+      pitch: 2.0,
+      voiceHint: 'samantha|karen|zira|female|junior|paulina',
+      ping: [698.46, 932.33],
+      fallbackScale: 1.48
+    },
+    panda: {
+      phrase: 'Last card.',
+      rate: 0.82,
+      pitch: 0.8,
+      voiceHint: 'daniel|david|lee|male|google uk english male',
+      ping: [130.81, 174.61],
+      fallbackScale: 0.68
+    },
+    boba: {
+      phrase: 'Last card!',
+      rate: 1.16,
+      pitch: 1.42,
+      voiceHint: 'karen|samantha|zira|female|google us english',
+      ping: [523.25, 698.46],
+      fallbackScale: 1.12
+    },
+    pip: {
+      phrase: 'Last card last card!',
+      rate: 1.38,
+      pitch: 2.0,
+      voiceHint: 'junior|paulina|samantha|female|google us english',
+      ping: [880, 1174.66],
+      fallbackScale: 1.55
+    }
+  };
+
+  function getLastCardVoiceProfile(player, options = {}) {
+    if (!player) return HUMAN_LAST_CARD_VOICES.male;
+    if (player.isHuman) {
+      const gender = options.gender === 'female' ? 'female' : 'male';
+      return HUMAN_LAST_CARD_VOICES[gender];
+    }
+    const character = getForPlayer(player);
+    const voice = character ? AI_LAST_CARD_VOICES[character.id] : null;
+    if (voice) return { id: character.id, ...voice };
+    return {
+      id: character?.id || player.characterId || player.name || 'ai',
+      phrase: 'Last card!',
+      rate: 1.05,
+      pitch: 1.35,
+      voiceHint: 'english',
+      ping: [440, 554.37],
+      fallbackScale: 1
+    };
+  }
+
   window.Big2GoAICharacters = {
     pool: AI_CHARACTER_POOL,
     getById,
@@ -630,6 +738,7 @@
     getTableSlot,
     getRivalVictoryCopy,
     getSessionFarewells,
-    renderAvatar
+    renderAvatar,
+    getLastCardVoiceProfile
   };
 })();
