@@ -2926,9 +2926,9 @@
         title: 'Step 2: Cards are dealt',
         caption: 'Everyone gets a hand. The player holding 3♦ always opens the game.',
         html: `
-          <div class="demo-stage">
+          <div class="demo-stage demo-stage--cards">
             <h3 class="demo-stage-title">Find 3♦</h3>
-            <div class="demo-hand">
+            <div class="demo-hand demo-hand--spread">
               ${buildDemoCard('5', 'H')}
               ${buildDemoCard('9', 'C')}
               ${buildDemoCard('3', 'D', 'demo-card--glow')}
@@ -2943,9 +2943,9 @@
         title: 'Step 3: Lead the first trick',
         caption: 'Tap cards to select them, then tap Play. Singles, pairs, triples, and five-card combos each have their own rules.',
         html: `
-          <div class="demo-stage">
+          <div class="demo-stage demo-stage--cards">
             <h3 class="demo-stage-title">Open with a valid hand</h3>
-            <div class="demo-table">
+            <div class="demo-table demo-table--large">
               <div class="demo-trick">${buildDemoCard('3', 'D', 'demo-card--play-in')}</div>
             </div>
             <div class="demo-actions"><span class="demo-play-btn">Play</span></div>
@@ -2957,10 +2957,10 @@
         title: 'Step 4: Beat the current trick',
         caption: 'Match the trick type: beat a single with a higher single, a pair with a higher pair, and so on.',
         html: `
-          <div class="demo-stage">
+          <div class="demo-stage demo-stage--cards">
             <h3 class="demo-stage-title">Play higher than the table</h3>
-            <div class="demo-table">
-              <div class="demo-trick">
+            <div class="demo-table demo-table--large">
+              <div class="demo-trick demo-trick--dense">
                 ${buildDemoCard('4', 'C')}
                 ${buildDemoCard('4', 'D')}
                 <span class="demo-trick-arrow" aria-hidden="true">→</span>
@@ -2976,9 +2976,9 @@
         title: 'Step 5: Pass when you cannot beat',
         caption: 'If you have no legal higher play, tap Pass. After enough passes, the last winner leads again.',
         html: `
-          <div class="demo-stage">
+          <div class="demo-stage demo-stage--cards">
             <h3 class="demo-stage-title">No good play? Pass.</h3>
-            <div class="demo-table">
+            <div class="demo-table demo-table--large">
               <div class="demo-trick">
                 ${buildDemoCard('K', 'S')}
                 ${buildDemoCard('K', 'H')}
@@ -2993,10 +2993,10 @@
         title: 'Step 6: Five-card power plays',
         caption: 'Straights, flushes, full houses, four of a kind, and straight flushes can turn the table.',
         html: `
-          <div class="demo-stage">
+          <div class="demo-stage demo-stage--cards">
             <h3 class="demo-stage-title">Five-card combos</h3>
-            <div class="demo-table">
-              <div class="demo-trick">
+            <div class="demo-table demo-table--large">
+              <div class="demo-trick demo-trick--dense">
                 ${buildDemoCard('7', 'D', 'demo-card--play-in')}
                 ${buildDemoCard('8', 'D', 'demo-card--play-in')}
                 ${buildDemoCard('9', 'D', 'demo-card--play-in')}

@@ -63,7 +63,11 @@
     inset 0 0 0 1px rgba(108, 63, 209, 0.24),
     0 12px 32px rgba(0, 0, 0, 0.35);
   aspect-ratio: 4 / 3;
-  min-height: 280px;
+  min-height: 300px;
+  --demo-card-w: clamp(58px, 16vw, 74px);
+  --demo-card-h: calc(var(--demo-card-w) * 1.36);
+  --demo-rank-size: clamp(1.05rem, 4.8vw, 1.28rem);
+  --demo-suit-size: clamp(1.35rem, 6.2vw, 1.72rem);
 }
 
 .play-demo-screen-wrap::before {
@@ -147,16 +151,36 @@
   color: rgba(255, 255, 255, 0.88);
 }
 
+.demo-stage--cards {
+  gap: 10px;
+}
+
+.demo-stage--cards .demo-stage-title {
+  font-size: clamp(0.98rem, 3.8vw, 1.14rem);
+}
+
+.demo-stage--cards .demo-stage-caption {
+  font-size: clamp(0.82rem, 3.1vw, 0.92rem);
+  line-height: 1.4;
+}
+
 .demo-table {
   position: relative;
-  width: min(100%, 380px);
-  min-height: 156px;
+  width: min(100%, 420px);
+  min-height: 188px;
   border-radius: 999px;
   background:
-    radial-gradient(ellipse 90% 70% at 50% 42%, rgba(54, 209, 126, 0.16) 0%, transparent 62%),
+    radial-gradient(ellipse 92% 74% at 50% 44%, rgba(54, 209, 126, 0.24) 0%, rgba(54, 209, 126, 0.08) 42%, transparent 68%),
     linear-gradient(180deg, rgba(21, 16, 68, 0.92) 0%, rgba(9, 11, 32, 0.96) 100%);
-  border: 2px solid rgba(108, 63, 209, 0.45);
-  box-shadow: inset 0 8px 24px rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(108, 63, 209, 0.5);
+  box-shadow:
+    inset 0 10px 28px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(54, 209, 126, 0.12);
+}
+
+.demo-table--large {
+  min-height: 210px;
+  width: min(100%, 440px);
 }
 
 .demo-hand,
@@ -170,8 +194,26 @@
   align-items: center;
 }
 
+.demo-hand--spread,
+.demo-trick--dense {
+  --demo-card-w: clamp(46px, 12.5vw, 58px);
+  --demo-card-h: calc(var(--demo-card-w) * 1.34);
+  --demo-rank-size: clamp(0.92rem, 4vw, 1.08rem);
+  --demo-suit-size: clamp(1.12rem, 5vw, 1.38rem);
+}
+
+.demo-hand--spread {
+  gap: 6px;
+  max-width: 100%;
+}
+
+.demo-trick--dense {
+  gap: 5px;
+  max-width: calc(100% - 10px);
+}
+
 .demo-hand {
-  margin-top: -4px;
+  margin-top: -2px;
 }
 
 .demo-trick {
@@ -189,24 +231,31 @@
 
 .demo-card {
   display: grid;
-  place-items: center;
-  width: 48px;
-  height: 64px;
-  border-radius: 9px;
-  border: 1.5px solid rgba(255, 255, 255, 0.24);
+  grid-template-rows: auto 1fr;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  width: var(--demo-card-w);
+  height: var(--demo-card-h);
+  padding: 6px 4px 8px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
   background: linear-gradient(180deg, #fff 0%, #f2f4f8 100%);
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.3);
-  font-size: 0.78rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
   line-height: 1;
 }
 
 .demo-card strong {
-  font-size: 1.05rem;
+  font-size: var(--demo-rank-size);
   font-weight: 1000;
+  line-height: 1;
 }
 
 .demo-card span {
-  font-size: 0.92rem;
+  display: grid;
+  place-items: center;
+  font-size: var(--demo-suit-size);
+  line-height: 1;
 }
 
 .demo-card--red strong,
@@ -306,9 +355,10 @@
 }
 
 .demo-trick-arrow {
-  font-size: 1.1rem;
+  font-size: clamp(1.2rem, 4.8vw, 1.45rem);
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.62);
+  flex-shrink: 0;
 }
 
 .play-demo-progress {
@@ -401,16 +451,25 @@
 
 @media (min-width: 420px) {
   .play-demo-screen-wrap {
-    min-height: 320px;
+    min-height: 340px;
+    --demo-card-w: clamp(62px, 14vw, 78px);
+    --demo-rank-size: clamp(1.12rem, 4.2vw, 1.34rem);
+    --demo-suit-size: clamp(1.48rem, 5.6vw, 1.82rem);
   }
 
-  .demo-card {
-    width: 52px;
-    height: 70px;
+  .demo-table {
+    min-height: 220px;
   }
 
-  .demo-card strong {
-    font-size: 1.12rem;
+  .demo-table--large {
+    min-height: 236px;
+  }
+
+  .demo-hand--spread,
+  .demo-trick--dense {
+    --demo-card-w: clamp(50px, 11.5vw, 62px);
+    --demo-rank-size: clamp(0.98rem, 3.6vw, 1.14rem);
+    --demo-suit-size: clamp(1.2rem, 4.6vw, 1.48rem);
   }
 }
 
@@ -423,17 +482,26 @@
     padding: 14px 12px 12px;
   }
 
-  .demo-card {
-    width: 44px;
-    height: 60px;
+  .play-demo-screen-wrap {
+    min-height: 268px;
+    --demo-card-w: clamp(52px, 15vw, 62px);
+    --demo-rank-size: clamp(0.98rem, 4.6vw, 1.12rem);
+    --demo-suit-size: clamp(1.22rem, 5.8vw, 1.48rem);
   }
 
-  .demo-card strong {
-    font-size: 0.98rem;
+  .demo-hand--spread,
+  .demo-trick--dense {
+    --demo-card-w: clamp(42px, 11.8vw, 50px);
+    --demo-rank-size: clamp(0.86rem, 3.8vw, 0.98rem);
+    --demo-suit-size: clamp(1.02rem, 4.8vw, 1.22rem);
   }
 
   .demo-table {
-    min-height: 140px;
+    min-height: 168px;
+  }
+
+  .demo-table--large {
+    min-height: 182px;
   }
 }
 
