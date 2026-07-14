@@ -150,7 +150,8 @@
     victoryTimer: null,
     levelUpTimer: null,
     contextStateHooked: false,
-    pendingLastCardAnimal: null
+    pendingLastCardAnimal: null,
+    pendingLastCardLabel: null
   };
 
   const LEVEL_UP_MASTER_GAIN = 0.96;
@@ -3458,15 +3459,39 @@
 
   function flushPendingLastCardSound() {
     const animalSound = audio.pendingLastCardAnimal;
+    const animalLabel = audio.pendingLastCardLabel;
     if (!animalSound || !state.sound) return;
+    if (!isAudioContextRunning()) return;
     audio.pendingLastCardAnimal = null;
+    audio.pendingLastCardLabel = null;
     deliverLastCardAnimalSound(animalSound);
+    speakLastCardAnimalLabel(animalLabel);
+  }
+
+  function speakLastCardAnimalLabel(label) {
+    if (!state.sound || !label) return;
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    try {
+      synth.cancel();
+      const utter = new SpeechSynthesisUtterance(String(label).replace(/!+$/g, '').trim() || 'Chirp');
+      utter.volume = Math.max(0.35, Math.min(1, state.voiceVolume || 0.9));
+      utter.rate = 1.05;
+      utter.pitch = 1.45;
+      utter.lang = 'en-US';
+      const voices = synth.getVoices();
+      const voice = voices.find(entry => /samantha|karen|zira|google.*english.*female|microsoft.*zira/i.test(entry.name))
+        || voices.find(entry => /^en/i.test(entry.lang))
+        || null;
+      if (voice) utter.voice = voice;
+      window.setTimeout(() => synth.speak(utter), 0);
+    } catch (_) {}
   }
 
   function deliverLastCardAnimalSound(animalSound) {
     const ctx = getAudioContext();
     const bus = getLastCardAudioMaster() || audio.master;
-    if (!ctx || !bus) return false;
+    if (!ctx || !bus || ctx.state !== 'running') return false;
 
     playTone(1174.66, 0.05, 'triangle', 0.16, 0, 0, bus);
     playTone(1567.98, 0.07, 'sine', 0.14, 0.04, 0, bus);
@@ -3499,35 +3524,36 @@
     if (!state.sound) return;
     const profile = resolveLastCardVoiceProfile(playerIndex);
     const animalSound = profile.animalSound || 'bird';
-
-    const attempt = () => {
-      unlockAudioFromGesture();
-      return deliverLastCardAnimalSound(animalSound);
-    };
+    const animalLabel = profile.label || 'Chirp!';
 
     audio.pendingLastCardAnimal = animalSound;
-    if (attempt()) {
-      audio.pendingLastCardAnimal = null;
-      return;
-    }
+    audio.pendingLastCardLabel = animalLabel;
 
-    unlockAudio().then(ctx => {
-      if (!ctx) return;
-      if (attempt()) {
-        audio.pendingLastCardAnimal = null;
-        return;
+    const tryPlay = () => {
+      unlockAudioFromGesture();
+      const ctx = getAudioContext();
+      if (!ctx) return false;
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+        return false;
       }
-      window.setTimeout(() => {
-        if (attempt()) audio.pendingLastCardAnimal = null;
-      }, 80);
-      window.setTimeout(() => {
-        if (attempt()) {
-          audio.pendingLastCardAnimal = null;
-          return;
-        }
-        playUiSound('lastCardPing');
-      }, 220);
-    });
+      if (ctx.state !== 'running') return false;
+      if (!deliverLastCardAnimalSound(animalSound)) return false;
+      speakLastCardAnimalLabel(animalLabel);
+      audio.pendingLastCardAnimal = null;
+      audio.pendingLastCardLabel = null;
+      return true;
+    };
+
+    if (tryPlay()) return;
+
+    unlockAudio().then(() => tryPlay());
+    [60, 140, 280, 520].forEach(delay => window.setTimeout(() => tryPlay(), delay));
+    window.setTimeout(() => {
+      if (!audio.pendingLastCardAnimal) return;
+      speakLastCardAnimalLabel(animalLabel);
+      playUiSound('lastCardPing');
+    }, 360);
   }
 
   function scheduleLastCardVoice(playerIndex) {
