@@ -100,6 +100,44 @@
   position: relative;
 }
 
+.opponent-row.last-card {
+  z-index: 2;
+}
+
+.last-card-callout {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 8px);
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: #1a0800;
+  background: linear-gradient(180deg, #ffe566 0%, #ff9f1a 100%);
+  border: 1px solid rgba(255, 230, 120, 0.95);
+  box-shadow: 0 4px 14px rgba(255, 159, 26, 0.55);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.opponent-row.last-card {
+  border-color: rgba(255, 159, 26, 0.9) !important;
+  box-shadow:
+    0 0 0 2px rgba(255, 200, 61, 0.32),
+    0 0 20px rgba(255, 159, 26, 0.38) !important;
+}
+
 .opponent-reaction-pop {
   position: absolute;
   top: -4px;

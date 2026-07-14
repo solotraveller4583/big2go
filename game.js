@@ -966,6 +966,7 @@
       state.busy = false;
       state.lastCardNotified = new Set();
       state.lastHandCounts = {};
+      state.lastCardFlashIndex = null;
       seedLastCardNotifiedFromHands();
       els.playerCount.value = String(state.settings.players || 4);
       els.sound.textContent = state.sound ? '🔊' : '🔇';
@@ -3192,6 +3193,7 @@
     state.lastShuffleKey = `solo:${state.round}:${Date.now()}`;
     state.lastCardNotified = new Set();
     state.lastHandCounts = {};
+    state.lastCardFlashIndex = null;
     seedLastCardNotifiedFromHands();
     els.sound.textContent = '🔊';
     showGameScreen();
@@ -3226,6 +3228,30 @@
     });
   }
 
+  function queueLastCardFlash(playerIndex) {
+    if (!Number.isFinite(playerIndex) || playerIndex < 0) return;
+    state.lastCardFlashIndex = playerIndex;
+  }
+
+  function applyPendingLastCardFlash() {
+    const playerIndex = state.lastCardFlashIndex;
+    if (playerIndex == null) return;
+    state.lastCardFlashIndex = null;
+    const row = document.querySelector(`.opponent-row[data-player-index="${playerIndex}"]`);
+    if (!row) return;
+    row.classList.add('last-card-flash');
+    window.setTimeout(() => row.classList.remove('last-card-flash'), 3200);
+  }
+
+  function mountLastCardCallout(row, playerName) {
+    if (!row) return;
+    const callout = document.createElement('div');
+    callout.className = 'last-card-callout';
+    callout.setAttribute('aria-label', `${playerName} has one card left`);
+    callout.innerHTML = `<strong aria-hidden="true">⚠</strong><span>${playerName} · LAST CARD</span>`;
+    row.appendChild(callout);
+  }
+
   function announceLastCard(playerIndex) {
     const player = state.players[playerIndex];
     if (!player || player.finished || player.hand.length !== 1) return;
@@ -3239,6 +3265,7 @@
     logState(`⚠️ ${note}`);
     updateHeat(12, player.isHuman ? 'Last card — finish strong!' : `${player.name} has 1 card left — watch out!`);
     playUiSound('turn');
+    if (!player.isHuman) queueLastCardFlash(playerIndex);
   }
 
   function syncLiveLastCardFromGame(game) {
@@ -3254,8 +3281,10 @@
       if (count === 1 && prev !== 1 && !player.finished) {
         state.lastCardNotified.add(key);
         const label = index === game.playerIndex ? 'You' : player.name;
+        logState(`⚠️ ${label} ${index === game.playerIndex ? 'are' : 'is'} on their LAST CARD!`);
         updateHeat(12, `${label} ${index === game.playerIndex ? 'have' : 'has'} 1 card left — watch out!`);
         playUiSound('turn');
+        if (index !== state.humanIndex) queueLastCardFlash(index);
       }
       state.lastHandCounts[key] = count;
     });
@@ -3349,7 +3378,10 @@
       stats.appendChild(cards);
       stack.appendChild(nameRow);
       stack.appendChild(stats);
-      if (isLastCard) renderLastCardBadge(stack, '1 LEFT');
+      if (isLastCard) {
+        renderLastCardBadge(stack, '1 LEFT');
+        if (!isSelf) mountLastCardCallout(row, player.name);
+      }
       row.appendChild(avatar);
       row.appendChild(stack);
       row.appendChild(online);
@@ -4084,6 +4116,7 @@
     renderChat();
     updateStatus();
     renderCoinHud();
+    applyPendingLastCardFlash();
     els.sparkCount.textContent = String(state.sparks);
     els.roundCount.textContent = String(state.round);
     els.heatFill.style.width = `${state.heat}%`;
