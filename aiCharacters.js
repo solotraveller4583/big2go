@@ -624,25 +624,25 @@
   const HUMAN_LAST_CARD_VOICES = {
     male: {
       id: 'player-male',
-      animalSound: 'dog',
-      label: 'Woof!'
+      doorbell: 'captain',
+      label: 'Ding-dong!'
     },
     female: {
       id: 'player-female',
-      animalSound: 'cat',
-      label: 'Meow!'
+      doorbell: 'wonder',
+      label: 'Chime-chime!'
     }
   };
 
   const AI_LAST_CARD_VOICES = {
-    brownie: { animalSound: 'bear', label: 'Grr!' },
-    bunny: { animalSound: 'rabbit', label: 'Squeak!' },
-    sally: { animalSound: 'parrot', label: 'Squawk!' },
-    cookie: { animalSound: 'mouse', label: 'Squeak!' },
-    mochi: { animalSound: 'seal', label: 'Arf!' },
-    panda: { animalSound: 'panda', label: 'Bleat!' },
-    boba: { animalSound: 'duck', label: 'Quack!' },
-    pip: { animalSound: 'chick', label: 'Peep!' }
+    brownie: { doorbell: 'brownie', label: 'Gong-gong!' },
+    bunny: { doorbell: 'bunny', label: 'Ring-ring-ring!' },
+    sally: { doorbell: 'sally', label: 'Ding-ding-dong!' },
+    cookie: { doorbell: 'cookie', label: 'Westminster!' },
+    mochi: { doorbell: 'mochi', label: 'Bubble-ding!' },
+    panda: { doorbell: 'panda', label: 'Low bell!' },
+    boba: { doorbell: 'boba', label: 'Boing-ding!' },
+    pip: { doorbell: 'pip', label: 'Pip-pip-ding!' }
   };
 
   function getLastCardVoiceProfile(player, options = {}) {
@@ -656,8 +656,8 @@
     if (voice) return { id: character.id, ...voice };
     return {
       id: character?.id || player.characterId || player.name || 'ai',
-      animalSound: 'bird',
-      label: 'Chirp!'
+      doorbell: 'default',
+      label: 'Ding-dong!'
     };
   }
 

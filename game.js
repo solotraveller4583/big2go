@@ -150,8 +150,7 @@
     victoryTimer: null,
     levelUpTimer: null,
     contextStateHooked: false,
-    pendingLastCardAnimal: null,
-    pendingLastCardLabel: null
+    pendingLastCardDoorbell: null
   };
 
   const LEVEL_UP_MASTER_GAIN = 0.96;
@@ -3327,123 +3326,70 @@
     row.appendChild(callout);
   }
 
-  const LAST_CARD_ANIMAL_UI = {
-    dog: [
-      { noise: true, d: 0.11, w: 0, g: 0.16, ff: 300 },
-      { f: 145, d: 0.14, type: 'sawtooth', g: 0.18, w: 0.03 },
-      { f: 118, d: 0.12, type: 'triangle', g: 0.15, w: 0.12 },
-      { noise: true, d: 0.09, w: 0.1, g: 0.12, ff: 240 }
+  const LAST_CARD_DOORBELLS = {
+    captain: [
+      { noise: true, d: 0.022, w: 0, g: 0.09, ff: 3000 },
+      { f: 659.25, d: 0.24, type: 'sine', g: 0.17, w: 0.02 },
+      { f: 523.25, d: 0.3, type: 'sine', g: 0.16, w: 0.3 }
     ],
-    cat: [
-      { sweep: true, f0: 1280, f1: 540, d: 0.3, type: 'sine', g: 0.16, w: 0 },
-      { f: 760, d: 0.12, type: 'triangle', g: 0.14, w: 0.22 },
-      { noise: true, d: 0.04, w: 0.08, g: 0.08, ff: 2600 }
+    wonder: [
+      { noise: true, d: 0.02, w: 0, g: 0.08, ff: 3400 },
+      { f: 880, d: 0.13, type: 'triangle', g: 0.15, w: 0.02 },
+      { f: 1046.5, d: 0.13, type: 'triangle', g: 0.15, w: 0.16 },
+      { f: 1318.51, d: 0.2, type: 'sine', g: 0.16, w: 0.32 }
     ],
-    bear: [
-      { f: 95, d: 0.18, type: 'sawtooth', g: 0.17, w: 0 },
-      { noise: true, d: 0.16, w: 0.04, g: 0.14, ff: 160 },
-      { sweep: true, f0: 150, f1: 88, d: 0.2, type: 'triangle', g: 0.13, w: 0.14 }
+    brownie: [
+      { noise: true, d: 0.03, w: 0, g: 0.07, ff: 500 },
+      { f: 196, d: 0.38, type: 'sine', g: 0.18, w: 0.03 },
+      { f: 146.83, d: 0.42, type: 'triangle', g: 0.15, w: 0.42 }
     ],
-    rabbit: [
-      { f: 1560, d: 0.06, type: 'sine', g: 0.15, w: 0 },
-      { f: 1820, d: 0.06, type: 'sine', g: 0.14, w: 0.07 },
-      { f: 2100, d: 0.07, type: 'triangle', g: 0.13, w: 0.14 }
+    bunny: [
+      { noise: true, d: 0.018, w: 0, g: 0.08, ff: 3600 },
+      { f: 1174.66, d: 0.09, type: 'sine', g: 0.15, w: 0.02 },
+      { f: 1174.66, d: 0.09, type: 'sine', g: 0.14, w: 0.14 },
+      { f: 1046.5, d: 0.16, type: 'triangle', g: 0.15, w: 0.26 }
     ],
-    parrot: [
-      { sweep: true, f0: 620, f1: 1280, d: 0.1, type: 'triangle', g: 0.15, w: 0 },
-      { sweep: true, f0: 1280, f1: 680, d: 0.11, type: 'sawtooth', g: 0.14, w: 0.1 },
-      { f: 1040, d: 0.09, type: 'square', g: 0.12, w: 0.2 }
+    sally: [
+      { noise: true, d: 0.02, w: 0, g: 0.08, ff: 3200 },
+      { chord: [523.25, 659.25, 783.99], d: 0.22, type: 'sine', g: 0.13, w: 0.02 },
+      { chord: [587.33, 698.46, 880], d: 0.24, type: 'triangle', g: 0.12, w: 0.26 }
     ],
-    mouse: [
-      { f: 2480, d: 0.05, type: 'sine', g: 0.14, w: 0 },
-      { f: 2760, d: 0.05, type: 'sine', g: 0.13, w: 0.06 },
-      { f: 2320, d: 0.06, type: 'triangle', g: 0.12, w: 0.12 }
+    cookie: [
+      { noise: true, d: 0.02, w: 0, g: 0.08, ff: 3100 },
+      { f: 392, d: 0.11, type: 'sine', g: 0.14, w: 0.02 },
+      { f: 493.88, d: 0.11, type: 'sine', g: 0.14, w: 0.13 },
+      { f: 587.33, d: 0.11, type: 'sine', g: 0.14, w: 0.24 },
+      { f: 493.88, d: 0.18, type: 'triangle', g: 0.13, w: 0.38 }
     ],
-    seal: [
-      { sweep: true, f0: 460, f1: 280, d: 0.12, type: 'triangle', g: 0.15, w: 0 },
-      { noise: true, d: 0.07, w: 0.1, g: 0.1, ff: 500 },
-      { sweep: true, f0: 400, f1: 240, d: 0.1, type: 'sine', g: 0.12, w: 0.18 }
-    ],
-    panda: [
-      { sweep: true, f0: 280, f1: 180, d: 0.16, type: 'sine', g: 0.14, w: 0 },
-      { f: 220, d: 0.14, type: 'triangle', g: 0.13, w: 0.14 },
-      { noise: true, d: 0.09, w: 0.08, g: 0.1, ff: 320 }
-    ],
-    duck: [
-      { sweep: true, f0: 320, f1: 220, d: 0.1, type: 'triangle', g: 0.16, w: 0 },
-      { noise: true, d: 0.08, w: 0.05, g: 0.12, ff: 420 },
-      { sweep: true, f0: 360, f1: 250, d: 0.09, type: 'sine', g: 0.13, w: 0.14 }
-    ],
-    chick: [
-      { f: 2040, d: 0.05, type: 'sine', g: 0.15, w: 0 },
-      { f: 2360, d: 0.05, type: 'sine', g: 0.14, w: 0.06 },
-      { f: 2160, d: 0.06, type: 'triangle', g: 0.13, w: 0.12 },
-      { f: 2520, d: 0.06, type: 'sine', g: 0.12, w: 0.2 }
-    ],
-    bird: [
-      { f: 1880, d: 0.05, type: 'sine', g: 0.14, w: 0 },
-      { sweep: true, f0: 1880, f1: 2360, d: 0.08, type: 'triangle', g: 0.13, w: 0.07 },
-      { f: 2120, d: 0.08, type: 'sine', g: 0.12, w: 0.16 }
-    ]
-  };
-
-  const LAST_CARD_ANIMAL_SOUNDS = {
-    cat: [
-      { kind: 'sweep', f0: 980, f1: 560, d: 0.24, type: 'sine', g: 0.038, w: 0 },
-      { kind: 'tone', f: 760, d: 0.09, type: 'triangle', g: 0.024, w: 0.22 },
-      { kind: 'noise', d: 0.035, g: 0.014, ff: 2400, w: 0.08 }
-    ],
-    dog: [
-      { kind: 'noise', d: 0.08, g: 0.038, ff: 320, w: 0 },
-      { kind: 'tone', f: 155, d: 0.11, type: 'triangle', g: 0.038, w: 0.03 },
-      { kind: 'noise', d: 0.06, g: 0.024, ff: 260, w: 0.12 },
-      { kind: 'tone', f: 130, d: 0.08, type: 'sawtooth', g: 0.022, w: 0.2 }
-    ],
-    bear: [
-      { kind: 'tone', f: 110, d: 0.16, type: 'sawtooth', g: 0.034, w: 0 },
-      { kind: 'noise', d: 0.14, g: 0.028, ff: 180, w: 0.04 },
-      { kind: 'sweep', f0: 140, f1: 95, d: 0.18, type: 'triangle', g: 0.03, w: 0.16 }
-    ],
-    rabbit: [
-      { kind: 'tone', f: 1380, d: 0.05, type: 'sine', g: 0.032, w: 0 },
-      { kind: 'tone', f: 1560, d: 0.05, type: 'sine', g: 0.03, w: 0.07 },
-      { kind: 'tone', f: 1720, d: 0.06, type: 'triangle', g: 0.028, w: 0.14 }
-    ],
-    parrot: [
-      { kind: 'sweep', f0: 620, f1: 1180, d: 0.08, type: 'triangle', g: 0.034, w: 0 },
-      { kind: 'sweep', f0: 1180, f1: 700, d: 0.09, type: 'sawtooth', g: 0.032, w: 0.1 },
-      { kind: 'tone', f: 980, d: 0.07, type: 'square', g: 0.022, w: 0.2 }
-    ],
-    mouse: [
-      { kind: 'tone', f: 2280, d: 0.04, type: 'sine', g: 0.03, w: 0 },
-      { kind: 'tone', f: 2520, d: 0.04, type: 'sine', g: 0.028, w: 0.06 },
-      { kind: 'tone', f: 2100, d: 0.05, type: 'triangle', g: 0.024, w: 0.12 }
-    ],
-    seal: [
-      { kind: 'sweep', f0: 420, f1: 280, d: 0.1, type: 'triangle', g: 0.034, w: 0 },
-      { kind: 'noise', d: 0.06, g: 0.02, ff: 520, w: 0.1 },
-      { kind: 'sweep', f0: 380, f1: 250, d: 0.09, type: 'sine', g: 0.028, w: 0.18 }
+    mochi: [
+      { noise: true, d: 0.02, w: 0, g: 0.08, ff: 3300 },
+      { f: 698.46, d: 0.1, type: 'sine', g: 0.14, w: 0.02 },
+      { f: 784, d: 0.1, type: 'sine', g: 0.14, w: 0.12 },
+      { f: 880, d: 0.1, type: 'sine', g: 0.14, w: 0.22 },
+      { f: 987.77, d: 0.16, type: 'triangle', g: 0.15, w: 0.34 }
     ],
     panda: [
-      { kind: 'sweep', f0: 260, f1: 190, d: 0.14, type: 'sine', g: 0.03, w: 0 },
-      { kind: 'tone', f: 220, d: 0.12, type: 'triangle', g: 0.026, w: 0.14 },
-      { kind: 'noise', d: 0.08, g: 0.016, ff: 340, w: 0.08 }
+      { noise: true, d: 0.025, w: 0, g: 0.07, ff: 900 },
+      { f: 329.63, d: 0.28, type: 'sine', g: 0.16, w: 0.03 },
+      { f: 293.66, d: 0.34, type: 'triangle', g: 0.15, w: 0.36 }
     ],
-    duck: [
-      { kind: 'sweep', f0: 280, f1: 210, d: 0.09, type: 'triangle', g: 0.036, w: 0 },
-      { kind: 'noise', d: 0.07, g: 0.028, ff: 420, w: 0.05 },
-      { kind: 'sweep', f0: 320, f1: 240, d: 0.08, type: 'sine', g: 0.03, w: 0.14 }
+    boba: [
+      { noise: true, d: 0.02, w: 0, g: 0.08, ff: 2800 },
+      { sweep: true, f0: 440, f1: 880, d: 0.09, type: 'sine', g: 0.15, w: 0.02 },
+      { sweep: true, f0: 880, f1: 523.25, d: 0.11, type: 'triangle', g: 0.14, w: 0.14 },
+      { f: 659.25, d: 0.18, type: 'sine', g: 0.15, w: 0.28 }
     ],
-    chick: [
-      { kind: 'tone', f: 1880, d: 0.04, type: 'sine', g: 0.034, w: 0 },
-      { kind: 'tone', f: 2140, d: 0.04, type: 'sine', g: 0.032, w: 0.06 },
-      { kind: 'tone', f: 1960, d: 0.05, type: 'triangle', g: 0.03, w: 0.12 },
-      { kind: 'tone', f: 2280, d: 0.05, type: 'sine', g: 0.028, w: 0.2 }
+    pip: [
+      { noise: true, d: 0.018, w: 0, g: 0.08, ff: 4000 },
+      { f: 1567.98, d: 0.06, type: 'sine', g: 0.14, w: 0.02 },
+      { f: 1760, d: 0.06, type: 'sine', g: 0.14, w: 0.1 },
+      { f: 1975.53, d: 0.06, type: 'sine', g: 0.14, w: 0.18 },
+      { f: 2093, d: 0.12, type: 'triangle', g: 0.15, w: 0.28 }
     ],
-    bird: [
-      { kind: 'tone', f: 1760, d: 0.05, type: 'sine', g: 0.03, w: 0 },
-      { kind: 'sweep', f0: 1760, f1: 2200, d: 0.06, type: 'triangle', g: 0.028, w: 0.08 },
-      { kind: 'tone', f: 1980, d: 0.06, type: 'sine', g: 0.024, w: 0.16 }
+    default: [
+      { noise: true, d: 0.02, w: 0, g: 0.08, ff: 3000 },
+      { f: 523.25, d: 0.16, type: 'sine', g: 0.15, w: 0.02 },
+      { f: 392, d: 0.22, type: 'sine', g: 0.14, w: 0.2 }
     ]
   };
 
@@ -3452,82 +3398,42 @@
     const gender = getPlayerProfileMeta().gender;
     return window.Big2GoAICharacters?.getLastCardVoiceProfile?.(player, { gender }) || {
       id: 'default',
-      animalSound: 'bird',
-      label: 'Chirp!'
+      doorbell: 'default',
+      label: 'Ding-dong!'
     };
   }
 
   function flushPendingLastCardSound() {
-    const animalSound = audio.pendingLastCardAnimal;
-    const animalLabel = audio.pendingLastCardLabel;
-    if (!animalSound || !state.sound) return;
+    const doorbellId = audio.pendingLastCardDoorbell;
+    if (!doorbellId || !state.sound) return;
     if (!isAudioContextRunning()) return;
-    audio.pendingLastCardAnimal = null;
-    audio.pendingLastCardLabel = null;
-    deliverLastCardAnimalSound(animalSound);
-    speakLastCardAnimalLabel(animalLabel);
+    audio.pendingLastCardDoorbell = null;
+    deliverLastCardDoorbell(doorbellId);
   }
 
-  function speakLastCardAnimalLabel(label) {
-    if (!state.sound || !label) return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    try {
-      synth.cancel();
-      const utter = new SpeechSynthesisUtterance(String(label).replace(/!+$/g, '').trim() || 'Chirp');
-      utter.volume = Math.max(0.35, Math.min(1, state.voiceVolume || 0.9));
-      utter.rate = 1.05;
-      utter.pitch = 1.45;
-      utter.lang = 'en-US';
-      const voices = synth.getVoices();
-      const voice = voices.find(entry => /samantha|karen|zira|google.*english.*female|microsoft.*zira/i.test(entry.name))
-        || voices.find(entry => /^en/i.test(entry.lang))
-        || null;
-      if (voice) utter.voice = voice;
-      window.setTimeout(() => synth.speak(utter), 0);
-    } catch (_) {}
+  function playLastCardDoorbellSteps(doorbellId, output = null) {
+    const bus = output || getLastCardAudioMaster() || audio.master;
+    if (!bus) return;
+    const steps = LAST_CARD_DOORBELLS[doorbellId] || LAST_CARD_DOORBELLS.default;
+    const boosted = steps.map(step => ({ ...step, g: (step.g || 0.03) * LAST_CARD_GAIN_BOOST }));
+    playSoundSteps(boosted, bus, LAST_CARD_SOUND_DELAY);
   }
 
-  function deliverLastCardAnimalSound(animalSound) {
+  function deliverLastCardDoorbell(doorbellId) {
     const ctx = getAudioContext();
     const bus = getLastCardAudioMaster() || audio.master;
     if (!ctx || !bus || ctx.state !== 'running') return false;
-
-    playTone(1174.66, 0.05, 'triangle', 0.16, 0, 0, bus);
-    playTone(1567.98, 0.07, 'sine', 0.14, 0.04, 0, bus);
-
-    const uiSteps = LAST_CARD_ANIMAL_UI[animalSound] || LAST_CARD_ANIMAL_UI.bird;
-    playSoundSteps(uiSteps, bus, 0.06);
-    playAnimalSoundSteps(animalSound, bus);
+    playNoise(0.028, 0.1, 0, 3200, bus);
+    playLastCardDoorbellSteps(doorbellId, bus);
     return true;
-  }
-
-  function playAnimalSoundSteps(animalSound, output = null) {
-    const bus = output || getLastCardAudioMaster() || audio.master;
-    if (!bus) return;
-    const steps = LAST_CARD_ANIMAL_SOUNDS[animalSound] || LAST_CARD_ANIMAL_SOUNDS.bird;
-    const baseWhen = LAST_CARD_SOUND_DELAY;
-    steps.forEach(step => {
-      const when = baseWhen + (step.w || 0);
-      const gain = (step.g || 0.03) * LAST_CARD_GAIN_BOOST;
-      if (step.kind === 'sweep') {
-        playToneSweep(step.f0, step.f1, step.d, step.type || 'sine', gain, when, bus);
-      } else if (step.kind === 'noise') {
-        playNoise(step.d, gain, when, step.ff || 900, bus);
-      } else {
-        playTone(step.f, step.d, step.type || 'sine', gain, when, step.detune || 0, bus);
-      }
-    });
   }
 
   function playLastCardVoice(playerIndex) {
     if (!state.sound) return;
     const profile = resolveLastCardVoiceProfile(playerIndex);
-    const animalSound = profile.animalSound || 'bird';
-    const animalLabel = profile.label || 'Chirp!';
+    const doorbellId = profile.doorbell || 'default';
 
-    audio.pendingLastCardAnimal = animalSound;
-    audio.pendingLastCardLabel = animalLabel;
+    audio.pendingLastCardDoorbell = doorbellId;
 
     const tryPlay = () => {
       unlockAudioFromGesture();
@@ -3538,10 +3444,8 @@
         return false;
       }
       if (ctx.state !== 'running') return false;
-      if (!deliverLastCardAnimalSound(animalSound)) return false;
-      speakLastCardAnimalLabel(animalLabel);
-      audio.pendingLastCardAnimal = null;
-      audio.pendingLastCardLabel = null;
+      if (!deliverLastCardDoorbell(doorbellId)) return false;
+      audio.pendingLastCardDoorbell = null;
       return true;
     };
 
@@ -3550,8 +3454,7 @@
     unlockAudio().then(() => tryPlay());
     [60, 140, 280, 520].forEach(delay => window.setTimeout(() => tryPlay(), delay));
     window.setTimeout(() => {
-      if (!audio.pendingLastCardAnimal) return;
-      speakLastCardAnimalLabel(animalLabel);
+      if (!audio.pendingLastCardDoorbell) return;
       playUiSound('lastCardPing');
     }, 360);
   }
@@ -3568,12 +3471,12 @@
     if (state.lastCardNotified.has(key)) return;
     state.lastCardNotified.add(key);
     const profile = resolveLastCardVoiceProfile(playerIndex);
-    const animalLabel = profile?.label || 'Chirp!';
+    const doorbellLabel = profile?.label || 'Ding-dong!';
     const note = player.isHuman
-      ? `You are on your LAST CARD — ${animalLabel}`
-      : `LAST CARD — ${animalLabel}`;
+      ? `You are on your LAST CARD — ${doorbellLabel}`
+      : `LAST CARD — ${doorbellLabel}`;
     logState(`⚠️ ${note}`);
-    updateHeat(12, player.isHuman ? `Last card — ${animalLabel}` : `Last card — ${animalLabel}`);
+    updateHeat(12, player.isHuman ? `Last card — ${doorbellLabel}` : `Last card — ${doorbellLabel}`);
     scheduleLastCardVoice(playerIndex);
     queueLastCardFlash(playerIndex);
   }
@@ -3591,9 +3494,9 @@
       if (count === 1 && prev !== 1 && !player.finished) {
         state.lastCardNotified.add(key);
         const profile = resolveLastCardVoiceProfile(index);
-        const animalLabel = profile?.label || 'Chirp!';
-        logState(`⚠️ ${index === game.playerIndex ? `You are on your LAST CARD — ${animalLabel}` : `LAST CARD — ${animalLabel}`}`);
-        updateHeat(12, `Last card — ${animalLabel}`);
+        const doorbellLabel = profile?.label || 'Ding-dong!';
+        logState(`⚠️ ${index === game.playerIndex ? `You are on your LAST CARD — ${doorbellLabel}` : `LAST CARD — ${doorbellLabel}`}`);
+        updateHeat(12, `Last card — ${doorbellLabel}`);
         scheduleLastCardVoice(index);
         queueLastCardFlash(index);
       }
