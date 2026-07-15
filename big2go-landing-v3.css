@@ -92,7 +92,6 @@
 }
 
 #home-screen.landing-v3 .home-topbar,
-#home-screen.landing-v3 .hero-stage,
 #home-screen.landing-v3 .player-setup,
 #home-screen.landing-v3 .cta-zone,
 #home-screen.landing-v3 .quick-actions,
@@ -100,8 +99,14 @@
 #home-screen.landing-v3 .landing-v3-footer,
 #home-screen.landing-v3 .room-recovery-card {
   position: relative;
-  z-index: 100 !important;
-  pointer-events: auto !important;
+  z-index: 5;
+  pointer-events: auto;
+}
+
+#home-screen.landing-v3 .hero-stage {
+  position: relative;
+  z-index: 1;
+  pointer-events: none !important;
 }
 
 #home-screen.landing-v3 .play-now,
@@ -115,8 +120,9 @@
 #home-screen.landing-v3 .room-recovery-card button,
 #home-screen.landing-v3 .landing-v3-footer a {
   position: relative;
-  z-index: 101 !important;
-  pointer-events: auto !important;
+  z-index: 6;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 #home-screen.landing-v3 .arena-orb,
@@ -321,7 +327,8 @@
   padding: 4px 8px 0;
   overflow: hidden;
   text-align: center;
-  z-index: 100;
+  z-index: 1;
+  pointer-events: none !important;
 }
 
 #home-screen.landing-v3 .hero-brand {
@@ -667,9 +674,8 @@
   margin-top: 0;
   padding: 0;
   position: relative;
-  z-index: 120 !important;
-  pointer-events: auto !important;
-  isolation: isolate;
+  z-index: 6;
+  pointer-events: auto;
   touch-action: manipulation;
 }
 
@@ -860,9 +866,8 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   position: relative;
-  z-index: 120 !important;
-  pointer-events: auto !important;
-  isolation: isolate;
+  z-index: 6;
+  pointer-events: auto;
   touch-action: manipulation;
 }
 
@@ -1636,12 +1641,10 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
   #home-screen.landing-v3 {
     --v3-mobile-inset: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
-    --v3-mobile-gap: clamp(3px, 0.55dvh, 6px);
-    --v3-row-header: clamp(44px, 5.2dvh, 52px);
-    --v3-row-hero: clamp(68px, 10dvh, 96px);
-    --v3-row-profile: clamp(96px, 13.5dvh, 118px);
-    --v3-row-play: clamp(44px, 5.4dvh, 50px);
-    --v3-row-actions: clamp(48px, 5.8dvh, 54px);
+    --v3-mobile-gap: clamp(4px, 0.65dvh, 7px);
+    --v3-row-header: clamp(48px, 5.5dvh, 54px);
+    --v3-row-play: clamp(48px, 5.6dvh, 54px);
+    --v3-row-actions: clamp(52px, 6dvh, 58px);
 
     width: 100%;
     max-width: 100%;
@@ -1668,8 +1671,8 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
       "v3-match";
     grid-template-rows:
       var(--v3-row-header)
-      var(--v3-row-hero)
-      var(--v3-row-profile)
+      minmax(132px, 1.05fr)
+      minmax(96px, auto)
       var(--v3-row-play)
       var(--v3-row-actions)
       minmax(0, 1fr);
@@ -1693,8 +1696,8 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
       "v3-match";
     grid-template-rows:
       var(--v3-row-header)
-      var(--v3-row-hero)
-      var(--v3-row-profile)
+      minmax(120px, 1fr)
+      minmax(92px, auto)
       var(--v3-row-play)
       auto
       var(--v3-row-actions)
@@ -1777,11 +1780,11 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     height: 100%;
     max-height: 100%;
     margin: 0;
-    padding: 0;
+    padding: 2px 0 0;
     overflow: hidden;
-    gap: clamp(1px, 0.25dvh, 3px);
-    pointer-events: none;
-    z-index: 40 !important;
+    gap: clamp(2px, 0.35dvh, 5px);
+    pointer-events: none !important;
+    z-index: 1 !important;
   }
 
   #home-screen.landing-v3 .live-pill small {
@@ -1789,17 +1792,18 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
   }
 
   #home-screen.landing-v3 .hero-art {
-    width: min(100%, 320px);
-    height: clamp(56px, 8.5dvh, 78px);
+    width: min(100%, 360px);
+    height: clamp(88px, 13dvh, 118px);
+    flex: 0 0 auto;
   }
 
   #home-screen.landing-v3 .flying-cards {
-    height: clamp(56px, 8.5dvh, 78px);
+    height: clamp(88px, 13dvh, 118px);
   }
 
   #home-screen.landing-v3 .hero-card {
     position: relative;
-    width: clamp(52px, 15vw, 68px);
+    width: clamp(62px, 18vw, 78px);
     border-radius: 15px;
     animation: v3CardFloatA 5.2s ease-in-out infinite !important;
   }
@@ -1818,7 +1822,7 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
   #home-screen.landing-v3 .card-b,
   #home-screen.landing-v3 .hero-card-boss {
-    width: clamp(70px, 20vw, 92px) !important;
+    width: clamp(84px, 24vw, 108px) !important;
     animation-name: v3CardFloatB !important;
     animation-duration: 5.8s !important;
   }
@@ -1829,16 +1833,17 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
   #home-screen.landing-v3 .hero-brand {
     width: min(92vw, 340px);
-    gap: clamp(4px, 0.5dvh, 6px);
+    gap: clamp(2px, 0.35dvh, 4px);
+    flex: 0 0 auto;
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
-    font-size: clamp(1.7rem, 8.5vw, 2.2rem);
+    font-size: clamp(1.9rem, 9.5vw, 2.45rem);
     line-height: 0.9;
   }
 
   #home-screen.landing-v3 .hero-kicker {
-    font-size: clamp(0.54rem, 2.1vw, 0.62rem);
+    font-size: clamp(0.58rem, 2.3vw, 0.68rem);
     letter-spacing: 0.12em;
     max-width: 18em;
     line-height: 1.25;
@@ -1872,19 +1877,17 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     min-height: 0;
     max-height: 100%;
     overflow: hidden;
-    isolation: isolate;
-    z-index: 110 !important;
   }
 
   #home-screen.landing-v3 .player-setup-card {
     height: 100%;
-    gap: 4px;
-    padding: 6px 10px;
+    gap: 5px;
+    padding: 8px 10px;
     overflow: hidden;
   }
 
   #home-screen.landing-v3 .player-setup-label {
-    font-size: clamp(0.68rem, 2.8vw, 0.76rem);
+    font-size: clamp(0.72rem, 3vw, 0.82rem);
   }
 
   #home-screen.landing-v3 .player-setup-label--icons {
@@ -1892,29 +1895,30 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
   }
 
   #home-screen.landing-v3 .player-setup-input {
-    min-height: 36px;
+    min-height: 38px;
     padding: 0 12px;
-    font-size: clamp(0.88rem, 3.8vw, 0.98rem);
+    font-size: clamp(0.9rem, 3.8vw, 1rem);
   }
 
   #home-screen.landing-v3 .player-setup-avatars {
-    gap: 6px;
+    gap: 8px;
+    min-height: 0;
   }
 
   #home-screen.landing-v3 .player-setup-avatar-option {
     min-height: 0;
     height: 100%;
-    padding: 5px 4px 4px;
-    gap: 2px;
+    padding: 6px 4px 4px;
+    gap: 3px;
   }
 
   #home-screen.landing-v3 .player-setup-avatar-preview {
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
   }
 
   #home-screen.landing-v3 .player-setup-avatar-name {
-    font-size: clamp(0.58rem, 2.4vw, 0.64rem);
+    font-size: clamp(0.6rem, 2.4vw, 0.66rem);
   }
 
   #home-screen.landing-v3 .cta-zone {
@@ -1929,7 +1933,6 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     padding: 0;
     gap: 0;
     overflow: hidden;
-    z-index: 120 !important;
   }
 
   #home-screen.landing-v3 .play-now {
@@ -1994,7 +1997,7 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
   /* ── 4. Quick actions ── */
   #home-screen.landing-v3 .quick-actions.instant-actions {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 5px;
+    gap: 6px;
     height: 100%;
     min-height: 0;
     max-height: 100%;
@@ -2002,7 +2005,6 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     box-sizing: border-box;
     align-self: stretch;
     overflow: hidden;
-    z-index: 120 !important;
   }
 
   #home-screen.landing-v3 .quick-actions .menu-card {
@@ -2064,8 +2066,7 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
       0 -4px 24px rgba(108, 63, 209, 0.12);
     overflow: hidden;
     isolation: isolate;
-    z-index: 60 !important;
-    pointer-events: auto !important;
+    pointer-events: auto;
   }
 
   #home-screen.landing-v3 .player-panel.table-select::before {
@@ -2261,59 +2262,67 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
 @media (max-width: 639px) and (max-height: 700px) {
   #home-screen.landing-v3 {
-    --v3-mobile-gap: 2px;
-    --v3-row-header: 42px;
-    --v3-row-hero: clamp(58px, 9dvh, 72px);
-    --v3-row-profile: clamp(88px, 12.5dvh, 104px);
-    --v3-row-play: 42px;
-    --v3-row-actions: 46px;
+    --v3-mobile-gap: 3px;
+    --v3-row-header: 44px;
+    --v3-row-play: 44px;
+    --v3-row-actions: 48px;
+  }
+
+  #home-screen.landing-v3 {
+    grid-template-rows:
+      var(--v3-row-header)
+      minmax(112px, 0.95fr)
+      minmax(88px, auto)
+      var(--v3-row-play)
+      var(--v3-row-actions)
+      minmax(0, 1fr);
   }
 
   #home-screen.landing-v3 .hero-art,
   #home-screen.landing-v3 .flying-cards {
-    height: clamp(50px, 7.8dvh, 64px);
+    height: clamp(76px, 11.5dvh, 96px);
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
-    font-size: clamp(1.55rem, 8vw, 1.95rem) !important;
+    font-size: clamp(1.7rem, 8.5vw, 2.1rem) !important;
   }
 
   #home-screen.landing-v3 .hero-kicker {
-    font-size: clamp(0.5rem, 2vw, 0.56rem) !important;
+    font-size: clamp(0.52rem, 2vw, 0.58rem) !important;
   }
 
   #home-screen.landing-v3 .hero-card {
-    width: clamp(46px, 13vw, 58px) !important;
+    width: clamp(56px, 16vw, 68px) !important;
   }
 
   #home-screen.landing-v3 .card-b,
   #home-screen.landing-v3 .hero-card-boss {
-    width: clamp(62px, 17vw, 78px) !important;
+    width: clamp(74px, 21vw, 92px) !important;
   }
 
   #home-screen.landing-v3 .player-setup-card {
-    padding: 5px 8px;
-    gap: 3px;
+    padding: 6px 8px;
+    gap: 4px;
   }
 
   #home-screen.landing-v3 .player-setup-input {
-    min-height: 32px;
+    min-height: 34px;
   }
 
   #home-screen.landing-v3 .player-setup-avatar-preview {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
   }
 
   #home-screen.landing-v3 .player-option.mode-card {
     min-height: 0;
-    max-height: 52px;
+    max-height: 50px;
     padding: 5px 7px;
   }
 
   #home-screen.landing-v3 .mode-icon {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 }
 
@@ -2397,11 +2406,11 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
       "v3-actions"
       "v3-match" !important;
     grid-template-rows:
-      var(--v3-row-header, clamp(44px, 5.2dvh, 52px))
-      var(--v3-row-hero, clamp(68px, 10dvh, 96px))
-      var(--v3-row-profile, clamp(96px, 13.5dvh, 118px))
-      var(--v3-row-play, clamp(44px, 5.4dvh, 50px))
-      var(--v3-row-actions, clamp(48px, 5.8dvh, 54px))
+      var(--v3-row-header, clamp(48px, 5.5dvh, 54px))
+      minmax(132px, 1.05fr)
+      minmax(96px, auto)
+      var(--v3-row-play, clamp(48px, 5.6dvh, 54px))
+      var(--v3-row-actions, clamp(52px, 6dvh, 58px))
       minmax(0, 1fr) !important;
     align-content: stretch !important;
     overflow: hidden !important;

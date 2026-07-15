@@ -15,7 +15,7 @@
   height: 42% !important;
   transform: translateX(-50%) !important;
 }
-#home-screen > *:not(.arena-orb):not(.table-glow) {
+#home-screen:not(.landing-v3) > *:not(.arena-orb):not(.table-glow) {
   position: relative !important;
   z-index: 2 !important;
 }

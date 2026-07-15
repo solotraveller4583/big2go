@@ -5674,22 +5674,33 @@
     });
   }
 
-  function bindEvents() {
-    bindLandingAudioUnlock();
-    wireLandingPlayerSetup();
-    els.game?.addEventListener('pointerdown', () => {
-      if (!els.game?.classList.contains('hidden')) unlockAudioFromGesture();
-    }, { passive: true, capture: true });
-    els.start?.addEventListener('click', event => {
-      event.stopPropagation();
-      newGame();
-    });
-    els.continue?.addEventListener('click', event => {
-      event.stopPropagation();
+  function bindLandingPlayActions() {
+    const home = document.querySelector('#home-screen');
+    if (!home) return;
+    home.addEventListener('click', event => {
+      if (!isLandingScreenVisible()) return;
+      const startButton = event.target.closest('#start-button');
+      if (startButton) {
+        event.preventDefault();
+        newGame();
+        return;
+      }
+      const continueButton = event.target.closest('#continue-button');
+      if (!continueButton || continueButton.classList.contains('hidden')) return;
+      event.preventDefault();
       unlockAudioFromGesture();
       syncPlayerSetupFromLanding();
       if (!restoreGame()) newGame();
     });
+  }
+
+  function bindEvents() {
+    bindLandingAudioUnlock();
+    bindLandingPlayActions();
+    wireLandingPlayerSetup();
+    els.game?.addEventListener('pointerdown', () => {
+      if (!els.game?.classList.contains('hidden')) unlockAudioFromGesture();
+    }, { passive: true, capture: true });
     els.demo?.addEventListener('click', showPlayDemo);
     els.privateRoom?.addEventListener('click', () => showPrivateRoom());
     els.roomRejoin?.addEventListener('click', rejoinSavedRoom);
