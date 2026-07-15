@@ -3195,6 +3195,10 @@
     showHelp(t('settings.title'), `
       <div class="settings-modal">
         <section class="settings-audio-block">
+          <div class="settings-section-head">
+            <span class="settings-section-icon" aria-hidden="true">🔊</span>
+            <strong>${t('settings.audio')}</strong>
+          </div>
           <div class="settings-slider-row">
             <label>${t('settings.soundVolume')} <strong id="sound-volume-label">${Math.round(state.soundVolume * 100)}%</strong></label>
             <input id="sound-volume-range" type="range" min="0" max="100" value="${Math.round(state.soundVolume * 100)}" />
@@ -3206,8 +3210,11 @@
           <p class="settings-note">${t('settings.note')}</p>
         </section>
         <section class="settings-language-block">
-          <strong>${t('settings.language')}</strong>
-          <div class="language-options" id="settings-language-options">
+          <div class="settings-section-head">
+            <span class="settings-section-icon" aria-hidden="true">🌐</span>
+            <strong>${t('settings.language')}</strong>
+          </div>
+          <div class="language-options settings-language-list" id="settings-language-options">
             ${window.Big2GoI18n?.buildLanguageOptionsMarkup() || ''}
           </div>
         </section>

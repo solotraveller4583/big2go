@@ -140,7 +140,9 @@
 }
 
 #help-dialog.help-dialog--settings::backdrop {
-  background: rgba(8, 5, 31, 0.98);
+  background:
+    radial-gradient(circle at 50% 10%, rgba(108, 63, 209, 0.35), transparent 48%),
+    rgba(8, 5, 31, 0.98);
 }
 
 #help-dialog.help-dialog--settings .dialog-card {
@@ -157,22 +159,25 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0;
   padding:
-    max(10px, env(safe-area-inset-top))
-    max(14px, env(safe-area-inset-right))
-    max(10px, env(safe-area-inset-bottom))
-    max(14px, env(safe-area-inset-left));
+    max(14px, env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom))
+    max(18px, env(safe-area-inset-left));
   box-sizing: border-box;
   background:
-    radial-gradient(circle at 50% 0%, rgba(108, 63, 209, 0.28), transparent 42%),
-    linear-gradient(180deg, #2f1a7a, #0c0628 100%);
+    radial-gradient(circle at 50% 0%, rgba(108, 63, 209, 0.32), transparent 44%),
+    linear-gradient(180deg, #2f1a7a 0%, #140a38 55%, #0c0628 100%);
   box-shadow: none;
 }
 
 #help-dialog.help-dialog--settings #help-title {
-  margin: 0 0 8px;
-  font-size: clamp(1.15rem, 4.8vw, 1.45rem);
-  line-height: 1.2;
+  margin: 0 0 14px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: clamp(1.35rem, 5.5vw, 1.7rem);
+  line-height: 1.15;
   font-weight: 1000;
+  letter-spacing: -0.02em;
 }
 
 #help-dialog.help-dialog--settings .settings-copy {
@@ -185,20 +190,63 @@
 #help-dialog.help-dialog--settings .settings-modal {
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   overflow: hidden;
 }
 
-#help-dialog.help-dialog--settings .settings-audio-block {
+#help-dialog.help-dialog--settings .settings-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+#help-dialog.help-dialog--settings .settings-section-icon {
   display: grid;
-  gap: 6px;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  font-size: 1rem;
+  line-height: 1;
+  background: rgba(255, 200, 61, 0.14);
+  border: 1px solid rgba(255, 200, 61, 0.28);
+}
+
+#help-dialog.help-dialog--settings .settings-section-head strong {
+  font-size: clamp(0.92rem, 3.8vw, 1.02rem);
+  font-weight: 1000;
+  color: #ffe68f;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#help-dialog.help-dialog--settings .settings-audio-block,
+#help-dialog.help-dialog--settings .settings-language-block {
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+#help-dialog.help-dialog--settings .settings-audio-block {
+  flex-shrink: 0;
+  padding: 14px 16px 12px;
+  display: grid;
+  gap: 8px;
 }
 
 #help-dialog.help-dialog--settings .settings-slider-row {
   display: grid;
-  gap: 4px;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(8, 5, 31, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 #help-dialog.help-dialog--settings .settings-slider-row label {
@@ -207,7 +255,7 @@
   align-items: center;
   gap: 8px;
   margin: 0;
-  font-size: clamp(0.82rem, 3.6vw, 0.92rem);
+  font-size: clamp(0.88rem, 3.8vw, 0.96rem);
   font-weight: 800;
   color: rgba(255, 255, 255, 0.96);
 }
@@ -221,117 +269,157 @@
 #help-dialog.help-dialog--settings .settings-slider-row input[type="range"] {
   width: 100%;
   margin: 0;
+  height: 6px;
   accent-color: #6ea8ff;
 }
 
 #help-dialog.help-dialog--settings .settings-note {
   margin: 0;
-  font-size: clamp(0.68rem, 2.9vw, 0.76rem);
-  line-height: 1.35;
-  color: rgba(220, 214, 255, 0.68);
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: clamp(0.72rem, 3.1vw, 0.8rem);
+  line-height: 1.4;
+  color: rgba(220, 214, 255, 0.78);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 #help-dialog.help-dialog--settings .settings-language-block {
-  margin: 0;
-  padding: 8px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 12px;
+  overflow: hidden;
+}
+
+#help-dialog.help-dialog--settings .settings-language-block .settings-section-head {
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+#help-dialog.help-dialog--settings .settings-language-list {
+  flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 6px;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 8px;
   overflow: hidden;
 }
 
-#help-dialog.help-dialog--settings .settings-language-block > strong {
-  margin: 0;
-  font-size: clamp(0.82rem, 3.6vw, 0.92rem);
-  color: #ffe68f;
+#help-dialog.help-dialog--settings .settings-language-list .language-option {
+  min-height: 0;
+  height: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  font-size: clamp(0.98rem, 4.4vw, 1.12rem);
+  font-weight: 900;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 5, 31, 0.32);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-#help-dialog.help-dialog--settings .language-options {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  align-content: start;
+#help-dialog.help-dialog--settings .settings-language-list .language-option:hover,
+#help-dialog.help-dialog--settings .settings-language-list .language-option:focus-visible {
+  border-color: rgba(255, 200, 61, 0.45);
+  background: rgba(255, 200, 61, 0.08);
+}
+
+#help-dialog.help-dialog--settings .settings-language-list .language-option.selected {
+  border-color: rgba(255, 200, 61, 0.82);
+  background: linear-gradient(135deg, rgba(255, 200, 61, 0.22), rgba(255, 107, 61, 0.14));
+  box-shadow:
+    0 0 0 1px rgba(255, 200, 61, 0.24) inset,
+    0 8px 20px rgba(255, 107, 61, 0.2);
+}
+
+#help-dialog.help-dialog--settings .settings-language-list .language-option-flag {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+#help-dialog.help-dialog--settings .settings-language-list .language-option-label {
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-#help-dialog.help-dialog--settings .language-option {
-  min-height: 38px;
-  padding: 6px 10px;
-  font-size: clamp(0.78rem, 3.4vw, 0.88rem);
-  gap: 6px;
-  grid-template-columns: 26px 1fr;
-  border-radius: 12px;
-}
-
-#help-dialog.help-dialog--settings .language-option-flag {
-  font-size: 1.05rem;
-}
-
-#help-dialog.help-dialog--settings .language-option:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
+#help-dialog.help-dialog--settings .settings-language-list .language-option.selected::after {
+  content: '✓';
+  color: #ffc83d;
+  font-size: 1.15rem;
+  font-weight: 1000;
+  line-height: 1;
 }
 
 #help-dialog.help-dialog--settings .dialog-card menu {
   display: grid;
   grid-template-columns: 1fr;
   justify-items: stretch;
-  margin: 8px 0 0;
+  margin: 12px 0 0;
   padding: 0;
 }
 
 #help-dialog.help-dialog--settings .dialog-card menu button {
   width: 100%;
-  min-height: 46px;
-  font-size: 0.98rem;
+  min-height: 52px;
+  font-size: 1.02rem;
   font-weight: 1000;
-}
-
-#help-dialog.help-dialog--settings .language-option-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 @media (max-height: 720px) {
   #help-dialog.help-dialog--settings .dialog-card {
-    padding-top: max(8px, env(safe-area-inset-top));
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
 
   #help-dialog.help-dialog--settings #help-title {
-    margin-bottom: 6px;
-    font-size: 1.1rem;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    font-size: 1.25rem;
   }
 
   #help-dialog.help-dialog--settings .settings-modal {
+    gap: 10px;
+  }
+
+  #help-dialog.help-dialog--settings .settings-audio-block,
+  #help-dialog.help-dialog--settings .settings-language-block {
+    padding: 12px 14px 10px;
+    border-radius: 18px;
+  }
+
+  #help-dialog.help-dialog--settings .settings-section-head {
+    margin-bottom: 8px;
+  }
+
+  #help-dialog.help-dialog--settings .settings-slider-row {
+    padding: 8px 10px;
+  }
+
+  #help-dialog.help-dialog--settings .settings-language-list {
     gap: 6px;
   }
 
-  #help-dialog.help-dialog--settings .settings-audio-block {
-    gap: 4px;
-  }
-
-  #help-dialog.help-dialog--settings .settings-language-block {
-    padding-top: 6px;
-    gap: 4px;
-  }
-
-  #help-dialog.help-dialog--settings .language-options {
-    gap: 5px;
-  }
-
-  #help-dialog.help-dialog--settings .language-option {
-    min-height: 34px;
-    padding: 5px 8px;
+  #help-dialog.help-dialog--settings .settings-language-list .language-option {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 0.94rem;
+    border-radius: 14px;
   }
 
   #help-dialog.help-dialog--settings .dialog-card menu {
-    margin-top: 6px;
+    margin-top: 10px;
   }
 
   #help-dialog.help-dialog--settings .dialog-card menu button {
-    min-height: 42px;
+    min-height: 48px;
   }
 }
 
