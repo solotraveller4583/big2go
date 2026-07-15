@@ -928,6 +928,28 @@ dialog::backdrop { background: rgba(3, 2, 17, .72); backdrop-filter: blur(10px);
   width: 100%;
 }
 
+.help-copy .profile-name-label {
+  width: 100%;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffe68f;
+}
+
+.help-copy .profile-name-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
 .help-copy .profile-gender-option {
   min-height: 42px;
   border-radius: 14px;

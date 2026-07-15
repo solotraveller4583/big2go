@@ -101,6 +101,8 @@
 #home-screen.landing-v3 .settings-pill,
 #home-screen.landing-v3 .brand-pill,
 #home-screen.landing-v3 .live-pill,
+#home-screen.landing-v3 .player-setup-input,
+#home-screen.landing-v3 .player-setup-avatar-option,
 #home-screen.landing-v3 .room-recovery-card button,
 #home-screen.landing-v3 .landing-v3-footer a {
   position: relative;
@@ -650,13 +652,109 @@
   display: grid;
   place-items: stretch;
   align-self: stretch;
-  gap: 0;
+  gap: 10px;
   width: 100%;
   margin-top: 0;
   padding: 0;
   position: relative;
   z-index: 100 !important;
   pointer-events: auto !important;
+}
+
+#home-screen.landing-v3 .player-setup {
+  width: 100%;
+}
+
+#home-screen.landing-v3 .player-setup-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(108, 63, 209, 0.45);
+  background: linear-gradient(180deg, rgba(21, 16, 68, 0.92) 0%, rgba(13, 16, 48, 0.88) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+#home-screen.landing-v3 .player-setup-label {
+  margin: 0;
+  font-size: clamp(0.82rem, 3.4vw, 0.92rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffe68f;
+}
+
+#home-screen.landing-v3 .player-setup-label--icons {
+  margin-top: 2px;
+}
+
+#home-screen.landing-v3 .player-setup-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  font-size: clamp(1rem, 4.2vw, 1.12rem);
+  font-weight: 800;
+}
+
+#home-screen.landing-v3 .player-setup-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+#home-screen.landing-v3 .player-setup-input:focus {
+  outline: none;
+  border-color: rgba(255, 200, 61, 0.75);
+  box-shadow: 0 0 0 3px rgba(255, 200, 61, 0.18);
+}
+
+#home-screen.landing-v3 .player-setup-avatars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+#home-screen.landing-v3 .player-setup-avatar-option {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-height: 92px;
+  padding: 10px 8px 8px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(108, 63, 209, 0.45);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+#home-screen.landing-v3 .player-setup-avatar-option.selected,
+#home-screen.landing-v3 .player-setup-avatar-option[aria-pressed="true"] {
+  border-color: rgba(255, 200, 61, 0.85);
+  background: rgba(255, 200, 61, 0.12);
+  box-shadow: 0 0 0 1px rgba(255, 200, 61, 0.28), 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+#home-screen.landing-v3 .player-setup-avatar-preview {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+}
+
+#home-screen.landing-v3 .player-setup-avatar-name {
+  font-size: clamp(0.82rem, 3.2vw, 0.92rem);
+  font-weight: 900;
+  color: #fff;
+}
+
+#home-screen.landing-v3 .player-setup-avatar-option.selected .player-setup-avatar-name,
+#home-screen.landing-v3 .player-setup-avatar-option[aria-pressed="true"] .player-setup-avatar-name {
+  color: #ffe68f;
 }
 
 #home-screen.landing-v3 .play-now {

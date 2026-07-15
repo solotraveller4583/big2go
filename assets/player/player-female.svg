@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Female player icon">
+  <defs>
+    <linearGradient id="player-female-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e85d9a"/>
+      <stop offset="100%" stop-color="#8f2f62"/>
+    </linearGradient>
+    <linearGradient id="player-female-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff0b8"/>
+      <stop offset="100%" stop-color="#ffc83d"/>
+    </linearGradient>
+  </defs>
+  <circle cx="48" cy="48" r="46" fill="url(#player-female-ring)"/>
+  <circle cx="48" cy="48" r="40" fill="url(#player-female-bg)"/>
+  <circle cx="48" cy="30" r="5" fill="#ffd8ec"/>
+  <circle cx="40" cy="28" r="2" fill="#ffd8ec"/>
+  <circle cx="56" cy="28" r="2" fill="#ffd8ec"/>
+  <text x="48" y="64" text-anchor="middle" font-size="30" font-weight="900" fill="#ffd8ec" font-family="Arial, sans-serif">e</text>
+</svg>
