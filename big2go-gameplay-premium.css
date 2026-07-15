@@ -147,9 +147,10 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 4px 12px rgba(0, 0, 0, 0.24) !important;
 }
 
-#game-screen.gameplay-premium .coin-wallet span {
+#game-screen.gameplay-premium .coin-wallet .gold-coin-icon {
   grid-row: 1 / 3 !important;
-  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
 }
 
 #game-screen.gameplay-premium .coin-wallet strong {

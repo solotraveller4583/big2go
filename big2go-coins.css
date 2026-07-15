@@ -1,4 +1,38 @@
 /* Big2Go virtual gold coins — entertainment-only arcade tokens */
+.gold-coin-icon {
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  vertical-align: -0.12em;
+  flex-shrink: 0;
+  background: url('assets/coin-gold.svg') center / contain no-repeat;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .28));
+}
+.coin-wallet .gold-coin-icon {
+  width: 18px;
+  height: 18px;
+}
+.prize-pool strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.prize-pool .gold-coin-icon {
+  width: 16px;
+  height: 16px;
+}
+.opponent-coins,
+.room-player-coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.coin-pop {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
 .coin-wallet {
   min-width: 86px;
   padding: 7px 9px;
@@ -14,7 +48,7 @@
   line-height: 1;
   text-align: left;
 }
-.coin-wallet span { filter: drop-shadow(0 2px 3px rgba(0,0,0,.28)); }
+.coin-wallet .gold-coin-icon { filter: drop-shadow(0 2px 3px rgba(0,0,0,.28)); }
 .coin-wallet strong { font-size: 17px; font-weight: 1000; }
 .coin-wallet small { grid-column: 1 / -1; color: rgba(255,255,255,.72); font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
 .prize-pool {
@@ -43,7 +77,14 @@
   animation: coinFly var(--d, 900ms) cubic-bezier(.2,.72,.16,1) forwards;
   filter: drop-shadow(0 5px 8px rgba(0,0,0,.32));
 }
-.coin-bit::before { content: '🪙'; display:block; animation: coinSpin 420ms linear infinite; }
+.coin-bit::before {
+  content: '';
+  display: block;
+  width: 1em;
+  height: 1em;
+  background: url('assets/coin-gold.svg') center / contain no-repeat;
+  animation: coinSpin 420ms linear infinite;
+}
 .coin-bit.spark::before { content: '✨'; }
 @keyframes coinFly { to { left: var(--tx, 50vw); top: var(--ty, 45vh); opacity: 0; transform: translate(-50%, -50%) scale(.55) rotate(22deg); } }
 @keyframes coinSpin { 50% { transform: scaleX(.35) rotate(-8deg); } }

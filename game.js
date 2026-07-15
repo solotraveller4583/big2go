@@ -57,6 +57,20 @@
     return window.Big2GoAIDialogue?.getGameLine?.(key, vars) ?? key;
   }
 
+  const COIN_ICON_HTML = '<span class="gold-coin-icon" aria-hidden="true"></span>';
+
+  function coinIcon() {
+    return COIN_ICON_HTML;
+  }
+
+  function withCoinIcon(text) {
+    return String(text).replace(/\{\{coin\}\}|🪙/g, COIN_ICON_HTML);
+  }
+
+  function coinLabel(amount, prefix = '') {
+    return `${prefix}${coinIcon()} ${amount}`;
+  }
+
   function getRulesHtml() {
     return window.Big2GoI18n?.getRulesHtml() || RULES_HTML;
   }
@@ -688,8 +702,8 @@
   function renderGameResultStory(story) {
     if (!story) return;
     if (els.resultStoryHeadline) {
-      els.resultStoryHeadline.textContent = story.humanWon
-        ? `You won the table! +🪙 ${story.coinPrize}`
+      els.resultStoryHeadline.innerHTML = story.humanWon
+        ? `You won the table! +${coinIcon()} ${story.coinPrize}`
         : `${story.winnerName} won this round`;
     }
     if (els.resultStoryStats) {
@@ -700,7 +714,7 @@
         <div class="result-story-stat"><small>Your Rank</small><strong>${humanTier.emoji} Lv ${humanTier.level}</strong></div>
         <div class="result-story-stat"><small>Tier</small><strong>${humanTier.title}</strong></div>
         <div class="result-story-stat"><small>Level Progress</small><strong>${humanProgress.maxed ? 'MAX' : `${humanProgress.current} / ${humanProgress.target}`}</strong></div>
-        <div class="result-story-stat"><small>Your Coins</small><strong>🪙 ${story.coinsBalance}</strong></div>
+        <div class="result-story-stat"><small>Your Coins</small><strong>${coinIcon()} ${story.coinsBalance}</strong></div>
         <div class="result-story-stat result-story-stat--wide"><small>Best Combo</small><strong>${story.bestCombo}</strong></div>`;
     }
     if (els.resultStoryPlayers) {
@@ -724,7 +738,7 @@
         copy.innerHTML = `
           <strong>${player.name} · ${getLevelTier(player.level || STARTING_LEVEL).emoji} Lv ${player.level || STARTING_LEVEL}</strong>
           <span>${status}</span>
-          <small>🪙 ${player.coins}</small>`;
+          <small>${coinIcon()} ${player.coins}</small>`;
         const badge = document.createElement('span');
         badge.className = 'result-story-player-badge';
         badge.textContent = player.won ? '🏆' : (player.finished || player.cardsLeft === 0 ? '✓' : '…');
@@ -1606,14 +1620,14 @@
   function showCoinPop(text) {
     const pop = document.createElement('div');
     pop.className = 'coin-pop';
-    pop.textContent = text;
+    pop.innerHTML = withCoinIcon(text);
     document.body.appendChild(pop);
     setTimeout(() => pop.remove(), 1250);
   }
 
   function paySinglePlayerEntry(playerCount) {
     if (state.coins.balance < ENTRY_FEE_COINS) {
-      showOracle('Need more virtual coins', `You need 🪙 ${ENTRY_FEE_COINS} entertainment coins to start. Daily free coins are a good next retention feature.`);
+      showOracle('Need more virtual coins', `You need ${coinIcon()} ${ENTRY_FEE_COINS} entertainment coins to start. Daily free coins are a good next retention feature.`);
       return false;
     }
     setCoinBalance(state.coins.balance - ENTRY_FEE_COINS);
@@ -1621,7 +1635,7 @@
     state.coins.entryPaid = true;
     state.coins.paidOut = false;
     animateCoins('entry', ENTRY_FEE_COINS);
-    showCoinPop(`Entry fee: 🪙 ${ENTRY_FEE_COINS}`);
+    showCoinPop(`Entry fee: {{coin}} ${ENTRY_FEE_COINS}`);
     renderCoinHud();
     return true;
   }
@@ -1633,16 +1647,16 @@
     if (winner?.isHuman) {
       setCoinBalance(state.coins.balance + prize);
       animateCoins('win', Math.max(ENTRY_FEE_COINS, prize));
-      showCoinPop(`+🪙 ${prize}`);
+      showCoinPop(`+{{coin}} ${prize}`);
     } else if (winner?.characterId) {
       const nextBalance = getAiCoinBalance(winner.characterId) + prize;
       setAiCoinBalance(winner.characterId, nextBalance);
       winner.coins = nextBalance;
       animateCoins('entry', ENTRY_FEE_COINS);
-      showCoinPop(`Good Game! -🪙 ${ENTRY_FEE_COINS}`);
+      showCoinPop(`Good Game! -{{coin}} ${ENTRY_FEE_COINS}`);
     } else {
       animateCoins('entry', ENTRY_FEE_COINS);
-      showCoinPop(`Good Game! -🪙 ${ENTRY_FEE_COINS}`);
+      showCoinPop(`Good Game! -{{coin}} ${ENTRY_FEE_COINS}`);
     }
     return prize;
   }
@@ -2343,7 +2357,7 @@
       </div>
       <div class="session-summary-item">
         <small>Coins Earned</small>
-        <strong>🪙 ${summary.coinsEarned}</strong>
+        <strong>${coinIcon()} ${summary.coinsEarned}</strong>
       </div>
       <div class="session-summary-item session-summary-item--wide">
         <small>Best Moment / Combo</small>
@@ -2890,13 +2904,13 @@
 
     const stats = document.createElement('div');
     stats.className = 'victory-stats';
-    stats.innerHTML = `<span>+🪙 ${coinPrize}</span><span>${state.sparks} sparks</span><span>${state.players.length} players</span>`;
+    stats.innerHTML = `<span>+${coinIcon()} ${coinPrize}</span><span>${state.sparks} sparks</span><span>${state.players.length} players</span>`;
 
     const rewards = document.createElement('div');
     rewards.className = 'victory-rewards';
     rewards.innerHTML = winner.isHuman
-      ? `<div class="reward-line">🪙 +${coinPrize} virtual gold coins</div><div class="reward-line">✨ Arcade tokens only — no cash value</div>`
-      : `<div class="reward-line">Good Game! -🪙 ${ENTRY_FEE_COINS}</div><div class="reward-line">These are entertainment coins only — rematch anytime</div>`;
+      ? `<div class="reward-line">${coinIcon()} +${coinPrize} virtual gold coins</div><div class="reward-line">✨ Arcade tokens only — no cash value</div>`
+      : `<div class="reward-line">Good Game! -${coinIcon()} ${ENTRY_FEE_COINS}</div><div class="reward-line">These are entertainment coins only — rematch anytime</div>`;
 
     let levelUpPanel = null;
 
@@ -3576,7 +3590,7 @@
       stats.className = 'opponent-stats';
       const coins = document.createElement('span');
       coins.className = 'opponent-coins';
-      coins.textContent = `🪙 ${playerCoins(player, index)}`;
+      coins.innerHTML = `${coinIcon()} ${playerCoins(player, index)}`;
       const cards = document.createElement('span');
       cards.className = 'opponent-cards';
       if (isLastCard) {
@@ -3626,7 +3640,7 @@
     entries.slice(0, 6).forEach(message => {
       const entry = document.createElement('div');
       entry.className = 'log-entry';
-      entry.textContent = message;
+      entry.innerHTML = withCoinIcon(message);
       els.logList.appendChild(entry);
     });
   }
@@ -5095,7 +5109,7 @@
         if (player.id === room.hostId) tags.push('Host');
         if (player.connected === false) tags.push(player.timedOut ? 'Timed out' : 'Disconnected');
         else tags.push('Online');
-        item.textContent = `${index + 1}. ${displayName} · 🪙 ${Number.isFinite(player.coins) ? player.coins : STARTING_COINS}${tags.length ? ` · ${tags.join(' · ')}` : ''}`;
+        item.innerHTML = `${index + 1}. ${displayName} · ${coinIcon()} ${Number.isFinite(player.coins) ? player.coins : STARTING_COINS}${tags.length ? ` · ${tags.join(' · ')}` : ''}`;
         if (player.connected === false) item.dataset.left = 'true';
         playersEl.appendChild(item);
       });

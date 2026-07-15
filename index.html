@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="big2go-room.css?v=10" />
   <link rel="stylesheet" href="big2go-voice.css?v=4" />
   <link rel="stylesheet" href="big2go-rejoin.css?v=3" />
-  <link rel="stylesheet" href="big2go-coins.css?v=11" />
+  <link rel="stylesheet" href="big2go-coins.css?v=12" />
   <link rel="stylesheet" href="big2go-mobile-redesign.css?v=9" />
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=3" />
   <link rel="stylesheet" href="big2go-session-complete.css?v=1" />
@@ -235,7 +235,7 @@
           <h2 id="table-title" data-i18n="game.arena">Big2Go Arena</h2>
           <p class="header-subtitle" id="table-subtitle">Beat the trick or let the table pass to the next player.</p>
         </div>
-        <div class="coin-wallet" id="coin-wallet" aria-label="Your virtual gold coins"><span>🪙</span><strong id="coin-balance">100</strong><small data-i18n="game.yourCoins">Your Coins</small></div>
+        <div class="coin-wallet" id="coin-wallet" aria-label="Your virtual gold coins"><span class="gold-coin-icon" aria-hidden="true"></span><strong id="coin-balance">100</strong><small data-i18n="game.yourCoins">Your Coins</small></div>
         <button class="icon-button" id="sound-button" aria-label="Toggle sound">🔊</button>
       </header>
 
@@ -279,7 +279,7 @@
           <div class="table-rim-light"></div>
         </div>
         <span class="table-room-id" id="table-room-id" aria-live="polite"></span>
-        <div class="prize-pool" id="prize-pool" aria-label="Virtual prize pool"><small data-i18n="game.prizePool">Prize Pool</small><strong>🪙 <span id="prize-pool-value">0</span></strong></div>
+        <div class="prize-pool" id="prize-pool" aria-label="Virtual prize pool"><small data-i18n="game.prizePool">Prize Pool</small><strong><span class="gold-coin-icon" aria-hidden="true"></span><span id="prize-pool-value">0</span></strong></div>
         <div id="ai-reaction-layer" class="ai-reaction-layer" aria-live="polite"></div>
         <div class="arena-header">
           <div>
@@ -511,6 +511,6 @@
   <script src="aiDialogue.js?v=1" defer></script>
   <script src="aiCharacters.js?v=13" defer></script>
   <script src="aiReactions.js?v=6" defer></script>
-  <script src="game.js?v=117" defer></script>
+  <script src="game.js?v=118" defer></script>
 </body>
 </html>
