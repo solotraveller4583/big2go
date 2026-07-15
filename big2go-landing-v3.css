@@ -18,15 +18,7 @@
 
   position: relative;
   display: grid;
-  grid-template-columns: 1fr;
-  grid-template-areas:
-    "v3-topbar"
-    "v3-hero"
-    "v3-profile"
-    "v3-play"
-    "v3-actions"
-    "v3-match";
-  grid-template-rows: auto minmax(0, 1fr) auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto auto auto auto;
   gap: clamp(10px, 1.6dvh, 16px);
   padding:
     max(8px, env(safe-area-inset-top))
@@ -92,21 +84,15 @@
 }
 
 #home-screen.landing-v3 .home-topbar,
-#home-screen.landing-v3 .player-setup,
+#home-screen.landing-v3 .hero-stage,
 #home-screen.landing-v3 .cta-zone,
 #home-screen.landing-v3 .quick-actions,
 #home-screen.landing-v3 .player-panel,
 #home-screen.landing-v3 .landing-v3-footer,
 #home-screen.landing-v3 .room-recovery-card {
   position: relative;
-  z-index: 5;
-  pointer-events: auto;
-}
-
-#home-screen.landing-v3 .hero-stage {
-  position: relative;
-  z-index: 1;
-  pointer-events: none !important;
+  z-index: 100 !important;
+  pointer-events: auto !important;
 }
 
 #home-screen.landing-v3 .play-now,
@@ -115,14 +101,11 @@
 #home-screen.landing-v3 .settings-pill,
 #home-screen.landing-v3 .brand-pill,
 #home-screen.landing-v3 .live-pill,
-#home-screen.landing-v3 .player-setup-input,
-#home-screen.landing-v3 .player-setup-avatar-option,
 #home-screen.landing-v3 .room-recovery-card button,
 #home-screen.landing-v3 .landing-v3-footer a {
   position: relative;
-  z-index: 6;
-  pointer-events: auto;
-  touch-action: manipulation;
+  z-index: 101 !important;
+  pointer-events: auto !important;
 }
 
 #home-screen.landing-v3 .arena-orb,
@@ -327,8 +310,7 @@
   padding: 4px 8px 0;
   overflow: hidden;
   text-align: center;
-  z-index: 1;
-  pointer-events: none !important;
+  z-index: 100;
 }
 
 #home-screen.landing-v3 .hero-brand {
@@ -668,116 +650,13 @@
   display: grid;
   place-items: stretch;
   align-self: stretch;
-  gap: 8px;
+  gap: 0;
   width: 100%;
-  min-width: 0;
   margin-top: 0;
   padding: 0;
   position: relative;
-  z-index: 6;
-  pointer-events: auto;
-  touch-action: manipulation;
-}
-
-#home-screen.landing-v3 .player-setup {
-  grid-area: v3-profile;
-  width: 100%;
-  min-width: 0;
-  align-self: stretch;
-  min-height: 0;
-  overflow: hidden;
-}
-
-#home-screen.landing-v3 .player-setup-card {
-  display: grid;
-  gap: 8px;
-  padding: 12px 14px;
-  border-radius: 18px;
-  border: 1px solid rgba(108, 63, 209, 0.45);
-  background: linear-gradient(180deg, rgba(21, 16, 68, 0.92) 0%, rgba(13, 16, 48, 0.88) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 24px rgba(0, 0, 0, 0.22);
-}
-
-#home-screen.landing-v3 .player-setup-label {
-  margin: 0;
-  font-size: clamp(0.82rem, 3.4vw, 0.92rem);
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #ffe68f;
-}
-
-#home-screen.landing-v3 .player-setup-label--icons {
-  margin-top: 2px;
-}
-
-#home-screen.landing-v3 .player-setup-input {
-  width: 100%;
-  min-height: 48px;
-  padding: 0 14px;
-  border-radius: 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font: inherit;
-  font-size: clamp(1rem, 4.2vw, 1.12rem);
-  font-weight: 800;
-}
-
-#home-screen.landing-v3 .player-setup-input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-#home-screen.landing-v3 .player-setup-input:focus {
-  outline: none;
-  border-color: rgba(255, 200, 61, 0.75);
-  box-shadow: 0 0 0 3px rgba(255, 200, 61, 0.18);
-}
-
-#home-screen.landing-v3 .player-setup-avatars {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-#home-screen.landing-v3 .player-setup-avatar-option {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  min-height: 92px;
-  padding: 10px 8px 8px;
-  border-radius: 16px;
-  border: 1.5px solid rgba(108, 63, 209, 0.45);
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  font: inherit;
-  cursor: pointer;
-}
-
-#home-screen.landing-v3 .player-setup-avatar-option.selected,
-#home-screen.landing-v3 .player-setup-avatar-option[aria-pressed="true"] {
-  border-color: rgba(255, 200, 61, 0.85);
-  background: rgba(255, 200, 61, 0.12);
-  box-shadow: 0 0 0 1px rgba(255, 200, 61, 0.28), 0 8px 18px rgba(0, 0, 0, 0.2);
-}
-
-#home-screen.landing-v3 .player-setup-avatar-preview {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
-}
-
-#home-screen.landing-v3 .player-setup-avatar-name {
-  font-size: clamp(0.82rem, 3.2vw, 0.92rem);
-  font-weight: 900;
-  color: #fff;
-}
-
-#home-screen.landing-v3 .player-setup-avatar-option.selected .player-setup-avatar-name,
-#home-screen.landing-v3 .player-setup-avatar-option[aria-pressed="true"] .player-setup-avatar-name {
-  color: #ffe68f;
+  z-index: 100 !important;
+  pointer-events: auto !important;
 }
 
 #home-screen.landing-v3 .play-now {
@@ -866,9 +745,8 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   position: relative;
-  z-index: 6;
-  pointer-events: auto;
-  touch-action: manipulation;
+  z-index: 100 !important;
+  pointer-events: auto !important;
 }
 
 #home-screen.landing-v3 .quick-actions .menu-card {
@@ -1427,14 +1305,12 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     grid-template-areas:
       "v3-topbar"
       "v3-hero"
-      "v3-profile"
       "v3-play"
       "v3-actions"
       "v3-match";
     grid-template-rows:
       auto
       minmax(240px, 1.45fr)
-      auto
       auto
       auto
       minmax(0, 1fr);
@@ -1444,12 +1320,11 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     grid-template-areas:
       "v3-topbar"
       "v3-hero"
-      "v3-profile"
       "v3-play"
       "v3-recovery"
       "v3-actions"
       "v3-match";
-    grid-template-rows: auto minmax(200px, 1.2fr) auto auto auto auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(200px, 1.2fr) auto auto auto minmax(0, 1fr);
   }
 
   #home-screen.landing-v3:has(#room-recovery-card:not(.hidden)) .landing-v3-footer {
@@ -1607,6 +1482,10 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 /* ── Mobile full-screen lobby (portrait phones) ── */
 
 @media (max-width: 639px) {
+  #home-screen.landing-v3 {
+    overflow: hidden !important;
+  }
+
   html:has(#home-screen.landing-v3:not(.hidden)),
   body:has(#home-screen.landing-v3:not(.hidden)) {
     width: 100%;
@@ -1641,19 +1520,16 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
   #home-screen.landing-v3 {
     --v3-mobile-inset: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
-    --v3-mobile-gap: clamp(4px, 0.65dvh, 7px);
-    --v3-row-header: clamp(48px, 5.5dvh, 54px);
-    --v3-row-play: clamp(48px, 5.6dvh, 54px);
-    --v3-row-actions: clamp(52px, 6dvh, 58px);
+    --v3-mobile-gap: clamp(5px, 0.85dvh, 8px);
+    --v3-row-header: clamp(52px, 7dvh, 60px);
+    --v3-row-hero: minmax(220px, 1.55fr);
+    --v3-row-play: clamp(54px, 7.2dvh, 60px);
+    --v3-row-actions: clamp(60px, 8dvh, 66px);
 
     width: 100%;
     max-width: 100%;
-    height: 100vh;
-    height: 100svh;
     height: 100dvh;
-    max-height: 100svh;
     max-height: 100dvh;
-    min-height: 100svh;
     min-height: 100dvh;
     gap: var(--v3-mobile-gap);
     padding:
@@ -1665,14 +1541,12 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     grid-template-areas:
       "v3-topbar"
       "v3-hero"
-      "v3-profile"
       "v3-play"
       "v3-actions"
       "v3-match";
     grid-template-rows:
       var(--v3-row-header)
-      minmax(132px, 1.05fr)
-      minmax(96px, auto)
+      var(--v3-row-hero)
       var(--v3-row-play)
       var(--v3-row-actions)
       minmax(0, 1fr);
@@ -1689,38 +1563,20 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     grid-template-areas:
       "v3-topbar"
       "v3-hero"
-      "v3-profile"
       "v3-play"
       "v3-recovery"
       "v3-actions"
       "v3-match";
-    grid-template-rows:
-      var(--v3-row-header)
-      minmax(120px, 1fr)
-      minmax(92px, auto)
-      var(--v3-row-play)
-      auto
-      var(--v3-row-actions)
-      minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
   }
 
   #home-screen.landing-v3:has(#room-recovery-card:not(.hidden)) .landing-v3-footer {
     display: none;
   }
 
-  #home-screen.landing-v3 > .hero-stage,
-  #home-screen.landing-v3 > .player-panel,
-  #home-screen.landing-v3 > .room-recovery-card {
+  #home-screen.landing-v3 > *:not(.arena-orb):not(.table-glow) {
     min-width: 0;
     min-height: 0;
-  }
-
-  #home-screen.landing-v3 > .home-topbar,
-  #home-screen.landing-v3 > .player-setup,
-  #home-screen.landing-v3 > .cta-zone,
-  #home-screen.landing-v3 > .quick-actions {
-    min-width: 0;
-    min-height: min-content;
   }
 
   #home-screen.landing-v3::after {
@@ -1780,11 +1636,9 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     height: 100%;
     max-height: 100%;
     margin: 0;
-    padding: 2px 0 0;
+    padding: 0;
     overflow: hidden;
-    gap: clamp(2px, 0.35dvh, 5px);
-    pointer-events: none !important;
-    z-index: 1 !important;
+    gap: clamp(2px, 0.35dvh, 4px);
   }
 
   #home-screen.landing-v3 .live-pill small {
@@ -1793,17 +1647,16 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
   #home-screen.landing-v3 .hero-art {
     width: min(100%, 360px);
-    height: clamp(88px, 13dvh, 118px);
-    flex: 0 0 auto;
+    height: clamp(128px, 24dvh, 168px);
   }
 
   #home-screen.landing-v3 .flying-cards {
-    height: clamp(88px, 13dvh, 118px);
+    height: clamp(128px, 24dvh, 168px);
   }
 
   #home-screen.landing-v3 .hero-card {
     position: relative;
-    width: clamp(62px, 18vw, 78px);
+    width: clamp(68px, 20vw, 84px);
     border-radius: 15px;
     animation: v3CardFloatA 5.2s ease-in-out infinite !important;
   }
@@ -1822,7 +1675,7 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
   #home-screen.landing-v3 .card-b,
   #home-screen.landing-v3 .hero-card-boss {
-    width: clamp(84px, 24vw, 108px) !important;
+    width: clamp(92px, 28vw, 118px) !important;
     animation-name: v3CardFloatB !important;
     animation-duration: 5.8s !important;
   }
@@ -1833,17 +1686,16 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
   #home-screen.landing-v3 .hero-brand {
     width: min(92vw, 340px);
-    gap: clamp(2px, 0.35dvh, 4px);
-    flex: 0 0 auto;
+    gap: clamp(4px, 0.5dvh, 6px);
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
-    font-size: clamp(1.9rem, 9.5vw, 2.45rem);
+    font-size: clamp(2.35rem, 11.5vw, 3rem);
     line-height: 0.9;
   }
 
   #home-screen.landing-v3 .hero-kicker {
-    font-size: clamp(0.58rem, 2.3vw, 0.68rem);
+    font-size: clamp(0.62rem, 2.5vw, 0.72rem);
     letter-spacing: 0.12em;
     max-width: 18em;
     line-height: 1.25;
@@ -1870,82 +1722,30 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     padding: 0 4px 2px;
   }
 
-  /* ── 3. Player profile + Play Now ── */
-  #home-screen.landing-v3 .player-setup {
-    align-self: stretch;
-    height: 100%;
-    min-height: 0;
-    max-height: 100%;
-    overflow: hidden;
-  }
-
-  #home-screen.landing-v3 .player-setup-card {
-    height: 100%;
-    gap: 5px;
-    padding: 8px 10px;
-    overflow: hidden;
-  }
-
-  #home-screen.landing-v3 .player-setup-label {
-    font-size: clamp(0.72rem, 3vw, 0.82rem);
-  }
-
-  #home-screen.landing-v3 .player-setup-label--icons {
-    display: none;
-  }
-
-  #home-screen.landing-v3 .player-setup-input {
-    min-height: 38px;
-    padding: 0 12px;
-    font-size: clamp(0.9rem, 3.8vw, 1rem);
-  }
-
-  #home-screen.landing-v3 .player-setup-avatars {
-    gap: 8px;
-    min-height: 0;
-  }
-
-  #home-screen.landing-v3 .player-setup-avatar-option {
-    min-height: 0;
-    height: 100%;
-    padding: 6px 4px 4px;
-    gap: 3px;
-  }
-
-  #home-screen.landing-v3 .player-setup-avatar-preview {
-    width: 38px;
-    height: 38px;
-  }
-
-  #home-screen.landing-v3 .player-setup-avatar-name {
-    font-size: clamp(0.6rem, 2.4vw, 0.66rem);
-  }
-
+  /* ── 3. Play Now ── */
   #home-screen.landing-v3 .cta-zone {
     display: grid;
     place-items: stretch;
     align-self: stretch;
     width: 100%;
-    height: 100%;
-    min-height: 0;
-    max-height: 100%;
+    height: var(--v3-row-play);
+    min-height: var(--v3-row-play);
+    max-height: var(--v3-row-play);
     margin: 0;
     padding: 0;
-    gap: 0;
-    overflow: hidden;
   }
 
   #home-screen.landing-v3 .play-now {
     width: 100%;
     max-width: none;
-    min-height: 0;
-    height: 100%;
-    max-height: 100%;
+    min-height: var(--v3-row-play);
+    height: var(--v3-row-play);
+    max-height: 64px;
     margin: 0;
     padding: 0 14px 0 18px;
     justify-content: space-between;
     border-radius: 18px;
-    font-size: clamp(1.18rem, 4.8vw, 1.36rem);
+    font-size: clamp(1.22rem, 5vw, 1.42rem);
     letter-spacing: 0.07em;
     box-shadow:
       inset 0 3px 0 rgba(255, 255, 255, 0.68),
@@ -1997,21 +1797,19 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
   /* ── 4. Quick actions ── */
   #home-screen.landing-v3 .quick-actions.instant-actions {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-    height: 100%;
-    min-height: 0;
-    max-height: 100%;
+    gap: 8px;
+    height: var(--v3-row-actions);
+    min-height: var(--v3-row-actions);
+    max-height: var(--v3-row-actions);
     padding: 0;
     box-sizing: border-box;
-    align-self: stretch;
-    overflow: hidden;
   }
 
   #home-screen.landing-v3 .quick-actions .menu-card {
-    min-height: 0;
-    height: 100%;
-    max-height: 100%;
-    padding: 4px 3px 3px;
+    min-height: var(--v3-row-actions);
+    height: var(--v3-row-actions);
+    max-height: 70px;
+    padding: 6px 4px 5px;
     gap: 2px;
     border-radius: 14px;
     border: 1px solid rgba(108, 63, 209, 0.42);
@@ -2064,9 +1862,10 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.08),
       0 -4px 24px rgba(108, 63, 209, 0.12);
-    overflow: hidden;
+    overflow: visible;
     isolation: isolate;
-    pointer-events: auto;
+    z-index: 100 !important;
+    pointer-events: auto !important;
   }
 
   #home-screen.landing-v3 .player-panel.table-select::before {
@@ -2140,22 +1939,14 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     overflow: visible;
   }
 
-  #home-screen.landing-v3 .player-setup-card {
-    grid-template-rows: auto auto minmax(0, 1fr);
-  }
-
-  #home-screen.landing-v3 .player-setup-avatars {
-    min-height: 0;
-  }
-
   #home-screen.landing-v3 .player-option.mode-card {
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     gap: 8px;
-    min-height: 0;
+    min-height: 68px;
     height: auto;
-    max-height: 56px;
+    max-height: none;
     padding: 8px 10px;
     border-radius: 14px;
     text-align: left;
@@ -2262,67 +2053,38 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
 @media (max-width: 639px) and (max-height: 700px) {
   #home-screen.landing-v3 {
-    --v3-mobile-gap: 3px;
-    --v3-row-header: 44px;
-    --v3-row-play: 44px;
-    --v3-row-actions: 48px;
-  }
-
-  #home-screen.landing-v3 {
-    grid-template-rows:
-      var(--v3-row-header)
-      minmax(112px, 0.95fr)
-      minmax(88px, auto)
-      var(--v3-row-play)
-      var(--v3-row-actions)
-      minmax(0, 1fr);
+    --v3-mobile-gap: 4px;
+    --v3-row-header: 52px;
+    --v3-row-hero: minmax(188px, 1.35fr);
+    --v3-row-play: 52px;
+    --v3-row-actions: 58px;
   }
 
   #home-screen.landing-v3 .hero-art,
   #home-screen.landing-v3 .flying-cards {
-    height: clamp(76px, 11.5dvh, 96px);
+    height: clamp(108px, 18dvh, 132px);
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
-    font-size: clamp(1.7rem, 8.5vw, 2.1rem) !important;
+    font-size: clamp(2.1rem, 10.5vw, 2.65rem) !important;
   }
 
   #home-screen.landing-v3 .hero-kicker {
-    font-size: clamp(0.52rem, 2vw, 0.58rem) !important;
+    font-size: clamp(0.56rem, 2.2vw, 0.64rem) !important;
   }
 
   #home-screen.landing-v3 .hero-card {
-    width: clamp(56px, 16vw, 68px) !important;
+    width: clamp(62px, 18vw, 76px) !important;
   }
 
   #home-screen.landing-v3 .card-b,
   #home-screen.landing-v3 .hero-card-boss {
-    width: clamp(74px, 21vw, 92px) !important;
-  }
-
-  #home-screen.landing-v3 .player-setup-card {
-    padding: 6px 8px;
-    gap: 4px;
-  }
-
-  #home-screen.landing-v3 .player-setup-input {
-    min-height: 34px;
-  }
-
-  #home-screen.landing-v3 .player-setup-avatar-preview {
-    width: 32px;
-    height: 32px;
+    width: clamp(84px, 24vw, 102px) !important;
   }
 
   #home-screen.landing-v3 .player-option.mode-card {
-    min-height: 0;
-    max-height: 50px;
-    padding: 5px 7px;
-  }
-
-  #home-screen.landing-v3 .mode-icon {
-    width: 28px;
-    height: 28px;
+    min-height: 62px;
+    padding: 7px 8px;
   }
 }
 
@@ -2380,85 +2142,5 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
   #home-screen.landing-v3 .player-option.selected:active {
     transform: translateY(-4px) scale(0.98);
-  }
-}
-
-/* Beat legacy casino / b2g-home grid rows from older landing stylesheets */
-#home-screen.landing-v3.casino-home.b2g-home,
-#home-screen.landing-v3.hero.casino-home.b2g-home.panel {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-}
-
-@media (orientation: portrait) and (max-width: 620px) {
-  #home-screen.landing-v3.casino-home {
-    gap: var(--v3-mobile-gap, clamp(4px, 0.75dvh, 7px)) !important;
-    padding:
-      max(4px, env(safe-area-inset-top))
-      var(--v3-mobile-inset, max(12px, env(safe-area-inset-left), env(safe-area-inset-right)))
-      max(2px, env(safe-area-inset-bottom))
-      var(--v3-mobile-inset, max(12px, env(safe-area-inset-left), env(safe-area-inset-right))) !important;
-    grid-template-areas:
-      "v3-topbar"
-      "v3-hero"
-      "v3-profile"
-      "v3-play"
-      "v3-actions"
-      "v3-match" !important;
-    grid-template-rows:
-      var(--v3-row-header, clamp(48px, 5.5dvh, 54px))
-      minmax(132px, 1.05fr)
-      minmax(96px, auto)
-      var(--v3-row-play, clamp(48px, 5.6dvh, 54px))
-      var(--v3-row-actions, clamp(52px, 6dvh, 58px))
-      minmax(0, 1fr) !important;
-    align-content: stretch !important;
-    overflow: hidden !important;
-  }
-
-  #home-screen.landing-v3 .play-now {
-    width: 100% !important;
-    align-self: stretch !important;
-    font-size: clamp(1.18rem, 4.8vw, 1.36rem) !important;
-    min-height: var(--v3-row-play, clamp(52px, 6.8dvh, 58px)) !important;
-    height: var(--v3-row-play, clamp(52px, 6.8dvh, 58px)) !important;
-  }
-
-  #home-screen.landing-v3 .quick-actions.instant-actions {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  }
-
-  #home-screen.landing-v3 .quick-actions .menu-card {
-    min-height: var(--v3-row-actions, clamp(56px, 7.4dvh, 64px)) !important;
-    max-height: var(--v3-row-actions, clamp(56px, 7.4dvh, 64px)) !important;
-  }
-}
-
-@media (max-width: 768px) {
-  #home-screen.landing-v3.b2g-home {
-    grid-template-areas:
-      "v3-topbar"
-      "v3-hero"
-      "v3-profile"
-      "v3-play"
-      "v3-actions"
-      "v3-match" !important;
-    grid-template-rows:
-      auto
-      minmax(0, 1fr)
-      auto
-      auto
-      auto
-      minmax(0, 1fr) !important;
-    align-content: stretch !important;
-    overflow: hidden !important;
-    min-height: 100dvh !important;
-    max-height: 100dvh !important;
-    height: 100dvh !important;
-    padding:
-      max(8px, env(safe-area-inset-top))
-      max(14px, env(safe-area-inset-right))
-      max(12px, env(safe-area-inset-bottom))
-      max(14px, env(safe-area-inset-left)) !important;
   }
 }

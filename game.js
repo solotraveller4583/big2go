@@ -6,8 +6,6 @@
   const COIN_PEAK_KEY = 'big2go-virtual-coins-peak-v1';
   const AI_COINS_KEY = 'big2go-ai-coins-v1';
   const PLAYER_PROFILE_KEY = 'big2go-player-profile-v1';
-  const DEFAULT_PLAYER_NAME = '';
-  const MAX_PLAYER_NAME_LENGTH = 16;
   const AI_PROFILE_KEY = 'big2go-ai-profile-v1';
   const SOUND_SETTINGS_KEY = 'big2go-sound-settings-v1';
   const STARTING_COINS = 100;
@@ -259,11 +257,7 @@
     share: document.querySelector('#share-button'),
     profileButton: document.querySelector('#profile-button'),
     playerProfileAvatar: document.querySelector('#player-profile-avatar'),
-    playerNameLabel: document.querySelector('#player-name-label'),
     playerLevelLabel: document.querySelector('#player-level-label'),
-    playerNameInput: document.querySelector('#player-name-input'),
-    playerSetupAvatarMale: document.querySelector('#player-setup-avatar-male'),
-    playerSetupAvatarFemale: document.querySelector('#player-setup-avatar-female'),
     back: document.querySelector('#back-button'),
     sound: document.querySelector('#sound-button'),
     play: document.querySelector('#play-button'),
@@ -649,7 +643,7 @@
   function captureMatchStory(winner, coinPrize = 0) {
     const winnerIndex = state.players.indexOf(winner);
     return {
-      winnerName: winner?.isHuman ? getResolvedPlayerName() : (winner?.name || 'Player'),
+      winnerName: winner?.isHuman ? 'You' : (winner?.name || 'Player'),
       humanWon: Boolean(winner?.isHuman),
       coinPrize: Math.max(0, Number(coinPrize) || 0),
       coinsBalance: state.liveRoom?.code ? getWalletDisplayBalance() : state.coins.balance,
@@ -658,7 +652,7 @@
       playerCount: state.players.length,
       bestCombo: state.playSession.bestCombo || 'Opening spark',
       players: state.players.map((player, index) => ({
-        name: player.isHuman ? getResolvedPlayerName() : (player.name || `Player ${index + 1}`),
+        name: player.isHuman ? 'You' : (player.name || `Player ${index + 1}`),
         isHuman: Boolean(player.isHuman),
         finished: Boolean(player.finished) || index === winnerIndex,
         cardsLeft: Array.isArray(player.hand) ? player.hand.length : 0,
@@ -814,7 +808,7 @@
   function renderOpponentAvatar(container, player) {
     if (!container) return;
     if (player.isHuman) {
-      renderPlayerProfileAvatar(container, { className: 'character-avatar', imgClassName: 'opponent-avatar-img' });
+      container.textContent = 'Y';
       return;
     }
     if (window.Big2GoAICharacters?.renderAvatar(container, player, {
@@ -831,7 +825,7 @@
     for (let i = 0; i < count; i += 1) {
       if (i === 0) {
         state.players.push({
-          name: getResolvedPlayerName(),
+          name: 'You',
           isHuman: true,
           finished: false,
           coins: state.coins.balance,
@@ -960,7 +954,7 @@
       state.voiceVolume = Number.isFinite(Number(saved.voiceVolume)) ? Number(saved.voiceVolume) : state.voiceVolume;
       saveSoundSettings();
       state.players = saved.players.map((player, index) => hydrateAiPlayer({
-        name: player.isHuman ? getResolvedPlayerName() : (player.name || `AI ${index}`),
+        name: player.name || (index === 0 ? 'You' : `AI ${index}`),
         characterId: player.characterId || null,
         personality: player.personality || null,
         playingStyle: player.playingStyle || null,
@@ -1110,36 +1104,19 @@
   }
 
   function defaultProfileRecord() {
-    return { level: STARTING_LEVEL, totalWins: 0, gender: 'male', displayName: DEFAULT_PLAYER_NAME };
+    return { level: STARTING_LEVEL, totalWins: 0, gender: 'male' };
   }
 
   const PLAYER_PROFILE_AVATARS = {
     male: {
-      src: './assets/player/player-male.svg',
-      alt: 'Spade player icon',
-      label: 'Spade'
+      src: './assets/player/bruno.svg',
+      alt: 'Bruno player profile'
     },
     female: {
-      src: './assets/player/player-female.svg',
-      alt: 'Heart player icon',
-      label: 'Heart'
+      src: './assets/player/luna.svg',
+      alt: 'Luna player profile'
     }
   };
-
-  function normalizePlayerName(name) {
-    let cleaned = String(name || '').trim().replace(/\s+/g, ' ');
-    if (!cleaned || /^player$/i.test(cleaned)) return '';
-    cleaned = cleaned.replace(/^player(?=[A-Za-z0-9])/i, '');
-    return cleaned.slice(0, MAX_PLAYER_NAME_LENGTH);
-  }
-
-  function getPlayerDisplayName(profile = loadPlayerProfile()) {
-    return normalizePlayerName(profile?.displayName);
-  }
-
-  function getResolvedPlayerName(profile = loadPlayerProfile()) {
-    return getPlayerDisplayName(profile) || 'You';
-  }
 
   function normalizePlayerGender(gender) {
     return gender === 'female' ? 'female' : 'male';
@@ -1177,20 +1154,6 @@
     profile.gender = normalizePlayerGender(gender);
     savePlayerProfile(profile);
     renderPlayerProfileHud();
-    syncLandingPlayerSetup();
-  }
-
-  function setPlayerDisplayName(name) {
-    const profile = loadPlayerProfile();
-    profile.displayName = normalizePlayerName(name);
-    savePlayerProfile(profile);
-    renderPlayerProfileHud();
-    syncLandingPlayerSetup();
-  }
-
-  function syncPlayerSetupFromLanding() {
-    if (!els.playerNameInput) return;
-    setPlayerDisplayName(els.playerNameInput.value);
   }
 
   function computeProfileLevel(totalWins) {
@@ -1249,7 +1212,6 @@
       profile.totalWins = Math.max(0, Number(profile.totalWins) || 0);
       profile.level = computeProfileLevel(profile.totalWins);
       profile.gender = normalizePlayerGender(profile.gender);
-      profile.displayName = normalizePlayerName(profile.displayName);
       return profile;
     } catch (_) {
       return defaultProfileRecord();
@@ -1262,7 +1224,6 @@
         level: computeProfileLevel(profile.totalWins),
         totalWins: Math.max(0, Number(profile.totalWins) || 0),
         gender: normalizePlayerGender(profile.gender),
-        displayName: normalizePlayerName(profile.displayName),
         updatedAt: Date.now()
       }));
     } catch (_) {}
@@ -1323,7 +1284,7 @@
             kind: 'human',
             level: profile.level,
             previousLevel,
-            name: getResolvedPlayerName(),
+            name: 'You',
             totalWins: profile.totalWins,
             tier: getLevelTier(profile.level),
             previousTier: getLevelTier(previousLevel),
@@ -1354,57 +1315,10 @@
     return null;
   }
 
-  function renderLandingSetupAvatarPreview(container, gender) {
-    if (!container) return;
-    const key = normalizePlayerGender(gender);
-    const meta = PLAYER_PROFILE_AVATARS[key] || PLAYER_PROFILE_AVATARS.male;
-    container.innerHTML = '';
-    container.className = `player-setup-avatar-preview player-profile-avatar player-profile-avatar--${key}`;
-    const img = document.createElement('img');
-    img.className = 'player-profile-avatar-img';
-    img.src = meta.src;
-    img.alt = meta.alt;
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    container.appendChild(img);
-  }
-
-  function syncLandingPlayerSetup() {
-    const profile = loadPlayerProfile();
-    const gender = normalizePlayerGender(profile.gender);
-    if (els.playerNameInput) {
-      els.playerNameInput.value = getPlayerDisplayName(profile);
-    }
-    document.querySelectorAll('.player-setup-avatar-option[data-profile-gender]').forEach(button => {
-      const active = button.dataset.profileGender === gender;
-      button.classList.toggle('selected', active);
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-    renderLandingSetupAvatarPreview(els.playerSetupAvatarMale, 'male');
-    renderLandingSetupAvatarPreview(els.playerSetupAvatarFemale, 'female');
-  }
-
-  function wireLandingPlayerSetup() {
-    syncLandingPlayerSetup();
-    els.playerNameInput?.addEventListener('input', () => {
-      setPlayerDisplayName(els.playerNameInput.value);
-    });
-    els.playerNameInput?.addEventListener('blur', syncPlayerSetupFromLanding);
-    document.querySelectorAll('.player-setup-avatar-option[data-profile-gender]').forEach(button => {
-      button.addEventListener('click', () => {
-        setPlayerGender(button.dataset.profileGender || 'male');
-      });
-    });
-  }
-
   function renderPlayerProfileHud() {
     const profile = loadPlayerProfile();
     if (els.playerProfileAvatar) {
       renderPlayerProfileAvatar(els.playerProfileAvatar, { keepProfileShell: true });
-    }
-    if (els.playerNameLabel) {
-      const displayName = getPlayerDisplayName(profile);
-      els.playerNameLabel.textContent = displayName || 'Your name';
     }
     if (els.playerLevelLabel) {
       const tier = getLevelTier(profile.level);
@@ -1434,14 +1348,12 @@
           <div class="profile-logo-preview player-profile-avatar player-profile-avatar--${meta.gender}" id="profile-logo-preview">
             <img class="player-profile-avatar-img" src="${meta.src}" alt="${meta.alt}" loading="lazy" decoding="async" />
           </div>
-          <label class="profile-name-label" for="profile-name-input">Your name</label>
-          <input id="profile-name-input" class="profile-name-input" type="text" maxlength="${MAX_PLAYER_NAME_LENGTH}" value="${getPlayerDisplayName(profile)}" autocomplete="nickname" />
-          <div class="profile-gender-picker" role="group" aria-label="Choose player icon">
-            <button type="button" class="profile-gender-option${meta.gender === 'male' ? ' selected' : ''}" data-profile-gender="male">${PLAYER_PROFILE_AVATARS.male.label}</button>
-            <button type="button" class="profile-gender-option${meta.gender === 'female' ? ' selected' : ''}" data-profile-gender="female">${PLAYER_PROFILE_AVATARS.female.label}</button>
+          <div class="profile-gender-picker" role="group" aria-label="Choose player logo">
+            <button type="button" class="profile-gender-option${meta.gender === 'male' ? ' selected' : ''}" data-profile-gender="male">Bruno</button>
+            <button type="button" class="profile-gender-option${meta.gender === 'female' ? ' selected' : ''}" data-profile-gender="female">Luna</button>
           </div>
         </div>
-        <div class="modal-row"><strong>${getPlayerDisplayName(profile) || 'Your name'}</strong><span>Lv ${tier.level} ${tier.emoji} ${tier.title}</span></div>
+        <div class="modal-row"><strong>You</strong><span>Lv ${tier.level} ${tier.emoji} ${tier.title}</span></div>
         <div class="modal-row"><strong>Total Wins</strong><span>${profile.totalWins}</span></div>
         <div class="modal-row"><strong>Next Level</strong><span>${progress.maxed ? 'Legend Mode — MAX' : `${progress.current} / ${progress.target} wins`}</span></div>
         <p class="profile-note">Rank tiers: Lv 1–10 Rookie, Lv 11–20 Strategist (~150 wins), Lv 21–29 Master, Lv 30 Legend (300 total wins). Each level needs more wins as you climb.</p>
@@ -1470,12 +1382,6 @@
             }
           }
         });
-      });
-      const profileNameInput = document.querySelector('#profile-name-input');
-      profileNameInput?.addEventListener('input', () => {
-        setPlayerDisplayName(profileNameInput.value);
-        const nameRow = document.querySelector('.profile-modal .modal-row strong');
-        if (nameRow) nameRow.textContent = getPlayerDisplayName() || 'Your name';
       });
     }, 0);
   }
@@ -1688,7 +1594,7 @@
     processReaction({
       id: `solo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       playerId: 'local-human',
-      name: getResolvedPlayerName(),
+      name: 'You',
       emoji,
       playerIndex: state.humanIndex
     });
@@ -3297,7 +3203,7 @@
     for (let i = 0; i < count; i += 1) {
       if (i === 0) {
         state.players.push({
-          name: getResolvedPlayerName(),
+          name: 'You',
           isHuman: true,
           finished: false,
           coins: state.coins.balance,
@@ -3318,7 +3224,6 @@
 
   function newGame() {
     unlockAudioFromGesture();
-    syncPlayerSetupFromLanding();
     const count = Number(els.playerCount.value) || 4;
     disableVoiceChat();
     state.liveRoom = null;
@@ -3651,7 +3556,7 @@
       nameRow.className = 'opponent-name-row';
       const name = document.createElement('div');
       name.className = 'opponent-name';
-      name.textContent = player.name || (isSelf ? getResolvedPlayerName() : 'Player');
+      name.textContent = isSelf ? 'You' : player.name;
       nameRow.appendChild(name);
       if (!state.liveRoom?.code) {
         const level = document.createElement('span');
@@ -5674,33 +5579,16 @@
     });
   }
 
-  function bindLandingPlayActions() {
-    const home = document.querySelector('#home-screen');
-    if (!home) return;
-    home.addEventListener('click', event => {
-      if (!isLandingScreenVisible()) return;
-      const startButton = event.target.closest('#start-button');
-      if (startButton) {
-        event.preventDefault();
-        newGame();
-        return;
-      }
-      const continueButton = event.target.closest('#continue-button');
-      if (!continueButton || continueButton.classList.contains('hidden')) return;
-      event.preventDefault();
-      unlockAudioFromGesture();
-      syncPlayerSetupFromLanding();
-      if (!restoreGame()) newGame();
-    });
-  }
-
   function bindEvents() {
     bindLandingAudioUnlock();
-    bindLandingPlayActions();
-    wireLandingPlayerSetup();
     els.game?.addEventListener('pointerdown', () => {
       if (!els.game?.classList.contains('hidden')) unlockAudioFromGesture();
     }, { passive: true, capture: true });
+    els.start.addEventListener('click', newGame);
+    els.continue.addEventListener('click', () => {
+      unlockAudioFromGesture();
+      if (!restoreGame()) newGame();
+    });
     els.demo?.addEventListener('click', showPlayDemo);
     els.privateRoom?.addEventListener('click', () => showPrivateRoom());
     els.roomRejoin?.addEventListener('click', rejoinSavedRoom);
