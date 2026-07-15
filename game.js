@@ -49,6 +49,14 @@
       <li><strong>Goal:</strong> empty your hand before the AI players do.</li>
     </ul>`;
 
+  function t(key, vars = {}) {
+    return window.Big2GoI18n?.t(key, vars) ?? key;
+  }
+
+  function getRulesHtml() {
+    return window.Big2GoI18n?.getRulesHtml() || RULES_HTML;
+  }
+
   const RANKS = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
   const SUITS = [
     { key: 'D', symbol: '♦', name: 'diamonds', color: 'red' },
@@ -1003,7 +1011,7 @@
     state.heat = Math.max(0, Math.min(100, state.heat + delta));
     els.heatFill.style.width = `${state.heat}%`;
     els.heatValue.textContent = `${state.heat}%`;
-    els.heatText.textContent = note || (state.heat >= 80 ? 'The Big2Go crowd is roaring.' : state.heat >= 50 ? 'The Big2Go crowd is leaning in.' : 'The Big2Go crowd is waiting for a spark.');
+    els.heatText.textContent = note || (state.heat >= 80 ? t('game.heatHigh') : state.heat >= 50 ? t('game.heatMid') : t('game.heatLow'));
   }
 
   function renderConfetti(intensity = 12, palette = null) {
@@ -1195,7 +1203,7 @@
   function getLevelTier(level) {
     const lv = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(level) || STARTING_LEVEL));
     const tier = LEVEL_TIERS.find(entry => lv >= entry.min && lv <= entry.max) || LEVEL_TIERS[0];
-    return { ...tier, level: lv };
+    return { ...tier, level: lv, title: t(`tier.${tier.skill}`) };
   }
 
   function crossedSkillTier(previousLevel, newLevel) {
@@ -1348,7 +1356,7 @@
     }
     if (els.playerNameLabel) {
       const displayName = getPlayerDisplayName(profile);
-      els.playerNameLabel.textContent = displayName || 'Your name';
+      els.playerNameLabel.textContent = displayName || t('landing.yourNameDefault');
     }
     if (els.playerLevelLabel) {
       const tier = getLevelTier(profile.level);
@@ -3258,7 +3266,7 @@
     });
     els.playDemoRulesButton?.addEventListener('click', () => {
       els.playDemoDialog.close();
-      showHelp('How to Play', RULES_HTML);
+      showHelp(t('help.title'), getRulesHtml());
     });
     els.playDemoStartButton?.addEventListener('click', () => {
       els.playDemoDialog.close();
@@ -3270,7 +3278,7 @@
 
   function showPlayDemo() {
     if (!els.playDemoDialog) {
-      showHelp('How to Play', RULES_HTML);
+      showHelp(t('help.title'), getRulesHtml());
       return;
     }
     bindPlayDemoEvents();
@@ -3286,13 +3294,19 @@
 
   function showSettingsPanel() {
     ensureLandingMusicPlaying();
-    showHelp('Big2Go Settings', `
+    showHelp(t('settings.title'), `
       <div class="settings-modal">
-        <label>Sound Volume <strong id="sound-volume-label">${Math.round(state.soundVolume * 100)}%</strong></label>
+        <label>${t('settings.soundVolume')} <strong id="sound-volume-label">${Math.round(state.soundVolume * 100)}%</strong></label>
         <input id="sound-volume-range" type="range" min="0" max="100" value="${Math.round(state.soundVolume * 100)}" />
-        <label>Voice Chat Volume <strong id="voice-volume-label">${Math.round(state.voiceVolume * 100)}%</strong></label>
+        <label>${t('settings.voiceVolume')} <strong id="voice-volume-label">${Math.round(state.voiceVolume * 100)}%</strong></label>
         <input id="voice-volume-range" type="range" min="0" max="100" value="${Math.round(state.voiceVolume * 100)}" />
-        <p class="settings-note">Gameplay sounds are clearer on mobile speaker. Voice chat stays separate.</p>
+        <p class="settings-note">${t('settings.note')}</p>
+        <div class="settings-language-block">
+          <strong>${t('settings.language')}</strong>
+          <div class="language-options" id="settings-language-options">
+            ${window.Big2GoI18n?.buildLanguageOptionsMarkup() || ''}
+          </div>
+        </div>
       </div>`);
     setTimeout(() => {
       const soundRange = document.querySelector('#sound-volume-range');
@@ -3305,6 +3319,7 @@
         ensureLandingMusicPlaying();
       });
       voiceRange?.addEventListener('input', () => { state.voiceVolume = Number(voiceRange.value) / 100; document.querySelector('#voice-volume-label').textContent = `${voiceRange.value}%`; saveSoundSettings(); });
+      window.Big2GoI18n?.bindLanguageButtons(document.querySelector('#settings-language-options'));
     }, 0);
   }
 
@@ -3436,8 +3451,8 @@
     if (!row) return;
     const callout = document.createElement('div');
     callout.className = 'last-card-callout';
-    callout.setAttribute('aria-label', 'Last card');
-    callout.textContent = 'LAST CARD';
+    callout.setAttribute('aria-label', t('game.lastCard'));
+    callout.textContent = t('game.lastCard');
     row.appendChild(callout);
   }
 
@@ -3629,13 +3644,17 @@
       return;
     }
     const requirement = state.trick.play
-      ? `Beat ${describePlay(state.trick.play)}`
-      : (state.firstTrick ? 'Opening hand' : 'You lead');
+      ? t('game.beatPlay', { play: describePlay(state.trick.play) })
+      : (state.firstTrick ? t('game.openingHand') : t('game.youLead'));
     els.playerLeftCount.textContent = String(cardsLeft(human));
     els.roundCount.textContent = String(state.round);
-    els.trickCount.textContent = state.trick.play ? String(state.trick.play.count) : 'Open';
-    els.turnLabel.textContent = state.gameOver ? 'Game over' : `${current.isHuman ? 'Your' : current.name + '\'s'} turn`;
-    els.tableSubtitle.textContent = state.gameOver ? 'Match finished.' : `${requirement} · Round ${state.round} · Sparks ${state.sparks}`;
+    els.trickCount.textContent = state.trick.play ? String(state.trick.play.count) : t('game.open');
+    els.turnLabel.textContent = state.gameOver
+      ? t('game.gameOver')
+      : (current.isHuman ? t('game.yourTurn') : t('game.playerTurn', { name: current.name }));
+    els.tableSubtitle.textContent = state.gameOver
+      ? t('game.matchFinished')
+      : t('game.statusLine', { requirement, round: state.round, sparks: state.sparks });
     const roomIdEl = document.querySelector('#table-room-id');
     if (roomIdEl) roomIdEl.textContent = state.liveRoom?.code ? `ROOM ${state.liveRoom.code}` : '';
     els.trickHelp.textContent = selectionFeedback();
@@ -3684,11 +3703,11 @@
       if (isLastCard) {
         cards.hidden = true;
       } else {
-        cards.textContent = player.finished ? 'Out' : `${player.hand.length} cards`;
+        cards.textContent = player.finished ? t('game.out') : t('game.cards', { count: player.hand.length });
       }
       const online = document.createElement('span');
       online.className = 'opponent-online';
-      online.setAttribute('aria-label', player.connected === false ? 'Offline' : 'Online');
+      online.setAttribute('aria-label', player.connected === false ? t('game.offline') : t('game.online'));
       stats.appendChild(coins);
       stats.appendChild(cards);
       stack.appendChild(nameRow);
@@ -3705,7 +3724,7 @@
     els.trickPlay.innerHTML = '';
     if (!state.trick.play) {
       els.trickPlay.classList.add('empty');
-      els.trickPlay.textContent = state.firstTrick ? OPENING_LINE : 'The table is open — lead any legal hand.';
+      els.trickPlay.textContent = state.firstTrick ? t('game.trickEmptyOpening') : t('game.trickEmptyOpen');
       els.trickMeta.textContent = '';
       return;
     }
@@ -3720,7 +3739,7 @@
 
   function renderLogs() {
     els.logList.innerHTML = '';
-    const entries = state.logs.length ? state.logs : ['Tap cards to begin your first Big2Go move.'];
+    const entries = state.logs.length ? state.logs : [t('game.logEmpty')];
     entries.slice(0, 6).forEach(message => {
       const entry = document.createElement('div');
       entry.className = 'log-entry';
@@ -4390,7 +4409,7 @@
     els.hand.innerHTML = '';
     const human = getHumanPlayer();
     if (!human) {
-      els.selectedCount.textContent = '0 selected';
+      els.selectedCount.textContent = t('game.selected', { count: 0 });
       document.querySelector('.hand-head h2')?.setAttribute('data-count', '0');
       return;
     }
@@ -4404,14 +4423,14 @@
       els.hand.appendChild(tile);
     });
     if (shouldAnimateDeal) state.dealAnimationShown = true;
-    els.selectedCount.textContent = `${state.selected.size} selected`;
+    els.selectedCount.textContent = t('game.selected', { count: state.selected.size });
     document.querySelector('.hand-head h2')?.setAttribute('data-count', String(human.hand.length));
     const handCard = document.querySelector('.hand-card');
     const handHead = document.querySelector('.hand-head');
     handHead?.querySelector('.last-card-badge--you')?.remove();
     if (!state.gameOver && human.hand.length === 1) {
       handCard?.classList.add('last-card');
-      if (handHead) renderLastCardBadge(handHead, 'LAST CARD', 'last-card-badge--you');
+      if (handHead) renderLastCardBadge(handHead, t('game.lastCard'), 'last-card-badge--you');
       announceLastCard(state.humanIndex);
     } else {
       handCard?.classList.remove('last-card');
@@ -5885,6 +5904,27 @@
     };
   }
 
+  function applyInterfaceI18n() {
+    window.Big2GoI18n?.apply(document);
+    if (els.helpText && !els.helpDialog?.open) {
+      els.helpText.innerHTML = getRulesHtml();
+      els.helpTitle.textContent = t('help.title');
+    }
+    renderPlayerProfileHud();
+    if (state.players?.length) {
+      updateStatus();
+      renderTrick();
+      renderOpponents();
+      renderLogs();
+      renderHand();
+    } else {
+      if (els.turnLabel) els.turnLabel.textContent = t('game.ready');
+      if (els.heatText) els.heatText.textContent = t('game.heatLow');
+      renderLogs();
+    }
+    renderRoomRecovery();
+  }
+
   function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
     let refreshing = false;
@@ -5908,22 +5948,17 @@
     bindEvents();
     installReconnectTestMode();
     registerServiceWorker();
+    window.addEventListener('big2go:languagechange', applyInterfaceI18n);
     window.addEventListener('pagehide', () => {
       if (!state.liveRoom?.code) saveCoinBalance();
     });
     updateContinueButton();
     updatePlayerChoiceUI();
-    els.helpText.innerHTML = RULES_HTML;
-    els.helpTitle.textContent = 'How to Play';
-    els.turnLabel.textContent = 'Ready';
-    els.heatText.textContent = 'The Big2Go crowd is waiting for a spark.';
     els.heatValue.textContent = '0%';
     els.heatFill.style.width = '0%';
-    renderLogs();
-    renderPlayerProfileHud();
+    applyInterfaceI18n();
     syncLandingPlayerSetup();
     showHomeScreen();
-    renderRoomRecovery();
     verifySavedRoomSession()
       .catch(() => {})
       .finally(() => {

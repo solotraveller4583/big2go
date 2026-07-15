@@ -41,8 +41,39 @@
   <link rel="stylesheet" href="big2go-landing-v3.css?v=32" />
   <link rel="stylesheet" href="big2go-play-demo.css?v=3" />
   <link rel="stylesheet" href="big2go-gameplay-premium.css?v=30" />
+  <link rel="stylesheet" href="big2go-language.css?v=1" />
 </head>
 <body>
+  <div id="language-welcome" class="language-welcome hidden" role="dialog" aria-modal="true" aria-labelledby="language-welcome-title">
+    <div class="language-welcome-card">
+      <p class="language-welcome-brand" aria-hidden="true">Big<span class="logo-accent">2Go</span></p>
+      <h2 class="language-welcome-title" id="language-welcome-title" data-i18n="language.welcome">Welcome to Big2Go</h2>
+      <p class="language-welcome-subtitle" data-i18n="language.choose">Choose your language</p>
+      <div class="language-options" id="language-welcome-options" role="listbox" aria-label="Choose your language">
+        <button type="button" class="language-option selected" data-locale="en" aria-pressed="true">
+          <span class="language-option-flag" aria-hidden="true">🇺🇸</span>
+          <span class="language-option-label">English</span>
+        </button>
+        <button type="button" class="language-option" data-locale="th" aria-pressed="false">
+          <span class="language-option-flag" aria-hidden="true">🇹🇭</span>
+          <span class="language-option-label">ไทย</span>
+        </button>
+        <button type="button" class="language-option" data-locale="zh" aria-pressed="false">
+          <span class="language-option-flag" aria-hidden="true">🇨🇳</span>
+          <span class="language-option-label">中文</span>
+        </button>
+        <button type="button" class="language-option" data-locale="ja" aria-pressed="false">
+          <span class="language-option-flag" aria-hidden="true">🇯🇵</span>
+          <span class="language-option-label">日本語</span>
+        </button>
+        <button type="button" class="language-option" data-locale="ko" aria-pressed="false">
+          <span class="language-option-flag" aria-hidden="true">🇰🇷</span>
+          <span class="language-option-label">한국어</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <main class="app-shell">
     <section class="panel hero casino-home b2g-home landing-v3" id="home-screen" aria-label="Big2Go home screen">
       <div class="arena-orb orb-one" aria-hidden="true"></div>
@@ -53,14 +84,14 @@
         <button class="brand-pill profile-pill" id="profile-button" type="button" aria-label="Player profile">
           <span class="profile-avatar" id="player-profile-avatar" aria-hidden="true"></span>
           <span class="profile-copy">
-            <strong id="player-name-label">Your name</strong>
+            <strong id="player-name-label" data-i18n="landing.yourNameDefault">Your name</strong>
             <small id="player-level-label">Lv 1</small>
           </span>
         </button>
         <div class="online-pill live-pill" aria-label="Private rooms available">
           <span class="room-status-dot" aria-hidden="true"></span>
           <strong>ROOM</strong>
-          <small>private play</small>
+          <small data-i18n="landing.privatePlay">private play</small>
         </div>
         <button class="settings-pill" id="settings-button" type="button" aria-label="Settings">⚙️</button>
       </header>
@@ -92,14 +123,14 @@
         </div>
         <div class="hero-brand">
           <h1>Big<span class="logo-accent">2Go</span></h1>
-          <p class="hero-kicker">Fast Big 2 battles</p>
+          <p class="hero-kicker" data-i18n="landing.heroKicker">Fast Big 2 battles</p>
         </div>
-        <p class="hero-promise">Choose a table and start playing in one tap.</p>
+        <p class="hero-promise" data-i18n="landing.heroPromise">Choose a table and start playing in one tap.</p>
       </section>
 
       <section class="player-setup" aria-label="Your player profile">
         <div class="player-setup-card">
-          <label class="player-setup-label" for="player-name-input">Your name</label>
+          <label class="player-setup-label" for="player-name-input" data-i18n="landing.yourName">Your name</label>
           <div class="player-setup-main">
             <input
               id="player-name-input"
@@ -107,17 +138,18 @@
               type="text"
               maxlength="16"
               placeholder="Enter your name"
+              data-i18n-placeholder="landing.namePlaceholder"
               autocomplete="nickname"
               enterkeyhint="done"
             />
             <div class="player-setup-icons" role="group" aria-label="Choose profile icon">
               <button type="button" class="player-setup-avatar-option" data-profile-gender="male" aria-pressed="true" aria-label="Cute male icon, Spade">
                 <span class="player-setup-avatar-preview player-profile-avatar player-profile-avatar--male" id="player-setup-avatar-male" aria-hidden="true"></span>
-                <span class="player-setup-avatar-name">Spade</span>
+                <span class="player-setup-avatar-name" data-i18n="landing.spade">Spade</span>
               </button>
               <button type="button" class="player-setup-avatar-option" data-profile-gender="female" aria-pressed="false" aria-label="Cute female icon, Heart">
                 <span class="player-setup-avatar-preview player-profile-avatar player-profile-avatar--female" id="player-setup-avatar-female" aria-hidden="true"></span>
-                <span class="player-setup-avatar-name">Heart</span>
+                <span class="player-setup-avatar-name" data-i18n="landing.heart">Heart</span>
               </button>
             </div>
           </div>
@@ -125,55 +157,55 @@
       </section>
 
       <section class="cta-zone" aria-label="Start playing">
-        <button type="button" class="play-now primary" id="start-button">PLAY NOW <span>›</span></button>
-        <p>4-player quick table · 2-minute rounds</p>
+        <button type="button" class="play-now primary" id="start-button"><span data-i18n="landing.playNow">PLAY NOW</span> <span>›</span></button>
+        <p data-i18n="landing.ctaSub">4-player quick table · 2-minute rounds</p>
       </section>
 
       <section class="room-recovery-card hidden" id="room-recovery-card" aria-label="Active game session">
-        <small>Continue Game</small>
-        <strong>🎮 Resume Previous Game</strong>
-        <p id="room-recovery-summary">You have an active Big2Go game.</p>
+        <small data-i18n="landing.continueGame">Continue Game</small>
+        <strong data-i18n="landing.resume">🎮 Resume Previous Game</strong>
+        <p id="room-recovery-summary" data-i18n="landing.recoveryDefault">You have an active Big2Go game.</p>
         <div class="room-recovery-players" id="room-recovery-players"></div>
         <div class="room-recovery-actions">
-          <button type="button" class="primary" id="room-rejoin-button">REJOIN GAME</button>
-          <button type="button" class="secondary" id="room-exit-session-button">EXIT GAME</button>
+          <button type="button" class="primary" id="room-rejoin-button" data-i18n="landing.rejoin">REJOIN GAME</button>
+          <button type="button" class="secondary" id="room-exit-session-button" data-i18n="landing.exitGame">EXIT GAME</button>
         </div>
       </section>
 
       <div class="quick-actions instant-actions" aria-label="Quick actions">
-        <button type="button" class="menu-card" id="continue-button"><span>▶</span><strong>CONTINUE</strong><small>Last Game</small></button>
-        <button type="button" class="menu-card" id="private-room-button"><span>🔐</span><strong>ROOM</strong><small>Create / Join</small></button>
-        <button type="button" class="menu-card" id="demo-button"><span>▶</span><strong>DEMO</strong><small>How to Play</small></button>
-        <button type="button" class="menu-card share-card" id="share-button"><span>↗</span><strong>SHARE</strong><small>Invite Friends</small></button>
+        <button type="button" class="menu-card" id="continue-button"><span>▶</span><strong data-i18n="landing.continue">CONTINUE</strong><small data-i18n="landing.continueSub">Last Game</small></button>
+        <button type="button" class="menu-card" id="private-room-button"><span>🔐</span><strong data-i18n="landing.room">ROOM</strong><small data-i18n="landing.roomSub">Create / Join</small></button>
+        <button type="button" class="menu-card" id="demo-button"><span>▶</span><strong data-i18n="landing.demo">DEMO</strong><small data-i18n="landing.demoSub">How to Play</small></button>
+        <button type="button" class="menu-card share-card" id="share-button"><span>↗</span><strong data-i18n="landing.share">SHARE</strong><small data-i18n="landing.shareSub">Invite Friends</small></button>
       </div>
 
       <section class="player-panel table-select" aria-label="Choose players">
         <div class="panel-title-row">
-          <h2>Match Mode</h2>
+          <h2 data-i18n="landing.matchMode">Match Mode</h2>
         </div>
         <div class="mode-carousel" role="region" aria-label="Match mode carousel">
           <div class="player-options" role="group" aria-label="Number of players">
             <button class="player-option mode-card mode-classic selected" type="button" data-player-choice="4">
               <span class="mode-icon" aria-hidden="true"><span class="mode-icon-mark mode-icon-players"><i></i><i></i><i></i><i></i></span></span>
               <span class="mode-copy">
-                <strong>Classic</strong>
-                <small class="mode-sub">4 players</small>
+                <strong data-i18n="landing.classic">Classic</strong>
+                <small class="mode-sub" data-i18n="landing.players4">4 players</small>
               </span>
               <i class="mode-check" aria-hidden="true">✓</i>
             </button>
             <button class="player-option mode-card mode-fast" type="button" data-player-choice="3">
               <span class="mode-icon" aria-hidden="true"><span class="mode-icon-mark mode-icon-bolt">⚡</span></span>
               <span class="mode-copy">
-                <strong>Fast</strong>
-                <small class="mode-sub">3 players</small>
+                <strong data-i18n="landing.fast">Fast</strong>
+                <small class="mode-sub" data-i18n="landing.players3">3 players</small>
               </span>
               <i class="mode-check" aria-hidden="true">✓</i>
             </button>
             <button class="player-option mode-card mode-duel" type="button" data-player-choice="2">
               <span class="mode-icon" aria-hidden="true"><span class="mode-icon-mark mode-icon-duel">⚔️</span></span>
               <span class="mode-copy">
-                <strong>Duel</strong>
-                <small class="mode-sub">2 players</small>
+                <strong data-i18n="landing.duel">Duel</strong>
+                <small class="mode-sub" data-i18n="landing.players2">2 players</small>
               </span>
               <i class="mode-check" aria-hidden="true">✓</i>
             </button>
@@ -186,8 +218,8 @@
         </select>
         <footer class="landing-v3-footer" aria-label="Big2Go information">
           <span>Big2Go</span>
-          <a href="privacy.html">Privacy</a>
-          <a href="terms.html">Terms</a>
+          <a href="privacy.html" data-i18n="landing.privacy">Privacy</a>
+          <a href="terms.html" data-i18n="landing.terms">Terms</a>
         </footer>
       </section>
     </section>
@@ -196,19 +228,19 @@
       <header class="match-topbar">
         <button class="icon-button" id="back-button" aria-label="Back to menu">‹</button>
         <div class="match-title">
-          <p class="eyebrow" id="turn-label">Ready</p>
-          <h2 id="table-title">Big2Go Arena</h2>
+          <p class="eyebrow" id="turn-label" data-i18n="game.ready">Ready</p>
+          <h2 id="table-title" data-i18n="game.arena">Big2Go Arena</h2>
           <p class="header-subtitle" id="table-subtitle">Beat the trick or let the table pass to the next player.</p>
         </div>
-        <div class="coin-wallet" id="coin-wallet" aria-label="Your virtual gold coins"><span>🪙</span><strong id="coin-balance">100</strong><small>Your Coins</small></div>
+        <div class="coin-wallet" id="coin-wallet" aria-label="Your virtual gold coins"><span>🪙</span><strong id="coin-balance">100</strong><small data-i18n="game.yourCoins">Your Coins</small></div>
         <button class="icon-button" id="sound-button" aria-label="Toggle sound">🔊</button>
       </header>
 
       <section class="match-hud" aria-label="Match status">
-        <div class="hud-card"><span id="player-left-count">13</span><small>Your cards</small></div>
-        <div class="hud-card"><span id="trick-count">Open</span><small>Trick</small></div>
-        <div class="hud-card"><span id="round-count">1</span><small>Round</small></div>
-        <div class="hud-card"><span id="spark-count">0</span><small>Sparks</small></div>
+        <div class="hud-card"><span id="player-left-count">13</span><small data-i18n="game.yourCards">Your cards</small></div>
+        <div class="hud-card"><span id="trick-count" data-i18n="game.open">Open</span><small data-i18n="game.trick">Trick</small></div>
+        <div class="hud-card"><span id="round-count">1</span><small data-i18n="game.round">Round</small></div>
+        <div class="hud-card"><span id="spark-count">0</span><small data-i18n="game.sparks">Sparks</small></div>
       </section>
 
       <section class="opponent-rail" aria-label="Other players">
@@ -217,24 +249,24 @@
 
       <section class="room-chat-panel hidden" id="room-chat-panel" aria-label="Room chat">
         <button class="room-chat-toggle" id="room-chat-toggle" type="button" aria-expanded="false">
-          <span>💬 Table Chat</span>
-          <small id="room-chat-preview">Tap to open</small>
+          <span data-i18n="game.tableChat">💬 Table Chat</span>
+          <small id="room-chat-preview" data-i18n="game.chatOpen">Tap to open</small>
           <strong id="room-chat-count">0</strong>
         </button>
         <div class="room-chat-head">
-          <strong>Table Chat</strong>
+          <strong data-i18n="game.tableChat">Table Chat</strong>
         </div>
         <div class="quick-chat-row" aria-label="Quick chat">
-          <button type="button" data-chat-quick="Nice move">Nice move</button>
-          <button type="button" data-chat-quick="Good game">Good game</button>
-          <button type="button" data-chat-quick="Hurry up">Hurry up</button>
+          <button type="button" data-chat-quick="Nice move" data-i18n="game.chatNice">Nice move</button>
+          <button type="button" data-chat-quick="Good game" data-i18n="game.chatGood">Good game</button>
+          <button type="button" data-chat-quick="Hurry up" data-i18n="game.chatHurry">Hurry up</button>
           <button type="button" data-chat-quick="🔥">🔥</button>
           <button type="button" data-chat-quick="😂">😂</button>
         </div>
         <div class="room-chat-messages" id="room-chat-messages" aria-live="polite"></div>
         <form class="room-chat-form" id="room-chat-form">
-          <input id="room-chat-input" type="text" maxlength="120" autocomplete="off" placeholder="Say something…" aria-label="Chat message" />
-          <button type="submit" id="room-chat-send">Send</button>
+          <input id="room-chat-input" type="text" maxlength="120" autocomplete="off" placeholder="Say something…" data-i18n-placeholder="game.chatPlaceholder" aria-label="Chat message" />
+          <button type="submit" id="room-chat-send" data-i18n="game.chatSend">Send</button>
         </form>
       </section>
 
@@ -244,25 +276,25 @@
           <div class="table-rim-light"></div>
         </div>
         <span class="table-room-id" id="table-room-id" aria-live="polite"></span>
-        <div class="prize-pool" id="prize-pool" aria-label="Virtual prize pool"><small>Prize Pool</small><strong>🪙 <span id="prize-pool-value">0</span></strong></div>
+        <div class="prize-pool" id="prize-pool" aria-label="Virtual prize pool"><small data-i18n="game.prizePool">Prize Pool</small><strong>🪙 <span id="prize-pool-value">0</span></strong></div>
         <div id="ai-reaction-layer" class="ai-reaction-layer" aria-live="polite"></div>
         <div class="arena-header">
           <div>
-            <small>Last Play</small>
-            <h2>The current trick</h2>
+            <small data-i18n="game.lastPlay">Last Play</small>
+            <h2 data-i18n="game.currentTrick">The current trick</h2>
           </div>
           <span id="selected-count" class="pill">0 selected</span>
         </div>
-        <div id="trick-play" class="trick-play empty">The table is quiet. The opening player must lead 3♦.</div>
-        <p id="trick-help" class="trick-help">Lead the opening move with 3♦.</p>
+        <div id="trick-play" class="trick-play empty" data-i18n="game.trickEmptyOpening">The table is quiet. The opening player must lead 3♦.</div>
+        <p id="trick-help" class="trick-help" data-i18n="game.leadOpening">Lead the opening move with 3♦.</p>
         <div id="trick-meta" class="trick-meta"></div>
       </section>
 
       <section class="momentum-card" aria-label="Crowd energy">
         <div class="heat-head">
           <div>
-            <strong>Table Momentum</strong>
-            <p id="heat-text">The table is waiting for a spark.</p>
+            <strong data-i18n="game.tableMomentum">Table Momentum</strong>
+            <p id="heat-text" data-i18n="game.heatLow">The table is waiting for a spark.</p>
           </div>
           <span id="heat-value">0%</span>
         </div>
@@ -283,8 +315,8 @@
       <section class="hand-card" aria-label="Your hand">
         <div class="hand-head">
           <div>
-            <h2>Your hand</h2>
-            <p>Tap cards to lift them. Play a stronger combo or pass.</p>
+            <h2 data-i18n="game.yourHand">Your hand</h2>
+            <p data-i18n="game.handHelp">Tap cards to lift them. Play a stronger combo or pass.</p>
           </div>
         </div>
         <div id="hand" class="hand" aria-label="Cards in your hand"></div>
@@ -292,18 +324,18 @@
 
       <section class="center-card match-log" aria-label="Play log">
         <div class="section-head">
-          <h2>Table Feed</h2>
-          <p>Recent moves and combo reactions.</p>
+          <h2 data-i18n="game.tableFeed">Table Feed</h2>
+          <p data-i18n="game.tableFeedSub">Recent moves and combo reactions.</p>
         </div>
         <div id="log-list" class="log-list" aria-live="polite"></div>
       </section>
 
       <div class="actions action-dock">
-        <button class="secondary pass-action" id="pass-button">Pass</button>
-        <button class="secondary" id="sort-button">Sort</button>
-        <button class="secondary" id="hint-button">Hint</button>
-        <button class="primary play-action" id="play-button">Play Selected</button>
-        <button class="secondary restart-action" id="restart-button">New Game</button>
+        <button class="secondary pass-action" id="pass-button" data-i18n="game.pass">Pass</button>
+        <button class="secondary" id="sort-button" data-i18n="game.sort">Sort</button>
+        <button class="secondary" id="hint-button" data-i18n="game.hint">Hint</button>
+        <button class="primary play-action" id="play-button" data-i18n="game.playSelected">Play Selected</button>
+        <button class="secondary restart-action" id="restart-button" data-i18n="game.newGame">New Game</button>
       </div>
     </section>
 
@@ -320,13 +352,13 @@
           <span class="session-brand-mark">B2</span>
           <strong>Big<span>2Go</span></strong>
         </div>
-        <h1 class="session-complete-title">Session Complete</h1>
-        <p class="session-thanks">Thanks for playing Big2Go. Hope you enjoyed the battle!</p>
+        <h1 class="session-complete-title" data-i18n="session.complete">Session Complete</h1>
+        <p class="session-thanks" data-i18n="session.thanks">Thanks for playing Big2Go. Hope you enjoyed the battle!</p>
         <div class="session-summary" id="session-summary"></div>
         <div class="session-farewells" id="session-farewells" aria-live="polite"></div>
         <div class="session-complete-actions">
-          <button type="button" class="primary" id="session-play-again">Play Again</button>
-          <button type="button" class="secondary" id="session-back-home">🏠 Back To Home</button>
+          <button type="button" class="primary" id="session-play-again" data-i18n="session.playAgain">Play Again</button>
+          <button type="button" class="secondary" id="session-back-home" data-i18n="session.backHome">🏠 Back To Home</button>
         </div>
       </div>
     </section>
@@ -344,14 +376,14 @@
           <span class="result-story-brand-mark">B2</span>
           <strong>Big<span>2Go</span></strong>
         </div>
-        <p class="result-story-eyebrow">Game Result Story</p>
-        <h1 class="result-story-headline" id="result-story-headline">Match complete</h1>
+        <p class="result-story-eyebrow" data-i18n="result.eyebrow">Game Result Story</p>
+        <h1 class="result-story-headline" id="result-story-headline" data-i18n="result.headline">Match complete</h1>
         <div class="result-story-stats" id="result-story-stats"></div>
         <div class="result-story-players" id="result-story-players"></div>
         <div class="result-story-farewells" id="result-story-farewells" aria-live="polite"></div>
         <div class="result-story-actions">
-          <button type="button" class="primary" id="result-story-play-again">Play Again</button>
-          <button type="button" class="secondary" id="result-story-home">🏠 Back to Home</button>
+          <button type="button" class="primary" id="result-story-play-again" data-i18n="result.playAgain">Play Again</button>
+          <button type="button" class="secondary" id="result-story-home" data-i18n="result.home">🏠 Back to Home</button>
         </div>
       </div>
     </section>
@@ -379,14 +411,14 @@
         <div class="level-up-neon-frame">
           <div class="level-up-neon-frame__glow" aria-hidden="true"></div>
           <div class="level-up-card">
-            <div class="level-up-winner-ribbon" aria-hidden="true"><span>YOU WIN</span></div>
+            <div class="level-up-winner-ribbon" aria-hidden="true"><span data-i18n="levelUp.ribbon">YOU WIN</span></div>
             <div class="level-up-brand" aria-label="Big2Go">
               <span class="level-up-brand-mark">B2</span>
               <strong>Big<span>2Go</span></strong>
             </div>
-            <p class="level-up-eyebrow" id="level-up-eyebrow">Level Up</p>
-            <h1 class="level-up-title" id="level-up-title">You Win!</h1>
-            <p class="level-up-message" id="level-up-message">You reached a new level at the Big2Go table.</p>
+            <p class="level-up-eyebrow" id="level-up-eyebrow" data-i18n="levelUp.eyebrow">Level Up</p>
+            <h1 class="level-up-title" id="level-up-title" data-i18n="levelUp.youWin">You Win!</h1>
+            <p class="level-up-message" id="level-up-message" data-i18n="levelUp.message">You reached a new level at the Big2Go table.</p>
             <div class="level-up-hero">
               <div class="level-up-avatar-wrap" id="level-up-avatar-wrap">
                 <span class="level-up-avatar-crown" aria-hidden="true">👑</span>
@@ -394,23 +426,23 @@
               </div>
               <div class="level-up-transition" aria-label="Level progression">
                 <div class="level-up-badge">
-                  <small>Previous</small>
+                  <small data-i18n="levelUp.previous">Previous</small>
                   <strong id="level-up-from">Lv 1</strong>
                 </div>
                 <span class="level-up-arrow" aria-hidden="true">➜</span>
                 <div class="level-up-badge level-up-badge--new">
-                  <small>New Level</small>
+                  <small data-i18n="levelUp.newLevel">New Level</small>
                   <strong id="level-up-to">Lv 2</strong>
                 </div>
               </div>
             </div>
-            <div class="level-up-milestone hidden" id="level-up-milestone">⭐ First Promotion</div>
+            <div class="level-up-milestone hidden" id="level-up-milestone" data-i18n="levelUp.milestone">⭐ First Promotion</div>
             <div class="level-up-tier" id="level-up-tier">🥉 Rookie Challenger</div>
             <div class="level-up-skill hidden" id="level-up-skill"></div>
             <div class="level-up-stats" id="level-up-stats"></div>
             <p class="level-up-quote hidden" id="level-up-quote"></p>
             <div class="level-up-actions">
-              <button type="button" class="primary level-up-continue-btn" id="level-up-continue">Continue</button>
+              <button type="button" class="primary level-up-continue-btn" id="level-up-continue" data-i18n="levelUp.continue">Continue</button>
             </div>
           </div>
         </div>
@@ -425,10 +457,10 @@
 
     <dialog id="exit-confirm-dialog" class="exit-confirm-dialog">
       <form method="dialog" class="exit-confirm-card">
-        <h2>Are you sure you want to exit Big2Go?</h2>
+        <h2 data-i18n="exit.title">Are you sure you want to exit Big2Go?</h2>
         <div class="exit-confirm-actions">
-          <button type="submit" class="primary" value="stay">Stay</button>
-          <button type="submit" class="secondary" value="exit">Exit</button>
+          <button type="submit" class="primary" value="stay" data-i18n="exit.stay">Stay</button>
+          <button type="submit" class="secondary" value="exit" data-i18n="exit.exit">Exit</button>
         </div>
       </form>
     </dialog>
@@ -436,8 +468,8 @@
     <dialog id="play-demo-dialog" class="play-demo-dialog" aria-label="How to play demo">
       <form method="dialog" class="play-demo-card">
         <div class="play-demo-head">
-          <h2>Demo: How to Play Big Two</h2>
-          <p>Watch this quick clip if you are new. It shows deal, opening lead, beating tricks, passing, and winning.</p>
+          <h2 data-i18n="demo.title">Demo: How to Play Big Two</h2>
+          <p data-i18n="demo.desc">Watch this quick clip if you are new. It shows deal, opening lead, beating tricks, passing, and winning.</p>
         </div>
         <div class="play-demo-player">
           <div class="play-demo-screen-wrap">
@@ -452,27 +484,28 @@
           <div class="play-demo-steps" id="play-demo-steps" role="tablist" aria-label="Demo scenes"></div>
         </div>
         <div class="play-demo-actions">
-          <button type="button" class="secondary" id="play-demo-rules-button">Read full rules</button>
-          <button type="button" class="primary" id="play-demo-start-button">Play now</button>
-          <button type="submit" class="secondary" value="ok">Close</button>
+          <button type="button" class="secondary" id="play-demo-rules-button" data-i18n="demo.readRules">Read full rules</button>
+          <button type="button" class="primary" id="play-demo-start-button" data-i18n="demo.playNow">Play now</button>
+          <button type="submit" class="secondary" value="ok" data-i18n="demo.close">Close</button>
         </div>
       </form>
     </dialog>
 
     <dialog id="help-dialog">
       <form method="dialog" class="dialog-card">
-        <h2 id="help-title">How to Play</h2>
+        <h2 id="help-title" data-i18n="help.title">How to Play</h2>
         <div id="help-text" class="help-copy"></div>
         <menu>
-          <button class="primary" value="ok">Got it</button>
+          <button class="primary" value="ok" data-i18n="help.gotIt">Got it</button>
         </menu>
       </form>
     </dialog>
   </main>
   <div id="coin-fx-layer" class="coin-fx-layer" aria-hidden="true"></div>
 
+  <script src="i18n.js?v=1" defer></script>
   <script src="aiCharacters.js?v=12" defer></script>
   <script src="aiReactions.js?v=5" defer></script>
-  <script src="game.js?v=114" defer></script>
+  <script src="game.js?v=115" defer></script>
 </body>
 </html>
