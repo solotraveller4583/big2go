@@ -9,21 +9,6 @@
   overflow-y: hidden !important;
 }
 
-@media (max-width: 639px) {
-  #home-screen.landing-v3 {
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  html:has(#home-screen.landing-v3:not(.hidden)),
-  body:has(#home-screen.landing-v3:not(.hidden)) {
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
-}
-
 #home-screen:not(.landing-v3) .hero-stage h1 {
   position: relative !important;
   z-index: 5 !important;

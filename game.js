@@ -6,7 +6,7 @@
   const COIN_PEAK_KEY = 'big2go-virtual-coins-peak-v1';
   const AI_COINS_KEY = 'big2go-ai-coins-v1';
   const PLAYER_PROFILE_KEY = 'big2go-player-profile-v1';
-  const DEFAULT_PLAYER_NAME = 'Player';
+  const DEFAULT_PLAYER_NAME = '';
   const MAX_PLAYER_NAME_LENGTH = 16;
   const AI_PROFILE_KEY = 'big2go-ai-profile-v1';
   const SOUND_SETTINGS_KEY = 'big2go-sound-settings-v1';
@@ -649,7 +649,7 @@
   function captureMatchStory(winner, coinPrize = 0) {
     const winnerIndex = state.players.indexOf(winner);
     return {
-      winnerName: winner?.isHuman ? getPlayerDisplayName() : (winner?.name || 'Player'),
+      winnerName: winner?.isHuman ? getResolvedPlayerName() : (winner?.name || 'Player'),
       humanWon: Boolean(winner?.isHuman),
       coinPrize: Math.max(0, Number(coinPrize) || 0),
       coinsBalance: state.liveRoom?.code ? getWalletDisplayBalance() : state.coins.balance,
@@ -658,7 +658,7 @@
       playerCount: state.players.length,
       bestCombo: state.playSession.bestCombo || 'Opening spark',
       players: state.players.map((player, index) => ({
-        name: player.isHuman ? getPlayerDisplayName() : (player.name || `Player ${index + 1}`),
+        name: player.isHuman ? getResolvedPlayerName() : (player.name || `Player ${index + 1}`),
         isHuman: Boolean(player.isHuman),
         finished: Boolean(player.finished) || index === winnerIndex,
         cardsLeft: Array.isArray(player.hand) ? player.hand.length : 0,
@@ -831,7 +831,7 @@
     for (let i = 0; i < count; i += 1) {
       if (i === 0) {
         state.players.push({
-          name: getPlayerDisplayName(),
+          name: getResolvedPlayerName(),
           isHuman: true,
           finished: false,
           coins: state.coins.balance,
@@ -960,7 +960,7 @@
       state.voiceVolume = Number.isFinite(Number(saved.voiceVolume)) ? Number(saved.voiceVolume) : state.voiceVolume;
       saveSoundSettings();
       state.players = saved.players.map((player, index) => hydrateAiPlayer({
-        name: player.isHuman ? getPlayerDisplayName() : (player.name || `AI ${index}`),
+        name: player.isHuman ? getResolvedPlayerName() : (player.name || `AI ${index}`),
         characterId: player.characterId || null,
         personality: player.personality || null,
         playingStyle: player.playingStyle || null,
@@ -1127,13 +1127,18 @@
   };
 
   function normalizePlayerName(name) {
-    const cleaned = String(name || '').trim().replace(/\s+/g, ' ');
-    if (!cleaned) return DEFAULT_PLAYER_NAME;
+    let cleaned = String(name || '').trim().replace(/\s+/g, ' ');
+    if (!cleaned || /^player$/i.test(cleaned)) return '';
+    cleaned = cleaned.replace(/^player(?=[A-Za-z0-9])/i, '');
     return cleaned.slice(0, MAX_PLAYER_NAME_LENGTH);
   }
 
   function getPlayerDisplayName(profile = loadPlayerProfile()) {
     return normalizePlayerName(profile?.displayName);
+  }
+
+  function getResolvedPlayerName(profile = loadPlayerProfile()) {
+    return getPlayerDisplayName(profile) || 'You';
   }
 
   function normalizePlayerGender(gender) {
@@ -1318,7 +1323,7 @@
             kind: 'human',
             level: profile.level,
             previousLevel,
-            name: getPlayerDisplayName(),
+            name: getResolvedPlayerName(),
             totalWins: profile.totalWins,
             tier: getLevelTier(profile.level),
             previousTier: getLevelTier(previousLevel),
@@ -1398,7 +1403,8 @@
       renderPlayerProfileAvatar(els.playerProfileAvatar, { keepProfileShell: true });
     }
     if (els.playerNameLabel) {
-      els.playerNameLabel.textContent = getPlayerDisplayName(profile);
+      const displayName = getPlayerDisplayName(profile);
+      els.playerNameLabel.textContent = displayName || 'Your name';
     }
     if (els.playerLevelLabel) {
       const tier = getLevelTier(profile.level);
@@ -1435,7 +1441,7 @@
             <button type="button" class="profile-gender-option${meta.gender === 'female' ? ' selected' : ''}" data-profile-gender="female">${PLAYER_PROFILE_AVATARS.female.label}</button>
           </div>
         </div>
-        <div class="modal-row"><strong>${getPlayerDisplayName(profile)}</strong><span>Lv ${tier.level} ${tier.emoji} ${tier.title}</span></div>
+        <div class="modal-row"><strong>${getPlayerDisplayName(profile) || 'Your name'}</strong><span>Lv ${tier.level} ${tier.emoji} ${tier.title}</span></div>
         <div class="modal-row"><strong>Total Wins</strong><span>${profile.totalWins}</span></div>
         <div class="modal-row"><strong>Next Level</strong><span>${progress.maxed ? 'Legend Mode — MAX' : `${progress.current} / ${progress.target} wins`}</span></div>
         <p class="profile-note">Rank tiers: Lv 1–10 Rookie, Lv 11–20 Strategist (~150 wins), Lv 21–29 Master, Lv 30 Legend (300 total wins). Each level needs more wins as you climb.</p>
@@ -1469,7 +1475,7 @@
       profileNameInput?.addEventListener('input', () => {
         setPlayerDisplayName(profileNameInput.value);
         const nameRow = document.querySelector('.profile-modal .modal-row strong');
-        if (nameRow) nameRow.textContent = getPlayerDisplayName();
+        if (nameRow) nameRow.textContent = getPlayerDisplayName() || 'Your name';
       });
     }, 0);
   }
@@ -1682,7 +1688,7 @@
     processReaction({
       id: `solo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       playerId: 'local-human',
-      name: getPlayerDisplayName(),
+      name: getResolvedPlayerName(),
       emoji,
       playerIndex: state.humanIndex
     });
@@ -3291,7 +3297,7 @@
     for (let i = 0; i < count; i += 1) {
       if (i === 0) {
         state.players.push({
-          name: getPlayerDisplayName(),
+          name: getResolvedPlayerName(),
           isHuman: true,
           finished: false,
           coins: state.coins.balance,
@@ -3645,7 +3651,7 @@
       nameRow.className = 'opponent-name-row';
       const name = document.createElement('div');
       name.className = 'opponent-name';
-      name.textContent = player.name || (isSelf ? getPlayerDisplayName() : 'Player');
+      name.textContent = player.name || (isSelf ? getResolvedPlayerName() : 'Player');
       nameRow.appendChild(name);
       if (!state.liveRoom?.code) {
         const level = document.createElement('span');
@@ -5674,8 +5680,12 @@
     els.game?.addEventListener('pointerdown', () => {
       if (!els.game?.classList.contains('hidden')) unlockAudioFromGesture();
     }, { passive: true, capture: true });
-    els.start.addEventListener('click', newGame);
-    els.continue.addEventListener('click', () => {
+    els.start?.addEventListener('click', event => {
+      event.stopPropagation();
+      newGame();
+    });
+    els.continue?.addEventListener('click', event => {
+      event.stopPropagation();
       unlockAudioFromGesture();
       syncPlayerSetupFromLanding();
       if (!restoreGame()) newGame();
