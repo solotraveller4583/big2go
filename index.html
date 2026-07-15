@@ -480,11 +480,11 @@
             <div id="play-demo-screen" aria-live="polite"></div>
           </div>
           <div class="play-demo-progress">
-            <button type="button" class="play-demo-toggle" id="play-demo-toggle" aria-label="Pause demo">⏸</button>
+            <button type="button" class="play-demo-toggle" id="play-demo-toggle" aria-label="Pause demo" data-i18n-aria="demo.pause">⏸</button>
             <div class="play-demo-bar" aria-hidden="true"><span class="play-demo-bar-fill" id="play-demo-bar-fill"></span></div>
             <span class="play-demo-time" id="play-demo-time">0:00</span>
           </div>
-          <div class="play-demo-steps" id="play-demo-steps" role="tablist" aria-label="Demo scenes"></div>
+          <div class="play-demo-steps" id="play-demo-steps" role="tablist" data-i18n-aria="demo.scenesNav" aria-label="Demo scenes"></div>
         </div>
         <div class="play-demo-actions">
           <button type="button" class="secondary" id="play-demo-rules-button" data-i18n="demo.readRules">Read full rules</button>
@@ -506,10 +506,11 @@
   </main>
   <div id="coin-fx-layer" class="coin-fx-layer" aria-hidden="true"></div>
 
-  <script src="i18n.js?v=1" defer></script>
+  <script src="i18n.js?v=2" defer></script>
+  <script src="playDemoScenes.js?v=1" defer></script>
   <script src="aiDialogue.js?v=1" defer></script>
   <script src="aiCharacters.js?v=13" defer></script>
   <script src="aiReactions.js?v=6" defer></script>
-  <script src="game.js?v=116" defer></script>
+  <script src="game.js?v=117" defer></script>
 </body>
 </html>

@@ -3013,131 +3013,10 @@
   }
 
   function getPlayDemoScenes() {
-    return [
-      {
-        duration: 4200,
-        title: 'Welcome to Big2Go',
-        caption: 'Big Two is a shedding card game. Be the first player to play every card in your hand.',
-        html: `
-          <div class="demo-stage demo-stage--intro">
-            <div class="demo-brand-mark">B2</div>
-            <h3 class="demo-stage-title">Fast mobile Big Two</h3>
-            <p class="demo-stage-caption">This demo walks you through one full round so you know what to tap.</p>
-          </div>`
-      },
-      {
-        duration: 4200,
-        title: 'Step 1: Pick your table',
-        caption: 'On the landing page, choose 4-player Classic, 3-player Fast, or a 2-player duel.',
-        html: `
-          <div class="demo-stage">
-            <h3 class="demo-stage-title">Choose match mode</h3>
-            <div class="demo-modes">
-              <span class="demo-mode-chip is-active">4P Classic</span>
-              <span class="demo-mode-chip">3P Fast</span>
-              <span class="demo-mode-chip">2P Duel</span>
-            </div>
-            <p class="demo-stage-caption">Then tap the gold PLAY NOW button to start.</p>
-          </div>`
-      },
-      {
-        duration: 4600,
-        title: 'Step 2: Cards are dealt',
-        caption: 'Everyone gets a hand. The player holding 3♦ always opens the game.',
-        html: `
-          <div class="demo-stage demo-stage--cards">
-            <h3 class="demo-stage-title">Find 3♦</h3>
-            <div class="demo-hand demo-hand--spread">
-              ${buildDemoCard('5', 'H')}
-              ${buildDemoCard('9', 'C')}
-              ${buildDemoCard('3', 'D', 'demo-card--glow')}
-              ${buildDemoCard('J', 'S')}
-              ${buildDemoCard('A', 'H')}
-            </div>
-            <p class="demo-stage-caption">Your opening play must include 3♦ on the first trick.</p>
-          </div>`
-      },
-      {
-        duration: 4600,
-        title: 'Step 3: Lead the first trick',
-        caption: 'Tap cards to select them, then tap Play. Singles, pairs, triples, and five-card combos each have their own rules.',
-        html: `
-          <div class="demo-stage demo-stage--cards">
-            <h3 class="demo-stage-title">Open with a valid hand</h3>
-            <div class="demo-table demo-table--large">
-              <div class="demo-trick">${buildDemoCard('3', 'D', 'demo-card--play-in')}</div>
-            </div>
-            <div class="demo-actions"><span class="demo-play-btn">Play</span></div>
-            <p class="demo-stage-caption">Higher rank wins. Suit order: ♦ ♣ ♥ ♠. 2 is the strongest rank.</p>
-          </div>`
-      },
-      {
-        duration: 4800,
-        title: 'Step 4: Beat the current trick',
-        caption: 'Match the trick type: beat a single with a higher single, a pair with a higher pair, and so on.',
-        html: `
-          <div class="demo-stage demo-stage--cards">
-            <h3 class="demo-stage-title">Play higher than the table</h3>
-            <div class="demo-table demo-table--large">
-              <div class="demo-trick demo-trick--dense">
-                ${buildDemoCard('4', 'C')}
-                ${buildDemoCard('4', 'D')}
-                <span class="demo-trick-arrow" aria-hidden="true">→</span>
-                ${buildDemoCard('5', 'H', 'demo-card--play-in')}
-                ${buildDemoCard('5', 'S', 'demo-card--play-in')}
-              </div>
-            </div>
-            <p class="demo-stage-caption">This pair of 5s beats the pair of 4s.</p>
-          </div>`
-      },
-      {
-        duration: 4400,
-        title: 'Step 5: Pass when you cannot beat',
-        caption: 'If you have no legal higher play, tap Pass. After enough passes, the last winner leads again.',
-        html: `
-          <div class="demo-stage demo-stage--cards">
-            <h3 class="demo-stage-title">No good play? Pass.</h3>
-            <div class="demo-table demo-table--large">
-              <div class="demo-trick">
-                ${buildDemoCard('K', 'S')}
-                ${buildDemoCard('K', 'H')}
-              </div>
-            </div>
-            <div class="demo-actions"><span class="demo-pass-btn">Pass</span></div>
-            <p class="demo-stage-caption">Passing is normal. Wait for a fresh trick you can attack.</p>
-          </div>`
-      },
-      {
-        duration: 4800,
-        title: 'Step 6: Five-card power plays',
-        caption: 'Straights, flushes, full houses, four of a kind, and straight flushes can turn the table.',
-        html: `
-          <div class="demo-stage demo-stage--cards">
-            <h3 class="demo-stage-title">Five-card combos</h3>
-            <div class="demo-table demo-table--large">
-              <div class="demo-trick demo-trick--dense">
-                ${buildDemoCard('7', 'D', 'demo-card--play-in')}
-                ${buildDemoCard('8', 'D', 'demo-card--play-in')}
-                ${buildDemoCard('9', 'D', 'demo-card--play-in')}
-                ${buildDemoCard('10', 'D', 'demo-card--play-in')}
-                ${buildDemoCard('J', 'D', 'demo-card--play-in')}
-              </div>
-            </div>
-            <p class="demo-stage-caption">A straight flush is one of the strongest five-card hands.</p>
-          </div>`
-      },
-      {
-        duration: 5000,
-        title: 'Step 7: Win the match',
-        caption: 'Empty your hand before the AI rivals to win coins, rank up, and climb the Big2Go ladder.',
-        html: `
-          <div class="demo-stage">
-            <span class="demo-win-badge">YOU WIN!</span>
-            <h3 class="demo-stage-title">Clear your hand first</h3>
-            <p class="demo-stage-caption">Ready to try it? Tap PLAY NOW and use Hint if you get stuck.</p>
-          </div>`
-      }
-    ];
+    if (window.Big2GoPlayDemo?.buildPlayDemoScenes) {
+      return window.Big2GoPlayDemo.buildPlayDemoScenes(buildDemoCard);
+    }
+    return [];
   }
 
   function formatDemoTime(ms) {
@@ -3184,7 +3063,7 @@
     if (!els.playDemoToggle) return;
     const playing = playDemo.playing;
     els.playDemoToggle.textContent = playing ? '⏸' : '▶';
-    els.playDemoToggle.setAttribute('aria-label', playing ? 'Pause demo' : 'Play demo');
+    els.playDemoToggle.setAttribute('aria-label', playing ? t('demo.pause') : t('demo.play'));
     els.playDemoRecDot?.classList.toggle('is-paused', !playing);
   }
 
@@ -3281,6 +3160,7 @@
     }
     bindPlayDemoEvents();
     resetPlayDemo();
+    window.Big2GoI18n?.apply(els.playDemoDialog);
     els.playDemoDialog.showModal();
     startPlayDemoPlayback();
     playUiSound('click');
@@ -5936,6 +5816,10 @@
       renderLogs();
     }
     renderRoomRecovery();
+    if (els.playDemoDialog?.open) {
+      renderPlayDemoScene(playDemo.sceneIndex);
+      updatePlayDemoToggle();
+    }
   }
 
   function registerServiceWorker() {
