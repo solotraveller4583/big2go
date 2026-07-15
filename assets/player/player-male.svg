@@ -21,5 +21,6 @@
   <ellipse cx="34" cy="56" rx="4" ry="2.5" fill="#ffb0a0" opacity="0.45"/>
   <ellipse cx="62" cy="56" rx="4" ry="2.5" fill="#ffb0a0" opacity="0.45"/>
   <circle cx="48" cy="78" r="11" fill="#0f1f3d" opacity="0.35"/>
-  <text x="48" y="82" text-anchor="middle" font-size="16" font-weight="900" fill="#ffe68f" font-family="Arial, sans-serif">♠</text>
+  <path d="M48 52 L58 66 H38 Z" fill="#ffe68f"/>
+  <rect x="46" y="66" width="4" height="14" rx="1.5" fill="#ffe68f"/>
 </svg>
