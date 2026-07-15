@@ -108,6 +108,7 @@
     seenReactionIds: new Set(),
     liveRoom: null,
     liveRoomPlayers: [],
+    liveRoomCardSyncKey: null,
     playSession: {
       gamesPlayed: 0,
       wins: 0,
@@ -1295,7 +1296,7 @@
   }
 
   function recordProfileWin(winner) {
-    if (!winner || state.liveRoom?.code) return null;
+    if (!winner) return null;
     if (winner.isHuman) {
       const profile = loadPlayerProfile();
       const previousLevel = profile.level;
@@ -1316,6 +1317,7 @@
           }
         : null;
     }
+    if (state.liveRoom?.code) return null;
     if (winner.characterId) {
       const profile = loadAiProfile(winner.characterId);
       const previousLevel = profile.level;
@@ -3370,6 +3372,7 @@
     state.lastShuffleKey = `solo:${state.round}:${Date.now()}`;
     state.lastCardNotified = new Set();
     state.lastHandCounts = {};
+    state.liveRoomCardSyncKey = null;
     state.lastCardFlashIndex = null;
     seedLastCardNotifiedFromHands();
     els.sound.textContent = '🔊';
@@ -3584,21 +3587,15 @@
   function syncLiveLastCardFromGame(game) {
     if (!game?.players?.length) return;
     state.lastHandCounts = state.lastHandCounts || {};
-    state.lastCardNotified = state.lastCardNotified || new Set();
+    const seedBaseline = Object.keys(state.lastHandCounts).length === 0;
     game.players.forEach((player, index) => {
       const count = index === game.playerIndex
         ? (game.hand?.length || 0)
         : (Number(player.handCount) || 0);
       const key = player.id || String(index);
       const prev = state.lastHandCounts[key];
-      if (count === 1 && prev !== 1 && !player.finished) {
-        state.lastCardNotified.add(key);
-        const profile = resolveLastCardVoiceProfile(index);
-        const doorbellLabel = profile?.label || 'Ding-dong!';
-        logState(`⚠️ ${index === game.playerIndex ? `You are on your LAST CARD — ${doorbellLabel}` : `LAST CARD — ${doorbellLabel}`}`);
-        updateHeat(12, `Last card — ${doorbellLabel}`);
-        scheduleLastCardVoice(index);
-        queueLastCardFlash(index);
+      if (!seedBaseline && count === 1 && prev !== 1 && !player.finished) {
+        announceLastCard(index);
       }
       state.lastHandCounts[key] = count;
     });
@@ -4415,6 +4412,7 @@
     if (!state.gameOver && human.hand.length === 1) {
       handCard?.classList.add('last-card');
       if (handHead) renderLastCardBadge(handHead, 'LAST CARD', 'last-card-badge--you');
+      announceLastCard(state.humanIndex);
     } else {
       handCard?.classList.remove('last-card');
     }
@@ -5043,6 +5041,7 @@
     }
     state.liveRoom = null;
     state.liveRoomPlayers = [];
+    state.liveRoomCardSyncKey = null;
     document.body.classList.remove('live-room-active');
     updateVoicePanel();
     renderCoinHud();
@@ -5133,6 +5132,12 @@
       playUiSound('turn');
     }
     const shuffleKey = `${room?.code || 'room'}:${game.round}:${game.startingPlayer}`;
+    const cardSyncKey = shuffleKey;
+    if (state.liveRoomCardSyncKey !== cardSyncKey) {
+      state.liveRoomCardSyncKey = cardSyncKey;
+      state.lastHandCounts = {};
+      state.lastCardNotified = new Set();
+    }
     if (game.round === 1 && game.firstTrick && !game.trick?.play && shuffleKey !== state.lastShuffleKey) {
       state.lastShuffleKey = shuffleKey;
       state.dealAnimationShown = false;
