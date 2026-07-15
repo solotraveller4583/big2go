@@ -3006,8 +3006,14 @@
     els.helpTitle.textContent = title;
     const html = String(text || '');
     els.helpText.innerHTML = /<\/?[a-z][\s\S]*>/i.test(html) ? html : `<p>${html}</p>`;
-    els.helpText.className = options.variant === 'hint' ? 'help-copy oracle-hint-copy' : 'help-copy';
-    els.helpDialog.classList.toggle('help-dialog--hint', options.variant === 'hint');
+    els.helpText.className = options.variant === 'hint'
+      ? 'help-copy oracle-hint-copy'
+      : options.variant === 'settings'
+        ? 'help-copy settings-copy'
+        : 'help-copy';
+    els.helpDialog.classList.remove('help-dialog--hint', 'help-dialog--settings');
+    if (options.variant === 'hint') els.helpDialog.classList.add('help-dialog--hint');
+    if (options.variant === 'settings') els.helpDialog.classList.add('help-dialog--settings');
     els.helpDialog.showModal();
   }
 
@@ -3188,18 +3194,24 @@
     ensureLandingMusicPlaying();
     showHelp(t('settings.title'), `
       <div class="settings-modal">
-        <label>${t('settings.soundVolume')} <strong id="sound-volume-label">${Math.round(state.soundVolume * 100)}%</strong></label>
-        <input id="sound-volume-range" type="range" min="0" max="100" value="${Math.round(state.soundVolume * 100)}" />
-        <label>${t('settings.voiceVolume')} <strong id="voice-volume-label">${Math.round(state.voiceVolume * 100)}%</strong></label>
-        <input id="voice-volume-range" type="range" min="0" max="100" value="${Math.round(state.voiceVolume * 100)}" />
-        <p class="settings-note">${t('settings.note')}</p>
-        <div class="settings-language-block">
+        <section class="settings-audio-block">
+          <div class="settings-slider-row">
+            <label>${t('settings.soundVolume')} <strong id="sound-volume-label">${Math.round(state.soundVolume * 100)}%</strong></label>
+            <input id="sound-volume-range" type="range" min="0" max="100" value="${Math.round(state.soundVolume * 100)}" />
+          </div>
+          <div class="settings-slider-row">
+            <label>${t('settings.voiceVolume')} <strong id="voice-volume-label">${Math.round(state.voiceVolume * 100)}%</strong></label>
+            <input id="voice-volume-range" type="range" min="0" max="100" value="${Math.round(state.voiceVolume * 100)}" />
+          </div>
+          <p class="settings-note">${t('settings.note')}</p>
+        </section>
+        <section class="settings-language-block">
           <strong>${t('settings.language')}</strong>
           <div class="language-options" id="settings-language-options">
             ${window.Big2GoI18n?.buildLanguageOptionsMarkup() || ''}
           </div>
-        </div>
-      </div>`);
+        </section>
+      </div>`, { variant: 'settings' });
     setTimeout(() => {
       const soundRange = document.querySelector('#sound-volume-range');
       const voiceRange = document.querySelector('#voice-volume-range');
@@ -4672,7 +4684,7 @@
         <div class="oracle-hint-card oracle-hint-card--pass">
           <p class="oracle-hint-lead">Your hand cannot beat the cards on the table right now.</p>
           <ol class="oracle-hint-steps">
-            <li>Tap <strong>Pass</strong> to skip your turn.</li>
+            <li>Tap <strong class="oracle-hint-action">Pass</strong> to skip your turn.</li>
             <li>Other players will play or pass in turn.</li>
             <li>When everyone passes, the trick clears and a new round starts.</li>
           </ol>
@@ -4687,7 +4699,7 @@
         <p class="oracle-hint-play">${describePlay(chosen)}</p>
         <ol class="oracle-hint-steps">
           <li>Tap the highlighted cards in your hand.</li>
-          <li>Then tap <strong>Play</strong> to put them on the table.</li>
+          <li>Then tap <strong class="oracle-hint-action">Play</strong> to put them on the table.</li>
         </ol>
       </div>`, { variant: 'hint' });
   }

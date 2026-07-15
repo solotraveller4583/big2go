@@ -792,8 +792,11 @@ dialog::backdrop { background: rgba(3, 2, 17, .72); backdrop-filter: blur(10px);
 }
 
 #help-dialog.help-dialog--hint .dialog-card {
-  width: min(96vw, 460px);
-  padding: 24px 22px 20px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0;
+  width: min(92vw, 400px);
+  padding: 20px 20px 18px;
   background:
     radial-gradient(circle at 30% 0%, rgba(255, 216, 74, .3), transparent 34%),
     linear-gradient(180deg, #4a2cb8, #16084a 78%);
@@ -801,8 +804,10 @@ dialog::backdrop { background: rgba(3, 2, 17, .72); backdrop-filter: blur(10px);
 
 #help-dialog.help-dialog--hint .dialog-card h2,
 #help-dialog.help-dialog--hint #help-title {
-  font-size: clamp(1.5rem, 6vw, 1.9rem);
-  line-height: 1.15;
+  margin: 0 0 14px;
+  padding: 0;
+  font-size: clamp(1.35rem, 5.4vw, 1.75rem);
+  line-height: 1.2;
   font-weight: 1000;
   color: #fff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
@@ -810,34 +815,36 @@ dialog::backdrop { background: rgba(3, 2, 17, .72); backdrop-filter: blur(10px);
 
 .oracle-hint-copy {
   display: grid;
-  gap: 14px;
-  font-size: clamp(1.08rem, 4.6vw, 1.22rem);
-  line-height: 1.55;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(.98rem, 4vw, 1.08rem);
+  line-height: 1.5;
   color: rgba(255, 255, 255, 0.98);
 }
 
 .oracle-hint-card {
   display: grid;
-  gap: 14px;
-  padding: 16px 16px 14px;
-  border-radius: 20px;
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.08);
 }
 
 .oracle-hint-card--pass {
   border-color: rgba(255, 159, 120, 0.45);
-  background: rgba(255, 120, 61, 0.14);
+  background: linear-gradient(180deg, rgba(255, 120, 61, 0.16), rgba(255, 120, 61, 0.08));
 }
 
 .oracle-hint-card--play {
   border-color: rgba(255, 200, 61, 0.5);
-  background: rgba(255, 200, 61, 0.14);
+  background: linear-gradient(180deg, rgba(255, 200, 61, 0.16), rgba(255, 200, 61, 0.08));
 }
 
 .oracle-hint-lead {
   margin: 0;
-  font-size: clamp(1.15rem, 5vw, 1.32rem);
+  font-size: clamp(1.02rem, 4.4vw, 1.14rem);
   font-weight: 900;
   line-height: 1.45;
   color: #fff;
@@ -845,39 +852,81 @@ dialog::backdrop { background: rgba(3, 2, 17, .72); backdrop-filter: blur(10px);
 
 .oracle-hint-play {
   margin: 0;
-  padding: 14px 14px;
-  border-radius: 16px;
-  font-size: clamp(1.3rem, 5.8vw, 1.55rem);
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: clamp(1.15rem, 5vw, 1.35rem);
   font-weight: 1000;
   line-height: 1.35;
   text-align: center;
   color: #2a1200;
   background: linear-gradient(180deg, #fff0b8, #ffc83d);
-  box-shadow: 0 10px 22px rgba(255, 200, 61, 0.32);
+  box-shadow: 0 8px 18px rgba(255, 200, 61, 0.28);
   word-break: break-word;
 }
 
 .oracle-hint-steps {
-  margin: 0;
-  padding-left: 1.35rem;
+  list-style: none;
+  counter-reset: hint-step;
+  margin: 2px 0 0;
+  padding: 0;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .oracle-hint-steps li {
-  font-size: clamp(1.05rem, 4.5vw, 1.18rem);
-  line-height: 1.55;
-  color: #fff;
+  counter-increment: hint-step;
+  display: grid;
+  grid-template-columns: 1.7rem 1fr;
+  gap: 10px;
+  align-items: start;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(.95rem, 4vw, 1.05rem);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.96);
 }
 
-.oracle-hint-steps strong {
+.oracle-hint-steps li::before {
+  content: counter(hint-step);
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 1000;
+  line-height: 1;
+  color: #2a1200;
+  background: linear-gradient(180deg, #fff0b8, #ffc83d);
+  box-shadow: 0 2px 8px rgba(255, 200, 61, 0.24);
+}
+
+.oracle-hint-steps strong,
+.oracle-hint-action {
   color: #ffe68f;
   font-weight: 900;
 }
 
+.oracle-hint-action {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 230, 143, 0.42);
+  background: rgba(255, 230, 143, 0.14);
+}
+
+#help-dialog.help-dialog--hint .dialog-card menu {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: stretch;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
 #help-dialog.help-dialog--hint .dialog-card menu button {
-  min-height: 58px;
-  font-size: 1.08rem;
+  width: 100%;
+  min-height: 52px;
+  font-size: 1.02rem;
   font-weight: 1000;
 }
 
