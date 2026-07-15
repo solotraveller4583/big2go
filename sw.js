@@ -1,4 +1,4 @@
-const CACHE_NAME = 'big2go-v174';
+const CACHE_NAME = 'big2go-v175';
 const ASSETS = [
   './',
   './index.html',
@@ -10,7 +10,7 @@ const ASSETS = [
   './big2go-casino-landscape.css',
   './big2go-premium.css',
   './big2go-final-mobile.css',
-  './big2go-app-redesign.css',
+  './big2go-app-redesign.css?v=2',
   './big2go-cascade-guard.css',
   './big2go-polish-guard.css',
   './big2go-hand-guard.css',
@@ -37,7 +37,7 @@ const ASSETS = [
   './assets/characters/tora.svg',
   './assets/player/bruno.svg',
   './assets/player/luna.svg',
-  './game.js?v=107',
+  './game.js?v=108',
   './manifest.webmanifest',
   './icon.svg',
   './privacy.html',

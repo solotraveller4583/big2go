@@ -4651,7 +4651,7 @@
     }
     state.selected = new Set(chosen.cards.map(card => card.id));
     render();
-    showOracle('Suggested play', `
+    showOracle('Hint', `
       <div class="oracle-hint-card oracle-hint-card--play">
         <p class="oracle-hint-lead">Try this hand:</p>
         <p class="oracle-hint-play">${describePlay(chosen)}</p>
