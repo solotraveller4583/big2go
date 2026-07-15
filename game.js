@@ -53,6 +53,10 @@
     return window.Big2GoI18n?.t(key, vars) ?? key;
   }
 
+  function g(key, vars = {}) {
+    return window.Big2GoAIDialogue?.getGameLine?.(key, vars) ?? key;
+  }
+
   function getRulesHtml() {
     return window.Big2GoI18n?.getRulesHtml() || RULES_HTML;
   }
@@ -479,17 +483,18 @@
 
   function describePlay(play) {
     const cards = play.cards;
-    if (cards.length === 1) return `Single ${cards[0].short}`;
-    if (cards.length === 2) return `Pair ${describeCards(cards)}`;
-    if (cards.length === 3) return `Triple ${describeCards(cards)}`;
+    const cardList = describeCards(cards);
+    if (cards.length === 1) return g('play.single', { card: cards[0].short });
+    if (cards.length === 2) return g('play.pair', { cards: cardList });
+    if (cards.length === 3) return g('play.triple', { cards: cardList });
     const name = {
-      'straight': 'Straight',
-      'flush': 'Flush',
-      'full-house': 'Full house',
-      'four-kind': 'Four of a kind',
-      'straight-flush': 'Straight flush'
-    }[play.kind] || 'Five-card hand';
-    return `${name}: ${describeCards(cards)}`;
+      'straight': g('play.straight'),
+      'flush': g('play.flush'),
+      'full-house': g('play.fullHouse'),
+      'four-kind': g('play.fourKind'),
+      'straight-flush': g('play.straightFlush')
+    }[play.kind] || g('play.fiveCard');
+    return `${name}: ${cardList}`;
   }
 
   function buildPlay(cards, options = {}) {
@@ -733,7 +738,7 @@
       if (!farewells.length) {
         const empty = document.createElement('p');
         empty.className = 'result-story-empty';
-        empty.textContent = 'The rivals are already planning the rematch.';
+        empty.textContent = g('victory.seeYou');
         els.resultStoryFarewells.appendChild(empty);
         return;
       }
@@ -748,7 +753,7 @@
         });
         const copy = document.createElement('div');
         copy.className = 'result-story-farewell-copy';
-        copy.innerHTML = `<strong>${entry.character?.name || entry.player?.name || 'Rival'}</strong><p>"${entry.message || 'Great game!'}"</p>`;
+        copy.innerHTML = `<strong>${entry.character?.name || entry.player?.name || 'Rival'}</strong><p>"${entry.message || g('victory.goodGame')}"</p>`;
         row.append(avatar, copy);
         els.resultStoryFarewells.appendChild(row);
       });
@@ -996,7 +1001,7 @@
       els.playerCount.value = String(state.settings.players || 4);
       els.sound.textContent = state.sound ? '🔊' : '🔇';
       showGameScreen();
-      logState('The table returns from save. Pick up where you left off.');
+      logState(g('log.restore'));
       window.Big2GoAIReactions?.resetAIReactions(state.round);
       render();
       scheduleAiTurn();
@@ -1535,7 +1540,7 @@
       if (!replacements.length) break;
       const character = replacements[0];
       setAiCoinBalance(character.id, STARTING_COINS);
-      joinLogs.push(`${character.name} joins the table with 🪙 ${STARTING_COINS} coins.`);
+      joinLogs.push(g('log.aiJoin', { name: character.name, coins: STARTING_COINS }));
       used.add(character.id);
       cast.push(character);
     }
@@ -2355,7 +2360,7 @@
     if (!farewells.length) {
       const empty = document.createElement('p');
       empty.className = 'session-thanks';
-      empty.textContent = 'The table is quiet — see you at the next match.';
+      empty.textContent = g('victory.seeYou');
       els.sessionFarewells.appendChild(empty);
       return;
     }
@@ -2373,7 +2378,7 @@
       const name = document.createElement('strong');
       name.textContent = entry.character?.name || entry.player?.name || 'Rival';
       const message = document.createElement('p');
-      message.textContent = `"${entry.message || 'Great game!'}"`;
+      message.textContent = `"${entry.message || g('victory.goodGame')}"`;
       copy.append(name, message);
       row.append(avatar, copy);
       els.sessionFarewells.appendChild(row);
@@ -2628,16 +2633,7 @@
   }
 
   function getSkillUpgradeCopy(tier) {
-    if (tier.skill === 'strategist') {
-      return 'Skillset upgraded — this rival now plays smarter and reads the table better.';
-    }
-    if (tier.skill === 'master') {
-      return 'Skillset upgraded — this rival now outplays Strategist-level foes with sharper combos.';
-    }
-    if (tier.skill === 'legend') {
-      return 'Skillset upgraded — Expert Legend AI. Expect ruthless, intelligent plays every turn.';
-    }
-    return '';
+    return g(`skill.${tier.skill}`);
   }
 
   function getLevelUpCopy(levelUp) {
@@ -2646,91 +2642,93 @@
     const tierChanged = previousTier.skill !== tier.skill;
     const isHuman = levelUp.kind === 'human';
     const isFirstPromotion = levelUp.previousLevel === 1 && levelUp.level === 2;
+    const tierLabel = `${tier.emoji} ${tier.title}`;
+    const vars = { name: levelUp.name, level: levelUp.level, tierLabel };
 
     if (isHuman && tier.skill === 'legend' && tierChanged) {
       return {
-        eyebrow: '🎪 Carnival Legend',
-        title: 'You Win!',
-        message: 'You reached Level 30 — the highest rank in Big2Go. You are now in Legend Mode.',
-        quote: '"The carnival crowns a true master of the cards."',
+        eyebrow: g('levelUp.humanLegend.eyebrow'),
+        title: g('levelUp.humanLegend.title'),
+        message: g('levelUp.humanLegend.message'),
+        quote: g('levelUp.humanLegend.quote'),
         milestone: true,
-        tierLabel: `${tier.emoji} ${tier.title}`,
+        tierLabel,
         skillNote: ''
       };
     }
     if (isHuman && tierChanged) {
       return {
-        eyebrow: '🎪 Carnival Rank Up',
-        title: 'You Win!',
-        message: `You advanced to ${tier.emoji} ${tier.title}. New rivals will respect your table presence.`,
-        quote: '"Every tier climbed lights up the Big2Go carnival."',
+        eyebrow: g('levelUp.humanTierChange.eyebrow'),
+        title: g('levelUp.humanTierChange.title'),
+        message: g('levelUp.humanTierChange.message', vars),
+        quote: g('levelUp.humanTierChange.quote'),
         milestone: true,
-        tierLabel: `${tier.emoji} ${tier.title}`,
+        tierLabel,
         skillNote: ''
       };
     }
     if (isHuman && isFirstPromotion) {
       return {
-        eyebrow: '🎪 First Carnival Win',
-        title: 'You Win!',
-        message: 'You earned your stripes as a Rookie Challenger. Keep winning to reach Battle Strategist.',
-        quote: '"Twenty wins — the carnival lights burn brighter when you rise."',
+        eyebrow: g('levelUp.humanFirstPromotion.eyebrow'),
+        title: g('levelUp.humanFirstPromotion.title'),
+        message: g('levelUp.humanFirstPromotion.message'),
+        quote: g('levelUp.humanFirstPromotion.quote'),
         milestone: true,
-        tierLabel: `${tier.emoji} ${tier.title}`,
+        tierLabel,
         skillNote: ''
       };
     }
     if (isHuman) {
       return {
-        eyebrow: '🎪 Carnival Win',
-        title: 'You Win!',
-        message: `You climbed to Lv ${levelUp.level} · ${tier.emoji} ${tier.title}.`,
-        quote: '"Every win sparks another light on the carnival strip."',
+        eyebrow: g('levelUp.humanDefault.eyebrow'),
+        title: g('levelUp.humanDefault.title'),
+        message: g('levelUp.humanDefault.message', vars),
+        quote: g('levelUp.humanDefault.quote'),
         milestone: false,
-        tierLabel: `${tier.emoji} ${tier.title}`,
+        tierLabel,
         skillNote: ''
       };
     }
     if (levelUp.skillUpgraded && tier.skill === 'legend') {
       return {
-        eyebrow: 'Rival Legend Mode',
-        title: `${levelUp.name} reached Legend Mode!`,
-        message: `${levelUp.name} hit Level 30. Their AI skillset is now Expert level — extremely intelligent.`,
-        quote: '"I see every card before it lands."',
+        eyebrow: g('levelUp.rivalLegendSkill.eyebrow'),
+        title: g('levelUp.rivalLegendSkill.title', vars),
+        message: g('levelUp.rivalLegendSkill.message', vars),
+        quote: g('levelUp.rivalLegendSkill.quote'),
         milestone: true,
-        tierLabel: `${tier.emoji} ${tier.title}`,
+        tierLabel,
         skillNote: getSkillUpgradeCopy(tier)
       };
     }
     if (levelUp.skillUpgraded) {
       return {
-        eyebrow: 'Rival Rank Up',
-        title: `${levelUp.name} promoted!`,
-        message: `${levelUp.name} reached Lv ${levelUp.level} · ${tier.emoji} ${tier.title}.`,
-        quote: '"My next hand will be sharper than the last."',
+        eyebrow: g('levelUp.rivalSkillUpgraded.eyebrow'),
+        title: g('levelUp.rivalSkillUpgraded.title', vars),
+        message: g('levelUp.rivalSkillUpgraded.message', vars),
+        quote: g('levelUp.rivalSkillUpgraded.quote'),
         milestone: true,
-        tierLabel: `${tier.emoji} ${tier.title}`,
+        tierLabel,
         skillNote: getSkillUpgradeCopy(tier)
       };
     }
     if (isFirstPromotion) {
       return {
-        eyebrow: 'Rival Promotion',
-        title: `${levelUp.name} leveled up!`,
-        message: `${levelUp.name} is now Lv ${levelUp.level} · ${tier.emoji} ${tier.title}.`,
-        quote: '"Watch out… I am just getting warmed up."',
+        eyebrow: g('levelUp.rivalFirstPromotion.eyebrow'),
+        title: g('levelUp.rivalFirstPromotion.title', vars),
+        message: g('levelUp.rivalFirstPromotion.message', vars),
+        quote: g('levelUp.rivalFirstPromotion.quote'),
         milestone: true,
-        tierLabel: `${tier.emoji} ${tier.title}`,
+        tierLabel,
         skillNote: ''
       };
     }
     return {
-      eyebrow: 'Rival Promotion',
-      title: `${levelUp.name} leveled up!`,
-      message: `${levelUp.name} reached Lv ${levelUp.level} · ${tier.emoji} ${tier.title}.`,
-      quote: '"Next table, I play even harder."',
+      eyebrow: g('levelUp.rivalDefault.eyebrow'),
+      title: g('levelUp.rivalDefault.title', vars),
+      message: g('levelUp.rivalDefault.message', vars),
+      quote: g('levelUp.rivalDefault.quote'),
       milestone: false,
-      tierLabel: `${tier.emoji} ${tier.title}`,
+      tierLabel,
       skillNote: ''
     };
   }
@@ -3350,6 +3348,7 @@
 
   function newGame() {
     unlockAudioFromGesture();
+    window.Big2GoAIDialogue?.clearBags?.();
     syncPlayerSetupFromLanding();
     const count = Number(els.playerCount.value) || 4;
     disableVoiceChat();
@@ -3393,7 +3392,7 @@
     els.sound.textContent = '🔊';
     showGameScreen();
     updateHeat(10, 'The opening player can lead any valid Big Two hand.');
-    logState(`The table begins. ${state.players[state.startingPlayer].name} holds the 3♦ and starts the game.`);
+    logState(g('log.tableBegins', { name: state.players[state.startingPlayer].name }));
     window.Big2GoAIReactions?.resetAIReactions(state.round);
     render();
     saveGame();
@@ -3593,7 +3592,7 @@
     const note = player.isHuman
       ? `You are on your LAST CARD — ${doorbellLabel}`
       : `LAST CARD — ${doorbellLabel}`;
-    logState(`⚠️ ${note}`);
+    logState(g('log.warn', { note }));
     updateHeat(12, player.isHuman ? `Last card — ${doorbellLabel}` : `Last card — ${doorbellLabel}`);
     scheduleLastCardVoice(playerIndex);
     queueLastCardFlash(playerIndex);
@@ -3628,11 +3627,11 @@
   function selectionFeedback() {
     const cards = selectedCards();
     if (!cards.length) {
-      if (state.trick.play) return `Beat ${describePlay(state.trick.play)} or pass`;
-      return state.firstTrick ? 'Your Turn · Play 3♦ opening' : 'Your Turn · Play any combo';
+      if (state.trick.play) return g('selection.beatOrPass', { play: describePlay(state.trick.play) });
+      return state.firstTrick ? g('selection.openingTurn') : g('selection.freeTurn');
     }
     const result = validateHumanPlay(cards);
-    if (result.ok) return `${describePlay(result.play)} · can play`;
+    if (result.ok) return g('selection.canPlay', { play: describePlay(result.play) });
     return result.reason;
   }
 
@@ -3734,7 +3733,11 @@
       tile.disabled = true;
       els.trickPlay.appendChild(tile);
     });
-    els.trickMeta.textContent = `${describePlay(state.trick.play)} · Led by ${state.players[state.trick.leader].name} · ${state.trick.passes} passes`;
+    els.trickMeta.textContent = g('log.trickMeta', {
+      play: describePlay(state.trick.play),
+      name: state.players[state.trick.leader].name,
+      passes: state.trick.passes
+    });
   }
 
   function renderLogs() {
@@ -4501,9 +4504,9 @@
 
   function validateHumanPlay(cards) {
     const play = buildPlay(cards, state.settings);
-    if (!play) return { ok: false, reason: 'That selection is not a valid Big Two hand.' };
+    if (!play) return { ok: false, reason: g('play.invalidHand') };
     if (state.trick.play && !playBeats(play, state.trick)) {
-      return { ok: false, reason: `You must beat ${describePlay(state.trick.play)} with a stronger hand of the same size.` };
+      return { ok: false, reason: g('play.mustBeat', { play: describePlay(state.trick.play) }) };
     }
     return { ok: true, play };
   }
@@ -4533,8 +4536,8 @@
   }
 
   function playComment(play) {
-    const deck = ORACLE[play.kind] || ORACLE.single;
-    return deck[Math.floor(Math.random() * deck.length)];
+    return window.Big2GoAIDialogue?.getOracleLine?.(play.kind)
+      || (ORACLE[play.kind] || ORACLE.single)[Math.floor(Math.random() * 3)];
   }
 
   function applyPlay(playerIndex, cards, source = 'played') {
@@ -4543,7 +4546,13 @@
     const play = buildPlay(cards, state.settings);
     advanceTurnAfterPlay(playerIndex, play);
     const comment = playComment(play);
-    logState(`${player.name} ${source} ${describePlay(play)}. ${comment}`);
+    const sourceLabel = source === 'played' ? g('play.sourcePlayed') : source;
+    logState(g('log.played', {
+      name: player.name,
+      source: sourceLabel,
+      play: describePlay(play),
+      comment
+    }));
     const heatBoost = {
       single: 6, pair: 9, triple: 12, straight: 16, flush: 18, 'full-house': 24, 'four-kind': 30, 'straight-flush': 38
     }[play.kind] || 6;
@@ -4555,7 +4564,7 @@
     } else {
       sparkle(1);
     }
-    if (player.hand.length === 2) updateHeat(7, `${player.name} is down to 2 cards.`);
+    if (player.hand.length === 2) updateHeat(7, g('log.twoCards', { name: player.name }));
     if (player.hand.length === 1) announceLastCard(playerIndex);
     if (finishIfNeeded(playerIndex)) return;
     if (!state.liveRoom && !player.isHuman) {
@@ -4568,7 +4577,7 @@
   function passTurn(playerIndex) {
     state.trick.passes += 1;
     state.heat = Math.max(0, state.heat - 8);
-    logState(`${state.players[playerIndex].name} passed. The table keeps moving.`);
+    logState(g('log.passed', { name: state.players[playerIndex].name }));
     playUiSound('pass');
     if (state.trick.passes >= state.players.length - 1) {
       const leader = state.trick.leader;
@@ -4578,8 +4587,8 @@
       state.currentPlayer = leader;
       state.trick = { play: null, leader, passes: 0 };
       state.round += 1;
-      logState(`${state.players[leader].name} claimed the trick and opens a fresh table line.`);
-      updateHeat(10, 'A fresh trick means a fresh crowd cheer.');
+      logState(g('log.claimedTrick', { name: state.players[leader].name }));
+      updateHeat(10, g('heat.freshTrick'));
       sparkle(1);
       clearSelection();
     } else {
@@ -5649,7 +5658,7 @@
       const play = buildPlay(cards, state.settings);
       recordSessionCombo(play);
       const comment = playComment(play);
-      logState(`You played ${describePlay(play)}. ${comment}`);
+      logState(g('log.youPlayed', { play: describePlay(play), comment }));
       advanceTurnAfterPlay(state.humanIndex, play);
       playUiSound('cardPlace');
       const heatBoost = {
@@ -5750,7 +5759,11 @@
     els.voiceMuteAll?.addEventListener('dblclick', toggleVoiceMixer);
     els.voicePtt?.addEventListener('click', togglePushToTalk);
     document.querySelectorAll('[data-chat-quick]').forEach(button => {
-      button.addEventListener('click', () => sendRoomChat(button.dataset.chatQuick || button.textContent || ''));
+      button.addEventListener('click', () => {
+        const key = button.dataset.chatKey;
+        const text = key ? t(key) : (button.dataset.chatQuick || button.textContent || '');
+        sendRoomChat(text);
+      });
     });
     document.querySelector('#profile-button')?.addEventListener('click', showPlayerProfilePanel);
     document.querySelectorAll('[data-home-tab]').forEach(button => {
@@ -5948,7 +5961,10 @@
     bindEvents();
     installReconnectTestMode();
     registerServiceWorker();
-    window.addEventListener('big2go:languagechange', applyInterfaceI18n);
+    window.addEventListener('big2go:languagechange', () => {
+      applyInterfaceI18n();
+      window.Big2GoAIDialogue?.clearBags?.();
+    });
     window.addEventListener('pagehide', () => {
       if (!state.liveRoom?.code) saveCoinBalance();
     });

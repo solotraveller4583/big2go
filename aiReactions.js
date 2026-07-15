@@ -84,7 +84,20 @@
 
   function choosePersonalityLine(gameState, playerIndex, event) {
     const character = getCharacter(gameState, playerIndex);
-    const pool = character?.reactions?.[event] || GENERIC_LINES[event] || GENERIC_LINES.player_slow;
+    if (character?.id && window.Big2GoAIDialogue?.pickCharacterLine) {
+      const line = window.Big2GoAIDialogue.pickCharacterLine(
+        character.id,
+        'reactions',
+        event,
+        `${character.id}:reactions:${event}`
+      );
+      if (line) return line;
+    }
+    const genericPool = window.Big2GoAIDialogue?.getGenericPool?.(event);
+    if (genericPool?.length) {
+      return genericPool[Math.floor(Math.random() * genericPool.length)];
+    }
+    const pool = GENERIC_LINES[event] || GENERIC_LINES.player_slow;
     return pool[Math.floor(Math.random() * pool.length)];
   }
 

@@ -413,6 +413,9 @@
   const rivalLineBags = new Map();
 
   function pickRivalLine(lines, bagKey) {
+    if (window.Big2GoAIDialogue?.pickLine) {
+      return window.Big2GoAIDialogue.pickLine(lines, bagKey);
+    }
     if (!Array.isArray(lines) || !lines.length) return '';
 
     let bag = rivalLineBags.get(bagKey);
@@ -428,6 +431,13 @@
     const pick = bag.remaining.shift();
     bag.last = pick;
     return pick || lines[0];
+  }
+
+  function getLocalizedLines(character, category, subcategory) {
+    if (!character?.id) return [];
+    return window.Big2GoAIDialogue?.getPool?.(character.id, category, subcategory)
+      || character?.[category]?.[subcategory]
+      || [];
   }
 
   function resolveRivalPlayer(gameState, winner) {
@@ -457,8 +467,11 @@
         if (!character) return null;
         const pool = humanWon ? character.farewell?.humanWon : character.farewell?.humanLost;
         const fallback = humanWon ? character.rival?.defeatedByPlayer : character.rival?.defeatPlayer;
-        const message = pickRivalLine(pool, `${character.id}:farewell:${humanWon}`)
-          || pickRivalLine(fallback, `${character.id}:farewell-fallback:${humanWon}`)
+        const localizedPool = getLocalizedLines(character, 'farewell', humanWon ? 'humanWon' : 'humanLost');
+        const localizedFallback = getLocalizedLines(character, 'rival', humanWon ? 'defeatedByPlayer' : 'defeatPlayer');
+        const message = pickRivalLine(localizedPool.length ? localizedPool : pool, `${character.id}:farewell:${humanWon}`)
+          || pickRivalLine(localizedFallback.length ? localizedFallback : fallback, `${character.id}:farewell-fallback:${humanWon}`)
+          || window.Big2GoAIDialogue?.getGameLine?.(humanWon ? 'victory.goodGame' : 'victory.seeYou')
           || (humanWon ? 'Great game!' : 'See you again!');
         return { character, player, message };
       })
@@ -474,18 +487,31 @@
     const playerWon = Boolean(winner.isHuman);
     const scenario = playerWon ? 'defeatedByPlayer' : 'defeatPlayer';
     const lines = character.rival?.[scenario];
+    const localizedLines = getLocalizedLines(character, 'rival', scenario);
     const bagKey = `${character.id}:${scenario}`;
-    const quote = pickRivalLine(lines, bagKey)
-      || pickRivalLine(character.reactions?.[playerWon ? 'ai_lose' : 'ai_win'], `${character.id}:reaction-${scenario}`)
+    const quote = pickRivalLine(localizedLines.length ? localizedLines : lines, bagKey)
+      || pickRivalLine(
+        getLocalizedLines(character, 'reactions', playerWon ? 'ai_lose' : 'ai_win').length
+          ? getLocalizedLines(character, 'reactions', playerWon ? 'ai_lose' : 'ai_win')
+          : character.reactions?.[playerWon ? 'ai_lose' : 'ai_win'],
+        `${character.id}:reaction-${scenario}`
+      )
+      || window.Big2GoAIDialogue?.getGameLine?.(playerWon ? 'victory.goodGame' : 'victory.betterLuck')
       || (playerWon ? 'Good game!' : 'Better luck next time!');
+
+    const victoryMeta = window.Big2GoAIDialogue?.getVictoryMeta?.(character, playerWon) || {
+      title: playerWon ? `You defeated ${character.name}!` : `${character.name} defeated you!`,
+      speakerLabel: `${character.name} says:`,
+      rematchLabel: 'Rematch?'
+    };
 
     return {
       character,
       rivalPlayer,
-      title: playerWon ? `You defeated ${character.name}!` : `${character.name} defeated you!`,
-      speakerLabel: `${character.name} says:`,
+      title: victoryMeta.title,
+      speakerLabel: victoryMeta.speakerLabel,
       quote,
-      rematchLabel: 'Rematch?'
+      rematchLabel: victoryMeta.rematchLabel
     };
   }
 
