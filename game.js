@@ -2871,10 +2871,12 @@
     render();
   }
 
-  function showHelp(title, text) {
+  function showHelp(title, text, options = {}) {
     els.helpTitle.textContent = title;
     const html = String(text || '');
     els.helpText.innerHTML = /<\/?[a-z][\s\S]*>/i.test(html) ? html : `<p>${html}</p>`;
+    els.helpText.className = options.variant === 'hint' ? 'help-copy oracle-hint-copy' : 'help-copy';
+    els.helpDialog.classList.toggle('help-dialog--hint', options.variant === 'hint');
     els.helpDialog.showModal();
   }
 
@@ -3167,8 +3169,8 @@
     playUiSound('click');
   }
 
-  function showOracle(title, message) {
-    showHelp(title, message);
+  function showOracle(title, message, options = {}) {
+    showHelp(title, message, options);
   }
 
   function showSettingsPanel() {
@@ -4636,12 +4638,28 @@
     const hand = getHumanPlayer().hand;
     const chosen = pickAIMove(hand);
     if (!chosen) {
-      showOracle('Oracle says no', 'You cannot beat the current trick with your hand. Pass and wait for the table to reset.');
+      showOracle('No move available', `
+        <div class="oracle-hint-card oracle-hint-card--pass">
+          <p class="oracle-hint-lead">Your hand cannot beat the cards on the table right now.</p>
+          <ol class="oracle-hint-steps">
+            <li>Tap <strong>Pass</strong> to skip your turn.</li>
+            <li>Other players will play or pass in turn.</li>
+            <li>When everyone passes, the trick clears and a new round starts.</li>
+          </ol>
+        </div>`, { variant: 'hint' });
       return;
     }
     state.selected = new Set(chosen.cards.map(card => card.id));
     render();
-    showOracle('Oracle hint', `Try ${describePlay(chosen)}.`);
+    showOracle('Suggested play', `
+      <div class="oracle-hint-card oracle-hint-card--play">
+        <p class="oracle-hint-lead">Try this hand:</p>
+        <p class="oracle-hint-play">${describePlay(chosen)}</p>
+        <ol class="oracle-hint-steps">
+          <li>Tap the highlighted cards in your hand.</li>
+          <li>Then tap <strong>Play</strong> to put them on the table.</li>
+        </ol>
+      </div>`, { variant: 'hint' });
   }
 
   function scheduleAiTurn() {
