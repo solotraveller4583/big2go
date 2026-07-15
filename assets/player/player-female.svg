@@ -1,18 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Female player icon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Cute female player icon">
   <defs>
-    <linearGradient id="player-female-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#e85d9a"/>
-      <stop offset="100%" stop-color="#8f2f62"/>
+    <linearGradient id="pf-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff7eb8"/>
+      <stop offset="100%" stop-color="#b83d7a"/>
     </linearGradient>
-    <linearGradient id="player-female-ring" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fff0b8"/>
+    <linearGradient id="pf-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff6c8"/>
       <stop offset="100%" stop-color="#ffc83d"/>
     </linearGradient>
   </defs>
-  <circle cx="48" cy="48" r="46" fill="url(#player-female-ring)"/>
-  <circle cx="48" cy="48" r="40" fill="url(#player-female-bg)"/>
-  <circle cx="48" cy="30" r="5" fill="#ffd8ec"/>
-  <circle cx="40" cy="28" r="2" fill="#ffd8ec"/>
-  <circle cx="56" cy="28" r="2" fill="#ffd8ec"/>
-  <text x="48" y="64" text-anchor="middle" font-size="30" font-weight="900" fill="#ffd8ec" font-family="Arial, sans-serif">e</text>
+  <circle cx="48" cy="48" r="45" fill="url(#pf-ring)"/>
+  <circle cx="48" cy="48" r="39" fill="url(#pf-bg)"/>
+  <ellipse cx="48" cy="52" rx="22" ry="20" fill="#ffd9c8"/>
+  <circle cx="30" cy="36" r="7" fill="#8f2f62"/>
+  <circle cx="66" cy="36" r="7" fill="#8f2f62"/>
+  <path d="M36 34c6-6 14-8 24-6" fill="none" stroke="#8f2f62" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="38" cy="50" rx="5" ry="6" fill="#fff" opacity="0.95"/>
+  <ellipse cx="58" cy="50" rx="5" ry="6" fill="#fff" opacity="0.95"/>
+  <circle cx="38" cy="51" r="3" fill="#4a2040"/>
+  <circle cx="58" cy="51" r="3" fill="#4a2040"/>
+  <circle cx="39" cy="49.5" r="1.2" fill="#fff"/>
+  <circle cx="59" cy="49.5" r="1.2" fill="#fff"/>
+  <path d="M40 58 Q48 64 56 58" fill="none" stroke="#d65f7f" stroke-width="2.2" stroke-linecap="round"/>
+  <ellipse cx="34" cy="56" rx="4" ry="2.5" fill="#ff9eb8" opacity="0.55"/>
+  <ellipse cx="62" cy="56" rx="4" ry="2.5" fill="#ff9eb8" opacity="0.55"/>
+  <circle cx="48" cy="78" r="11" fill="#5a1840" opacity="0.35"/>
+  <text x="48" y="82" text-anchor="middle" font-size="16" font-weight="900" fill="#ffd8ec" font-family="Arial, sans-serif">♥</text>
 </svg>

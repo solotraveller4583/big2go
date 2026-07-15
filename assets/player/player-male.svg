@@ -1,17 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Male player icon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Cute male player icon">
   <defs>
-    <linearGradient id="player-male-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2f6fd6"/>
-      <stop offset="100%" stop-color="#123a7a"/>
+    <linearGradient id="pm-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4a9eff"/>
+      <stop offset="100%" stop-color="#1e4f9c"/>
     </linearGradient>
-    <linearGradient id="player-male-ring" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fff0b8"/>
+    <linearGradient id="pm-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff6c8"/>
       <stop offset="100%" stop-color="#ffc83d"/>
     </linearGradient>
   </defs>
-  <circle cx="48" cy="48" r="46" fill="url(#player-male-ring)"/>
-  <circle cx="48" cy="48" r="40" fill="url(#player-male-bg)"/>
-  <path d="M30 34h36l-4 8H34z" fill="#0a2248" opacity="0.55"/>
-  <path d="M48 24 L54 34 H42 Z" fill="#ffe68f"/>
-  <text x="48" y="62" text-anchor="middle" font-size="30" font-weight="900" fill="#ffe68f" font-family="Arial, sans-serif">`</text>
+  <circle cx="48" cy="48" r="45" fill="url(#pm-ring)"/>
+  <circle cx="48" cy="48" r="39" fill="url(#pm-bg)"/>
+  <ellipse cx="48" cy="52" rx="22" ry="20" fill="#ffd9a8"/>
+  <path d="M26 40c2-8 10-14 22-14s20 6 22 14c-6-4-14-6-22-6s-16 2-22 6z" fill="#2d4a7a"/>
+  <circle cx="38" cy="50" r="4.5" fill="#1a2744"/>
+  <circle cx="58" cy="50" r="4.5" fill="#1a2744"/>
+  <circle cx="39.5" cy="48.5" r="1.6" fill="#fff"/>
+  <circle cx="59.5" cy="48.5" r="1.6" fill="#fff"/>
+  <path d="M40 58 Q48 64 56 58" fill="none" stroke="#c96a52" stroke-width="2.2" stroke-linecap="round"/>
+  <ellipse cx="34" cy="56" rx="4" ry="2.5" fill="#ffb0a0" opacity="0.45"/>
+  <ellipse cx="62" cy="56" rx="4" ry="2.5" fill="#ffb0a0" opacity="0.45"/>
+  <circle cx="48" cy="78" r="11" fill="#0f1f3d" opacity="0.35"/>
+  <text x="48" y="82" text-anchor="middle" font-size="16" font-weight="900" fill="#ffe68f" font-family="Arial, sans-serif">♠</text>
 </svg>
