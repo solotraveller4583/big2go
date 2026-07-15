@@ -224,8 +224,8 @@
 }
 
 #game-screen.gameplay-premium .opponent-avatar {
-  width: 36px !important;
-  height: 36px !important;
+  width: 40px !important;
+  height: 40px !important;
   border-radius: 50% !important;
   display: grid !important;
   place-items: center !important;
@@ -233,11 +233,59 @@
   font-size: 14px !important;
   font-weight: 1000 !important;
   color: var(--gp-gold) !important;
-  background: linear-gradient(145deg, var(--gp-purple-bright), var(--gp-purple)) !important;
+  background: transparent !important;
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.22),
-    0 4px 10px rgba(0, 0, 0, 0.28) !important;
-  border: 2px solid rgba(255, 255, 255, 0.18) !important;
+    0 0 0 2px rgba(255, 200, 61, 0.35),
+    0 4px 14px rgba(0, 0, 0, 0.35) !important;
+  border: none !important;
+}
+
+#game-screen.gameplay-premium .opponent-row[data-character-id="bruno"] .opponent-avatar,
+#game-screen.gameplay-premium .character-avatar--bruno {
+  box-shadow:
+    0 0 0 2px rgba(255, 107, 61, 0.55),
+    0 0 16px rgba(255, 107, 61, 0.35),
+    0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+#game-screen.gameplay-premium .opponent-row[data-character-id="luna"] .opponent-avatar,
+#game-screen.gameplay-premium .character-avatar--luna {
+  box-shadow:
+    0 0 0 2px rgba(192, 132, 252, 0.55),
+    0 0 16px rgba(192, 132, 252, 0.35),
+    0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+#game-screen.gameplay-premium .opponent-row[data-character-id="kiro"] .opponent-avatar,
+#game-screen.gameplay-premium .character-avatar--kiro {
+  box-shadow:
+    0 0 0 2px rgba(56, 189, 248, 0.55),
+    0 0 16px rgba(56, 189, 248, 0.35),
+    0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+#game-screen.gameplay-premium .opponent-row[data-character-id="pico"] .opponent-avatar,
+#game-screen.gameplay-premium .character-avatar--pico {
+  box-shadow:
+    0 0 0 2px rgba(253, 224, 71, 0.6),
+    0 0 16px rgba(253, 224, 71, 0.38),
+    0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+#game-screen.gameplay-premium .opponent-row[data-character-id="bao"] .opponent-avatar,
+#game-screen.gameplay-premium .character-avatar--bao {
+  box-shadow:
+    0 0 0 2px rgba(251, 113, 133, 0.55),
+    0 0 16px rgba(251, 113, 133, 0.35),
+    0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+#game-screen.gameplay-premium .opponent-row[data-character-id="tora"] .opponent-avatar,
+#game-screen.gameplay-premium .character-avatar--tora {
+  box-shadow:
+    0 0 0 2px rgba(251, 146, 60, 0.55),
+    0 0 16px rgba(251, 146, 60, 0.35),
+    0 4px 14px rgba(0, 0, 0, 0.35) !important;
 }
 
 #game-screen.gameplay-premium .opponent-avatar .opponent-avatar-img,

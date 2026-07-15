@@ -1,16 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Luna avatar">
   <defs>
     <linearGradient id="luna-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#7b6cff"/>
-      <stop offset="100%" stop-color="#3d2f9e"/>
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <linearGradient id="luna-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff6c8"/>
+      <stop offset="100%" stop-color="#ffc83d"/>
     </linearGradient>
   </defs>
-  <circle cx="48" cy="48" r="44" fill="url(#luna-bg)"/>
-  <circle cx="58" cy="34" r="16" fill="#d8d2ff" opacity="0.95"/>
-  <circle cx="66" cy="34" r="13" fill="url(#luna-bg)"/>
-  <circle cx="36" cy="52" r="5" fill="#120f2e"/>
-  <circle cx="58" cy="52" r="5" fill="#120f2e"/>
-  <circle cx="38" cy="50" r="1.5" fill="#fff"/>
-  <circle cx="60" cy="50" r="1.5" fill="#fff"/>
-  <path d="M40 66c4 4 12 4 16 0" fill="none" stroke="#e8e4ff" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="48" cy="48" r="45" fill="url(#luna-ring)"/>
+  <circle cx="48" cy="48" r="39" fill="url(#luna-bg)"/>
+  <ellipse cx="48" cy="52" rx="22" ry="20" fill="#ffe4f3"/>
+  <path d="M28 38c8-10 20-12 32-8c-6 2-10 6-12 10c-8-4-14-2-20 2z" fill="#5b21b6"/>
+  <circle cx="66" cy="30" r="9" fill="#ede9fe" opacity="0.95"/>
+  <circle cx="72" cy="30" r="7" fill="url(#luna-bg)"/>
+  <ellipse cx="38" cy="50" rx="5" ry="6" fill="#fff"/>
+  <ellipse cx="58" cy="50" rx="5" ry="6" fill="#fff"/>
+  <circle cx="38" cy="51" r="3" fill="#4c1d95"/>
+  <circle cx="58" cy="51" r="3" fill="#4c1d95"/>
+  <circle cx="39.5" cy="49.5" r="1.3" fill="#fff"/>
+  <circle cx="59.5" cy="49.5" r="1.3" fill="#fff"/>
+  <path d="M40 60 Q48 65 56 60" fill="none" stroke="#c4b5fd" stroke-width="2.4" stroke-linecap="round"/>
+  <ellipse cx="34" cy="58" rx="4" ry="2.5" fill="#f9a8d4" opacity="0.55"/>
+  <ellipse cx="62" cy="58" rx="4" ry="2.5" fill="#f9a8d4" opacity="0.55"/>
+  <circle cx="48" cy="78" r="10" fill="#4c1d95" opacity="0.35"/>
+  <path d="M54 74 A8 8 0 0 0 42 74 A6 6 0 0 1 54 74Z" fill="#ede9fe"/>
 </svg>

@@ -1,18 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Tora avatar">
   <defs>
     <linearGradient id="tora-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffb347"/>
-      <stop offset="100%" stop-color="#e86b1f"/>
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <linearGradient id="tora-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff6c8"/>
+      <stop offset="100%" stop-color="#ffc83d"/>
     </linearGradient>
   </defs>
-  <circle cx="48" cy="48" r="44" fill="url(#tora-bg)"/>
-  <path d="M22 34 L30 22 L34 36 Z" fill="#1a0d00"/>
-  <path d="M74 34 L66 22 L62 36 Z" fill="#1a0d00"/>
-  <path d="M30 40h8M58 40h8M36 48h6M54 48h6" stroke="#1a0d00" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="36" cy="54" r="5" fill="#1a0d00"/>
-  <circle cx="60" cy="54" r="5" fill="#1a0d00"/>
-  <circle cx="38" cy="52" r="1.5" fill="#fff"/>
-  <circle cx="62" cy="52" r="1.5" fill="#fff"/>
-  <path d="M40 68c4 3 12 3 16 0" fill="none" stroke="#2a1200" stroke-width="3" stroke-linecap="round"/>
-  <ellipse cx="48" cy="62" rx="8" ry="5" fill="#ffd9a8" opacity="0.55"/>
+  <circle cx="48" cy="48" r="45" fill="url(#tora-ring)"/>
+  <circle cx="48" cy="48" r="39" fill="url(#tora-bg)"/>
+  <ellipse cx="48" cy="52" rx="22" ry="20" fill="#ffedd5"/>
+  <path d="M22 34 L30 20 L36 36 Z M74 34 L66 20 L60 36 Z" fill="#7c2d12"/>
+  <path d="M32 44 L36 42 M60 42 L64 44 M38 48 L42 46 M54 46 L58 48" stroke="#7c2d12" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M34 50 Q38 48 42 50 M54 50 Q58 48 62 50" fill="none" stroke="#7c2d12" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="38" cy="52" rx="5" ry="4" fill="#fff"/>
+  <ellipse cx="58" cy="52" rx="5" ry="4" fill="#fff"/>
+  <circle cx="38" cy="52" r="2.5" fill="#431407"/>
+  <circle cx="58" cy="52" r="2.5" fill="#431407"/>
+  <path d="M42 60 Q48 63 54 60" fill="none" stroke="#9a3412" stroke-width="2.2" stroke-linecap="round"/>
+  <ellipse cx="34" cy="58" rx="4" ry="2.5" fill="#fdba74" opacity="0.5"/>
+  <ellipse cx="62" cy="58" rx="4" ry="2.5" fill="#fdba74" opacity="0.5"/>
+  <path d="M44 76 C48 70 52 70 56 76 C54 80 50 82 48 82 C46 82 44 80 44 76Z" fill="#166534" opacity="0.85"/>
+  <path d="M48 68 L48 76" stroke="#86efac" stroke-width="2" stroke-linecap="round"/>
 </svg>

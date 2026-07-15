@@ -499,6 +499,9 @@
 
     container.innerHTML = '';
     container.classList.add(className);
+    if (character?.id) {
+      container.classList.add(`${className}--${character.id}`);
+    }
 
     const fallback = character?.avatar?.fallback || character?.name?.charAt(0)?.toUpperCase() || '?';
     const src = character?.avatar?.src || '';
