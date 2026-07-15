@@ -344,8 +344,8 @@
 #home-screen.landing-v3 .hero-art {
   position: relative;
   flex: 0 0 auto;
-  width: min(92vw, 340px);
-  height: clamp(88px, 12dvh, 108px);
+  width: min(94vw, 380px);
+  height: clamp(100px, 14dvh, 124px);
   margin: 0 auto;
   z-index: 0;
   pointer-events: none;
@@ -467,8 +467,8 @@
 
 #home-screen.landing-v3 .flying-cards {
   position: relative;
-  width: min(92vw, 380px);
-  height: clamp(88px, 12dvh, 108px);
+  width: min(94vw, 400px);
+  height: clamp(100px, 14dvh, 124px);
   margin: 0 auto;
   z-index: 0;
   pointer-events: none;
@@ -483,10 +483,10 @@
   bottom: auto;
   flex: 0 0 auto;
   container-type: inline-size;
-  width: clamp(62px, 16vw, 80px);
+  width: clamp(70px, 18vw, 88px);
   height: auto;
   aspect-ratio: 66 / 88;
-  border-radius: 14px;
+  border-radius: 15px;
   padding: 0;
   display: flex;
   align-items: stretch;
@@ -500,7 +500,6 @@
     0 12px 24px rgba(0, 0, 0, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
   transform-origin: 50% 100%;
-  animation: none !important;
   pointer-events: none !important;
   overflow: hidden;
 }
@@ -543,6 +542,9 @@
     0 12px 24px rgba(0, 0, 0, 0.42),
     0 0 22px rgba(255, 68, 238, 0.48),
     inset 0 0 18px rgba(255, 68, 238, 0.14);
+  animation:
+    v3CardFloatA 5s ease-in-out infinite,
+    v3NeonBlinkDiamond 2.2s ease-in-out infinite;
 }
 
 #home-screen.landing-v3 .card-neon-heart {
@@ -552,6 +554,10 @@
     0 12px 24px rgba(0, 0, 0, 0.42),
     0 0 22px rgba(255, 92, 122, 0.46),
     inset 0 0 18px rgba(255, 92, 122, 0.14);
+  animation:
+    v3CardFloatC 6.4s ease-in-out infinite,
+    v3NeonBlinkHeart 2.4s ease-in-out infinite;
+  animation-delay: 0s, 0.65s;
 }
 
 #home-screen.landing-v3 .card-neon-spade {
@@ -562,6 +568,10 @@
     0 0 28px rgba(255, 229, 102, 0.55),
     0 0 10px rgba(0, 245, 255, 0.22),
     inset 0 0 22px rgba(255, 229, 102, 0.16);
+  animation:
+    v3CardFloatB 5.8s ease-in-out infinite,
+    v3NeonBlinkSpade 1.9s ease-in-out infinite;
+  animation-delay: 0s, 0.3s;
 }
 
 #home-screen.landing-v3 .card-a {
@@ -570,9 +580,9 @@
 }
 
 #home-screen.landing-v3 .card-b {
-  transform: translateY(0);
+  transform: translateY(-3px);
   z-index: 3;
-  width: clamp(72px, 19vw, 96px);
+  width: clamp(84px, 22vw, 108px);
 }
 
 #home-screen.landing-v3 .hero-card-boss .hero-card-rank {
@@ -1254,34 +1264,137 @@
 
 #home-screen.landing-v3 .card-a {
   --card-rot: -12deg;
-  animation-name: v3CardFloatA;
-  animation-duration: 5s;
-}
-
-#home-screen.landing-v3 .card-b {
-  animation-name: v3CardFloatB;
-  animation-duration: 5.8s;
 }
 
 #home-screen.landing-v3 .card-c {
   --card-rot: 12deg;
-  animation-name: v3CardFloatC;
-  animation-duration: 6.4s;
 }
 
 @keyframes v3CardFloatA {
-  0%, 100% { transform: rotate(-12deg) translateY(0); }
-  50% { transform: rotate(-12deg) translateY(-6px); }
+  0%, 100% { transform: rotate(-12deg) translateY(2px); }
+  50% { transform: rotate(-12deg) translateY(-4px); }
 }
 
 @keyframes v3CardFloatB {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-4px) rotate(0deg); }
+  0%, 100% { transform: translateY(-3px) rotate(0deg); }
+  50% { transform: translateY(-7px) rotate(0deg); }
 }
 
 @keyframes v3CardFloatC {
-  0%, 100% { transform: rotate(12deg) translateY(0); }
-  50% { transform: rotate(12deg) translateY(-6px); }
+  0%, 100% { transform: rotate(12deg) translateY(2px); }
+  50% { transform: rotate(12deg) translateY(-4px); }
+}
+
+@keyframes v3NeonBlinkDiamond {
+  0%, 100% {
+    border-color: rgba(255, 68, 238, 0.55);
+    box-shadow:
+      0 12px 24px rgba(0, 0, 0, 0.42),
+      0 0 14px rgba(255, 68, 238, 0.32),
+      inset 0 0 12px rgba(255, 68, 238, 0.08);
+    filter: brightness(0.94);
+  }
+  50% {
+    border-color: rgba(255, 120, 245, 1);
+    box-shadow:
+      0 12px 24px rgba(0, 0, 0, 0.42),
+      0 0 28px rgba(255, 68, 238, 0.82),
+      0 0 48px rgba(255, 68, 238, 0.42),
+      inset 0 0 26px rgba(255, 68, 238, 0.22);
+    filter: brightness(1.12);
+  }
+}
+
+@keyframes v3NeonBlinkSpade {
+  0%, 100% {
+    border-color: rgba(255, 229, 102, 0.62);
+    box-shadow:
+      0 14px 28px rgba(0, 0, 0, 0.44),
+      0 0 18px rgba(255, 229, 102, 0.38),
+      0 0 8px rgba(0, 245, 255, 0.14),
+      inset 0 0 14px rgba(255, 229, 102, 0.1);
+    filter: brightness(0.95);
+  }
+  50% {
+    border-color: rgba(255, 245, 170, 1);
+    box-shadow:
+      0 14px 28px rgba(0, 0, 0, 0.44),
+      0 0 36px rgba(255, 229, 102, 0.92),
+      0 0 58px rgba(255, 200, 61, 0.48),
+      0 0 16px rgba(0, 245, 255, 0.35),
+      inset 0 0 30px rgba(255, 229, 102, 0.28);
+    filter: brightness(1.18);
+  }
+}
+
+@keyframes v3NeonBlinkHeart {
+  0%, 100% {
+    border-color: rgba(255, 92, 122, 0.55);
+    box-shadow:
+      0 12px 24px rgba(0, 0, 0, 0.42),
+      0 0 14px rgba(255, 92, 122, 0.32),
+      inset 0 0 12px rgba(255, 92, 122, 0.08);
+    filter: brightness(0.94);
+  }
+  50% {
+    border-color: rgba(255, 140, 165, 1);
+    box-shadow:
+      0 12px 24px rgba(0, 0, 0, 0.42),
+      0 0 28px rgba(255, 92, 122, 0.82),
+      0 0 48px rgba(255, 92, 122, 0.42),
+      inset 0 0 26px rgba(255, 92, 122, 0.22);
+    filter: brightness(1.12);
+  }
+}
+
+#home-screen.landing-v3 .card-neon-diamond .hero-card-rank,
+#home-screen.landing-v3 .card-neon-diamond .hero-card-suit {
+  animation: v3NeonTextDiamond 2.2s ease-in-out infinite;
+}
+
+#home-screen.landing-v3 .card-neon-spade .hero-card-rank,
+#home-screen.landing-v3 .card-neon-spade .hero-card-suit {
+  animation: v3NeonTextSpade 1.9s ease-in-out infinite;
+  animation-delay: 0.3s;
+}
+
+#home-screen.landing-v3 .card-neon-heart .hero-card-rank,
+#home-screen.landing-v3 .card-neon-heart .hero-card-suit {
+  animation: v3NeonTextHeart 2.4s ease-in-out infinite;
+  animation-delay: 0.65s;
+}
+
+@keyframes v3NeonTextDiamond {
+  0%, 100% {
+    text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+  50% {
+    text-shadow: 0 0 16px currentColor, 0 0 32px currentColor, 0 0 48px currentColor;
+    filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 18px currentColor);
+  }
+}
+
+@keyframes v3NeonTextSpade {
+  0%, 100% {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 6px rgba(0, 245, 255, 0.35));
+  }
+  50% {
+    text-shadow: 0 0 18px currentColor, 0 0 36px currentColor, 0 0 54px currentColor;
+    filter: drop-shadow(0 0 14px currentColor) drop-shadow(0 0 12px rgba(0, 245, 255, 0.55));
+  }
+}
+
+@keyframes v3NeonTextHeart {
+  0%, 100% {
+    text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+  50% {
+    text-shadow: 0 0 16px currentColor, 0 0 32px currentColor, 0 0 48px currentColor;
+    filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 18px currentColor);
+  }
 }
 
 @keyframes v3LogoGlow {
@@ -1651,7 +1764,7 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     --v3-mobile-gap: clamp(5px, 0.8dvh, 8px);
     --v3-row-header: clamp(44px, 6dvh, 50px);
     --v3-row-profile: clamp(56px, 7.5dvh, 64px);
-    --v3-row-hero: minmax(156px, 1.12fr);
+    --v3-row-hero: minmax(178px, 1.32fr);
     --v3-row-play: clamp(46px, 6dvh, 52px);
     --v3-row-actions: clamp(50px, 6.8dvh, 56px);
 
@@ -1781,8 +1894,8 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
   }
 
   #home-screen.landing-v3 .hero-art {
-    width: min(100%, 320px);
-    height: clamp(92px, 15.5dvh, 108px);
+    width: min(100%, 360px);
+    height: clamp(112px, 18dvh, 132px);
     flex: 0 0 auto;
     padding-top: 2px;
   }
@@ -1790,14 +1903,52 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
   #home-screen.landing-v3 .flying-cards {
     height: 100%;
     max-height: 100%;
+    width: min(100%, 360px);
   }
 
   #home-screen.landing-v3 .hero-card {
     position: relative;
     width: auto;
-    height: clamp(68px, 11.5dvh, 80px);
-    border-radius: 13px;
-    animation: v3CardFloatA 5.2s ease-in-out infinite !important;
+    height: clamp(84px, 14dvh, 98px);
+    border-radius: 14px;
+  }
+
+  #home-screen.landing-v3 .card-a.card-neon-diamond {
+    animation:
+      v3CardFloatA 5.2s ease-in-out infinite,
+      v3NeonBlinkDiamond 2.2s ease-in-out infinite !important;
+  }
+
+  #home-screen.landing-v3 .card-c.card-neon-heart {
+    animation:
+      v3CardFloatC 6.4s ease-in-out infinite,
+      v3NeonBlinkHeart 2.4s ease-in-out infinite !important;
+    animation-delay: 0s, 0.65s !important;
+  }
+
+  #home-screen.landing-v3 .card-b,
+  #home-screen.landing-v3 .hero-card-boss {
+    width: auto !important;
+    height: clamp(98px, 16dvh, 116px) !important;
+    transform: translateY(-3px);
+  }
+
+  #home-screen.landing-v3 .card-b.card-neon-spade,
+  #home-screen.landing-v3 .hero-card-boss.card-neon-spade {
+    animation:
+      v3CardFloatB 5.8s ease-in-out infinite,
+      v3NeonBlinkSpade 1.9s ease-in-out infinite !important;
+    animation-delay: 0s, 0.3s !important;
+  }
+
+  #home-screen.landing-v3 .hero-art .flying-cards {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(6px, 1.6vw, 10px);
+    padding: 2px 4px 0;
   }
 
   #home-screen.landing-v3 .hero-card-rank {
@@ -1806,23 +1957,6 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
   #home-screen.landing-v3 .hero-card-suit {
     font-size: 46cqi;
-  }
-
-  #home-screen.landing-v3 .card-a {
-    animation-name: v3CardFloatA !important;
-  }
-
-  #home-screen.landing-v3 .card-b,
-  #home-screen.landing-v3 .hero-card-boss {
-    width: auto !important;
-    height: clamp(76px, 12.8dvh, 90px) !important;
-    animation-name: v3CardFloatB !important;
-    animation-duration: 5.8s !important;
-    transform: translateY(0);
-  }
-
-  #home-screen.landing-v3 .card-c {
-    animation-name: v3CardFloatC !important;
   }
 
   #home-screen.landing-v3 .hero-brand {
@@ -1852,16 +1986,6 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     opacity: 0.92;
     background:
       radial-gradient(circle, rgba(108, 63, 209, 0.72) 0%, rgba(108, 63, 209, 0.38) 24%, rgba(78, 43, 168, 0.14) 50%, transparent 76%);
-  }
-
-  #home-screen.landing-v3 .hero-art .flying-cards {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: clamp(4px, 1.2vw, 8px);
-    padding: 2px 4px 0;
   }
 
   /* ── 2b. Player setup ── */
@@ -2244,22 +2368,22 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
     --v3-mobile-gap: 4px;
     --v3-row-header: 42px;
     --v3-row-profile: 52px;
-    --v3-row-hero: minmax(138px, 1fr);
+    --v3-row-hero: minmax(162px, 1.18fr);
     --v3-row-play: 44px;
     --v3-row-actions: 48px;
   }
 
   #home-screen.landing-v3 .hero-art {
-    height: clamp(82px, 13.5dvh, 96px);
+    height: clamp(100px, 16dvh, 118px);
   }
 
   #home-screen.landing-v3 .hero-card {
-    height: clamp(60px, 10dvh, 72px);
+    height: clamp(76px, 12.5dvh, 90px);
   }
 
   #home-screen.landing-v3 .card-b,
   #home-screen.landing-v3 .hero-card-boss {
-    height: clamp(68px, 11dvh, 80px) !important;
+    height: clamp(88px, 14.5dvh, 104px) !important;
   }
 
   #home-screen.landing-v3 .hero-stage h1 {
@@ -2315,6 +2439,11 @@ body.landing-music-active #home-screen.landing-v3:not(.hidden) .arena-orb {
 
 @media (prefers-reduced-motion: reduce) {
   #home-screen.landing-v3 .hero-card,
+  #home-screen.landing-v3 .hero-card-rank,
+  #home-screen.landing-v3 .hero-card-suit,
+  #home-screen.landing-v3 .card-neon-diamond,
+  #home-screen.landing-v3 .card-neon-spade,
+  #home-screen.landing-v3 .card-neon-heart,
   #home-screen.landing-v3 .hero-stage h1,
   #home-screen.landing-v3 .play-now,
   #home-screen.landing-v3 .hero-particles,
