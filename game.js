@@ -1109,12 +1109,12 @@
 
   const PLAYER_PROFILE_AVATARS = {
     male: {
-      src: './assets/player/captain-shield.svg',
-      alt: 'Captain America shield profile logo'
+      src: './assets/player/bruno.svg',
+      alt: 'Bruno player profile'
     },
     female: {
-      src: './assets/player/wonder-woman.svg',
-      alt: 'Wonder Woman profile logo'
+      src: './assets/player/luna.svg',
+      alt: 'Luna player profile'
     }
   };
 
@@ -1349,8 +1349,8 @@
             <img class="player-profile-avatar-img" src="${meta.src}" alt="${meta.alt}" loading="lazy" decoding="async" />
           </div>
           <div class="profile-gender-picker" role="group" aria-label="Choose player logo">
-            <button type="button" class="profile-gender-option${meta.gender === 'male' ? ' selected' : ''}" data-profile-gender="male">🛡️ Captain Shield</button>
-            <button type="button" class="profile-gender-option${meta.gender === 'female' ? ' selected' : ''}" data-profile-gender="female">⭐ Wonder Woman</button>
+            <button type="button" class="profile-gender-option${meta.gender === 'male' ? ' selected' : ''}" data-profile-gender="male">Bruno</button>
+            <button type="button" class="profile-gender-option${meta.gender === 'female' ? ' selected' : ''}" data-profile-gender="female">Luna</button>
           </div>
         </div>
         <div class="modal-row"><strong>You</strong><span>Lv ${tier.level} ${tier.emoji} ${tier.title}</span></div>
@@ -3327,64 +3327,52 @@
   }
 
   const LAST_CARD_DOORBELLS = {
-    captain: [
+    'player-bruno': [
       { noise: true, d: 0.022, w: 0, g: 0.09, ff: 3000 },
       { f: 659.25, d: 0.24, type: 'sine', g: 0.17, w: 0.02 },
       { f: 523.25, d: 0.3, type: 'sine', g: 0.16, w: 0.3 }
     ],
-    wonder: [
+    'player-luna': [
       { noise: true, d: 0.02, w: 0, g: 0.08, ff: 3400 },
       { f: 880, d: 0.13, type: 'triangle', g: 0.15, w: 0.02 },
       { f: 1046.5, d: 0.13, type: 'triangle', g: 0.15, w: 0.16 },
       { f: 1318.51, d: 0.2, type: 'sine', g: 0.16, w: 0.32 }
     ],
-    brownie: [
+    bruno: [
       { noise: true, d: 0.03, w: 0, g: 0.07, ff: 500 },
       { f: 196, d: 0.38, type: 'sine', g: 0.18, w: 0.03 },
       { f: 146.83, d: 0.42, type: 'triangle', g: 0.15, w: 0.42 }
     ],
-    bunny: [
+    luna: [
       { noise: true, d: 0.018, w: 0, g: 0.08, ff: 3600 },
       { f: 1174.66, d: 0.09, type: 'sine', g: 0.15, w: 0.02 },
       { f: 1174.66, d: 0.09, type: 'sine', g: 0.14, w: 0.14 },
       { f: 1046.5, d: 0.16, type: 'triangle', g: 0.15, w: 0.26 }
     ],
-    sally: [
-      { noise: true, d: 0.02, w: 0, g: 0.08, ff: 3200 },
-      { chord: [523.25, 659.25, 783.99], d: 0.22, type: 'sine', g: 0.13, w: 0.02 },
-      { chord: [587.33, 698.46, 880], d: 0.24, type: 'triangle', g: 0.12, w: 0.26 }
-    ],
-    cookie: [
+    kiro: [
       { noise: true, d: 0.02, w: 0, g: 0.08, ff: 3100 },
       { f: 392, d: 0.11, type: 'sine', g: 0.14, w: 0.02 },
       { f: 493.88, d: 0.11, type: 'sine', g: 0.14, w: 0.13 },
       { f: 587.33, d: 0.11, type: 'sine', g: 0.14, w: 0.24 },
       { f: 493.88, d: 0.18, type: 'triangle', g: 0.13, w: 0.38 }
     ],
-    mochi: [
-      { noise: true, d: 0.02, w: 0, g: 0.08, ff: 3300 },
-      { f: 698.46, d: 0.1, type: 'sine', g: 0.14, w: 0.02 },
-      { f: 784, d: 0.1, type: 'sine', g: 0.14, w: 0.12 },
-      { f: 880, d: 0.1, type: 'sine', g: 0.14, w: 0.22 },
-      { f: 987.77, d: 0.16, type: 'triangle', g: 0.15, w: 0.34 }
-    ],
-    panda: [
-      { noise: true, d: 0.025, w: 0, g: 0.07, ff: 900 },
-      { f: 329.63, d: 0.28, type: 'sine', g: 0.16, w: 0.03 },
-      { f: 293.66, d: 0.34, type: 'triangle', g: 0.15, w: 0.36 }
-    ],
-    boba: [
-      { noise: true, d: 0.02, w: 0, g: 0.08, ff: 2800 },
-      { sweep: true, f0: 440, f1: 880, d: 0.09, type: 'sine', g: 0.15, w: 0.02 },
-      { sweep: true, f0: 880, f1: 523.25, d: 0.11, type: 'triangle', g: 0.14, w: 0.14 },
-      { f: 659.25, d: 0.18, type: 'sine', g: 0.15, w: 0.28 }
-    ],
-    pip: [
+    pico: [
       { noise: true, d: 0.018, w: 0, g: 0.08, ff: 4000 },
       { f: 1567.98, d: 0.06, type: 'sine', g: 0.14, w: 0.02 },
       { f: 1760, d: 0.06, type: 'sine', g: 0.14, w: 0.1 },
       { f: 1975.53, d: 0.06, type: 'sine', g: 0.14, w: 0.18 },
       { f: 2093, d: 0.12, type: 'triangle', g: 0.15, w: 0.28 }
+    ],
+    bao: [
+      { noise: true, d: 0.02, w: 0, g: 0.08, ff: 2800 },
+      { sweep: true, f0: 440, f1: 880, d: 0.09, type: 'sine', g: 0.15, w: 0.02 },
+      { sweep: true, f0: 880, f1: 523.25, d: 0.11, type: 'triangle', g: 0.14, w: 0.14 },
+      { f: 659.25, d: 0.18, type: 'sine', g: 0.15, w: 0.28 }
+    ],
+    tora: [
+      { noise: true, d: 0.025, w: 0, g: 0.07, ff: 900 },
+      { f: 329.63, d: 0.28, type: 'sine', g: 0.16, w: 0.03 },
+      { f: 293.66, d: 0.34, type: 'triangle', g: 0.15, w: 0.36 }
     ],
     default: [
       { noise: true, d: 0.02, w: 0, g: 0.08, ff: 3000 },

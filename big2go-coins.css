@@ -256,16 +256,28 @@
   word-break: break-word;
 }
 
-.ai-table-reaction--brownie {
+.ai-table-reaction--bruno {
   border-color: rgba(255, 120, 61, 0.55);
 }
 
-.ai-table-reaction--bunny {
-  border-color: rgba(255, 180, 220, 0.55);
+.ai-table-reaction--luna {
+  border-color: rgba(180, 170, 255, 0.55);
 }
 
-.ai-table-reaction--cookie {
-  border-color: rgba(210, 160, 90, 0.58);
+.ai-table-reaction--kiro {
+  border-color: rgba(90, 200, 255, 0.58);
+}
+
+.ai-table-reaction--pico {
+  border-color: rgba(255, 210, 70, 0.58);
+}
+
+.ai-table-reaction--bao {
+  border-color: rgba(242, 184, 128, 0.58);
+}
+
+.ai-table-reaction--tora {
+  border-color: rgba(255, 150, 60, 0.55);
 }
 
 @keyframes aiTableReactionBounce {
