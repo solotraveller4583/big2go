@@ -13,6 +13,7 @@
   const STARTING_COINS = 100;
   const STARTING_LEVEL = 1;
   const MAX_LEVEL = 30;
+  const HINT_LIMIT = 3;
   const LEGEND_MODE_TOTAL_WINS = 300;
   // Wins required to advance from level N → N+1 (29 steps total).
   const LEVEL_UP_WINS = [
@@ -146,6 +147,7 @@
     },
     lastMatchStory: null,
     pendingVictoryReveal: null,
+    hintsUsed: 0,
     hintPendingAction: null,
     levelUpFxTimers: [],
     voice: {
@@ -1082,7 +1084,8 @@
           coins: player.isHuman ? state.coins.balance : playerCoins(player, index),
           hand: player.hand.map(card => card.id)
         })),
-        logs: state.logs.slice(0, 8)
+        logs: state.logs.slice(0, 8),
+        hintsUsed: Number(state.hintsUsed) || 0
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
       if (!state.liveRoom?.code) saveCoinBalance();
@@ -1154,6 +1157,7 @@
         }
       });
       state.logs = Array.isArray(saved.logs) ? saved.logs.slice(0, 8) : [];
+      state.hintsUsed = Math.max(0, Math.min(HINT_LIMIT, Number(saved.hintsUsed) || 0));
       state.selected = new Set();
       state.gameOver = false;
       state.busy = false;
@@ -3911,6 +3915,7 @@
     state.lastHandCounts = {};
     state.liveRoomCardSyncKey = null;
     state.lastCardFlashIndex = null;
+    state.hintsUsed = 0;
     seedLastCardNotifiedFromHands();
     els.sound.textContent = '🔊';
     showGameScreen();
@@ -4986,7 +4991,7 @@
       els.play.textContent = result?.ok ? `Play ${describePlay(result.play)}` : 'Play Selected';
       els.play.disabled = !humanTurn || !canHumanAct() || !result?.ok;
       els.pass.disabled = !humanTurn || !state.trick.play;
-      els.hint.disabled = !humanTurn;
+      updateHintButton(humanTurn);
       els.sort.textContent = `Sort: ${sortModeLabel()}`;
       els.sort.disabled = !humanTurn;
       if (humanTurn && !state.liveRoom) {
@@ -4997,7 +5002,7 @@
     } else {
       els.play.disabled = true;
       els.pass.disabled = true;
-      els.hint.disabled = true;
+      updateHintButton(false);
       els.sort.disabled = true;
     }
     saveGame();
@@ -5191,6 +5196,20 @@
     })[0];
   }
 
+  function pickStrongestMove(candidates) {
+    if (!candidates.length) return null;
+    return candidates.reduce((best, play) => (
+      !best || compareScores(play.score, best.score) > 0 ? play : best
+    ), null);
+  }
+
+  function pickHintMove(hand) {
+    const candidates = legalCandidates(hand);
+    if (!candidates.length) return null;
+    if (!state.trick.play) return pickBigLead(candidates);
+    return pickStrongestMove(candidates);
+  }
+
   function pickBeatMove(candidates, handSize, playingStyle) {
     const sorted = candidates.slice().sort((a, b) => {
       const aKind = FIVE_KIND_ORDER[a.kind] || a.cards.length;
@@ -5218,14 +5237,7 @@
   }
 
   function pickExpertBeatMove(candidates) {
-    return candidates.slice().sort((a, b) => {
-      const aKind = FIVE_KIND_ORDER[a.kind] || a.cards.length;
-      const bKind = FIVE_KIND_ORDER[b.kind] || b.cards.length;
-      const aWeight = a.cards.length * 50 + aKind * 24 + a.score[1] * 2 + a.score[0];
-      const bWeight = b.cards.length * 50 + bKind * 24 + b.score[1] * 2 + b.score[0];
-      if (aWeight !== bWeight) return aWeight - bWeight;
-      return compareScores(a.score, b.score);
-    })[0];
+    return pickStrongestMove(candidates);
   }
 
   function pickStrategistLead(candidates, handSize) {
@@ -5284,18 +5296,38 @@
       return pickSmallLead(candidates);
     }
 
-    if (skillTier === 'legend') return pickExpertBeatMove(candidates);
-    if (skillTier === 'master') return pickBeatMove(candidates, handSize, 'smart');
+    if (skillTier === 'legend') return pickStrongestMove(candidates);
+    if (skillTier === 'master') return pickStrongestMove(candidates);
     if (skillTier === 'strategist') {
-      return pickBeatMove(candidates, handSize, Math.random() < 0.78 ? 'smart' : style);
+      if (state.trick.play?.count === 5 || Math.random() < 0.82) return pickStrongestMove(candidates);
+      return pickBeatMove(candidates, handSize, 'smart');
     }
-    return pickBeatMove(candidates, handSize, style);
+    return pickStrongestMove(candidates);
+  }
+
+  function getHintsRemaining() {
+    return Math.max(0, HINT_LIMIT - (Number(state.hintsUsed) || 0));
+  }
+
+  function updateHintButton(humanTurn) {
+    if (!els.hint) return;
+    const remaining = getHintsRemaining();
+    els.hint.textContent = t('game.hintWithCount', { count: remaining });
+    els.hint.disabled = !humanTurn || remaining <= 0;
   }
 
   function chooseHint() {
     playUiSound('click');
+    if (!canHumanAct()) return;
+    if (getHintsRemaining() <= 0) {
+      showHelp(t('hint.limitTitle'), t('hint.limitMessage', { limit: HINT_LIMIT }));
+      return;
+    }
+    state.hintsUsed += 1;
+    updateHintButton(true);
+    saveGame();
     const hand = getHumanPlayer().hand;
-    const chosen = pickAIMove(hand);
+    const chosen = pickHintMove(hand);
     if (!chosen) {
       clearSelection();
       showOracle(t('hint.titlePass'), `
@@ -5687,6 +5719,7 @@
     }
     if (game.round === 1 && game.firstTrick && !game.trick?.play && shuffleKey !== state.lastShuffleKey) {
       state.lastShuffleKey = shuffleKey;
+      state.hintsUsed = 0;
       state.dealAnimationShown = false;
       playShuffleSound();
     }
