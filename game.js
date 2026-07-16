@@ -166,8 +166,11 @@
       permissionAsked: false,
       pushToTalk: false,
       holdingToTalk: false,
-      mixerOpen: false
-    }
+      mixerOpen: false,
+      pendingAudioPlay: false,
+      remoteUnlockBound: false
+    },
+    lastLocalReactionEcho: { emoji: '', at: 0 }
   };
 
   const audio = {
@@ -1955,7 +1958,7 @@
     pop.setAttribute('aria-label', `${name || 'Player'} reacted with ${emoji}`);
     pop.textContent = emoji;
     row.appendChild(pop);
-    requestAnimationFrame(() => pop.classList.add('show'));
+    pop.classList.add('show');
     setTimeout(() => {
       pop.classList.remove('show');
       setTimeout(() => pop.remove(), 280);
@@ -1990,6 +1993,22 @@
   }
 
   function processReaction(reaction) {
+    const isOwnLiveReaction = Boolean(
+      state.liveRoom?.playerId
+      && reaction?.playerId === state.liveRoom.playerId
+    );
+    const now = Date.now();
+    if (
+      isOwnLiveReaction
+      && reaction?.emoji
+      && reaction.emoji === state.lastLocalReactionEcho.emoji
+      && now - state.lastLocalReactionEcho.at < 1200
+      && reaction.id
+      && !String(reaction.id).startsWith('pending-')
+    ) {
+      rememberReaction(reaction);
+      return;
+    }
     if (!rememberReaction(reaction)) return;
     displayReactionFloat(reaction.emoji);
     displayTableReactionBubble(reaction);
@@ -2015,8 +2034,26 @@
   async function sendLiveRoomReaction(emoji) {
     if (!state.liveRoom?.code) return;
     const now = Date.now();
-    if (now - state.lastReactionSentAt < 700) return;
+    if (now - state.lastReactionSentAt < 450) return;
     state.lastReactionSentAt = now;
+    state.lastLocalReactionEcho = { emoji, at: now };
+    processReaction({
+      id: `pending-${state.liveRoom.playerId}-${now}`,
+      playerId: state.liveRoom.playerId,
+      name: getResolvedPlayerName(),
+      emoji,
+      playerIndex: state.humanIndex
+    });
+    const payload = {
+      type: 'room:reaction',
+      emoji,
+      code: state.liveRoom.code,
+      playerId: state.liveRoom.playerId
+    };
+    if (state.roomSocket?.readyState === WebSocket.OPEN) {
+      state.roomSocket.send(JSON.stringify(payload));
+      return;
+    }
     const result = await sendLiveRoomMessage({ type: 'room:reaction', emoji });
     if (result?.reactions) processReactions(result.reactions);
   }
@@ -2024,6 +2061,8 @@
   function sendPlayerReaction(emoji) {
     const normalized = normalizeReactionEmoji(emoji);
     if (!normalized) return;
+    unlockAudioFromGesture();
+    resumePendingRemoteAudio();
     if (state.liveRoom?.code) {
       sendLiveRoomReaction(normalized);
       return;
@@ -4471,7 +4510,8 @@
     state.voice.peers.forEach((entry, playerId) => {
       if (entry.audio) {
         entry.audio.muted = state.voice.speakerMuted || state.voice.mutedPlayers.has(playerId);
-        entry.audio.volume = state.voice.volumes.get(playerId) ?? 1;
+        const volume = state.voice.volumes.get(playerId);
+        entry.audio.volume = Math.max(0, Math.min(1, volume ?? state.voiceVolume ?? 0.9));
       }
     });
   }
@@ -4548,11 +4588,18 @@
   }
 
   function applyVoicePayload(voice) {
+    const previous = new Map((state.voice.statuses || []).map(entry => [entry.id, Boolean(entry.enabled)]));
     state.voice.statuses = Array.isArray(voice) ? voice : [];
+    state.voice.statuses.forEach(entry => {
+      if (entry?.id && entry.enabled && !previous.get(entry.id)) {
+        callVoicePeer(entry.id).catch(() => {});
+      }
+    });
     syncVoiceConnections().catch(() => {});
     updateVoicePanel();
     renderOpponents();
     renderVoiceMixer();
+    resumePendingRemoteAudio();
   }
 
   function restoreVoiceInRoom() {
@@ -4650,17 +4697,51 @@
     if (!audioEl) return;
     audioEl.setAttribute('playsinline', '');
     audioEl.setAttribute('webkit-playsinline', '');
+    audioEl.autoplay = true;
     try {
       await audioEl.play();
+      state.voice.pendingAudioPlay = false;
     } catch (_) {
       state.voice.pendingAudioPlay = true;
     }
   }
 
+  function bindRemoteAudioUnlock() {
+    if (state.voice.remoteUnlockBound) return;
+    state.voice.remoteUnlockBound = true;
+    const unlock = () => {
+      unlockAudioFromGesture();
+      resumePendingRemoteAudio();
+    };
+    ['pointerdown', 'touchstart', 'click'].forEach(type => {
+      document.addEventListener(type, unlock, { passive: true, capture: true });
+    });
+  }
+
   async function resumePendingRemoteAudio() {
-    if (!state.voice.pendingAudioPlay) return;
-    state.voice.pendingAudioPlay = false;
-    await Promise.all([...state.voice.peers.values()].map(entry => playRemoteAudio(entry.audio)));
+    await unlockAudio().catch(() => {});
+    const peers = [...state.voice.peers.values()];
+    await Promise.all(peers.map(entry => playRemoteAudio(entry.audio)));
+    if (peers.some(entry => entry.audio && entry.audio.paused)) {
+      state.voice.pendingAudioPlay = true;
+    } else {
+      state.voice.pendingAudioPlay = false;
+    }
+  }
+
+  function attachRemoteAudioStream(entry, stream, playerId) {
+    if (!entry || !stream) return;
+    if (!entry.audio) {
+      const audioEl = document.createElement('audio');
+      audioEl.autoplay = true;
+      audioEl.playsInline = true;
+      audioEl.dataset.voicePeer = playerId;
+      entry.audio = audioEl;
+      (els.remoteAudio || document.body).appendChild(audioEl);
+    }
+    if (entry.audio.srcObject !== stream) entry.audio.srcObject = stream;
+    updateRemoteAudioMute();
+    playRemoteAudio(entry.audio);
   }
 
   function sendVoiceSignal(targetId, signal) {
@@ -4680,7 +4761,9 @@
     if (!Array.isArray(signals) || !signals.length) return;
     signals.forEach(entry => {
       if (!entry?.from || !entry?.signal) return;
-      handleVoiceSignal(entry.from, entry.signal).catch(() => {});
+      handleVoiceSignal(entry.from, entry.signal)
+        .then(() => resumePendingRemoteAudio())
+        .catch(() => {});
     });
   }
 
@@ -4715,19 +4798,7 @@
     pc.ontrack = event => {
       const stream = event.streams?.[0] || (event.track ? new MediaStream([event.track]) : null);
       if (!stream) return;
-      if (!entry.audio) {
-        const audioEl = document.createElement('audio');
-        audioEl.autoplay = true;
-        audioEl.playsInline = true;
-        audioEl.srcObject = stream;
-        audioEl.volume = state.voice.volumes.get(playerId) ?? state.voiceVolume ?? 0.9;
-        audioEl.muted = state.voice.speakerMuted || state.voice.mutedPlayers.has(playerId);
-        entry.audio = audioEl;
-        (els.remoteAudio || document.body).appendChild(audioEl);
-      } else if (entry.audio.srcObject !== stream) {
-        entry.audio.srcObject = stream;
-      }
-      playRemoteAudio(entry.audio);
+      attachRemoteAudioStream(entry, stream, playerId);
     };
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === 'failed') {
@@ -4752,6 +4823,23 @@
     await syncVoiceConnections();
   }
 
+  async function renegotiateAllVoicePeers() {
+    if (!state.liveRoom?.code || !state.voice.enabled || !('RTCPeerConnection' in window)) return;
+    try { await ensureVoiceStream(); } catch (_) { return; }
+    for (const playerId of voicePeerIds()) {
+      const entry = await createVoicePeer(playerId).catch(() => null);
+      if (!entry?.pc) continue;
+      attachLocalVoiceTracks(entry.pc);
+      const { pc } = entry;
+      if (!['stable', 'have-local-offer'].includes(pc.signalingState)) continue;
+      try {
+        const offer = await pc.createOffer({ offerToReceiveAudio: true });
+        await pc.setLocalDescription(offer);
+        sendVoiceSignal(playerId, { description: serializeSessionDescription(pc.localDescription) });
+      } catch (_) {}
+    }
+  }
+
   async function syncVoiceConnections() {
     if (!state.liveRoom?.code || !('RTCPeerConnection' in window)) return;
     await fetchVoiceIceServers().catch(() => {});
@@ -4761,11 +4849,23 @@
     }
     if (!state.voice.enabled) return;
     for (const id of peers) {
-      if (!shouldInitiateVoiceCall(id)) continue;
       const entry = state.voice.peers.get(id);
-      const connectionState = entry?.pc?.connectionState;
-      if (connectionState === 'connected' || connectionState === 'connecting') continue;
-      await callVoicePeer(id).catch(() => {});
+      if (!entry?.pc) continue;
+      const connectionState = entry.pc.connectionState;
+      const missingRemoteAudio = !entry.audio;
+      if (!missingRemoteAudio && connectionState !== 'failed' && connectionState !== 'disconnected' && connectionState !== 'new') continue;
+      if (shouldInitiateVoiceCall(id)) {
+        await callVoicePeer(id).catch(() => {});
+        continue;
+      }
+      if (missingRemoteAudio && entry.pc.signalingState === 'stable') {
+        try {
+          attachLocalVoiceTracks(entry.pc);
+          const offer = await entry.pc.createOffer({ offerToReceiveAudio: true });
+          await entry.pc.setLocalDescription(offer);
+          sendVoiceSignal(id, { description: serializeSessionDescription(entry.pc.localDescription) });
+        } catch (_) {}
+      }
     }
   }
 
@@ -4906,6 +5006,7 @@
       updateVoicePanel();
       sendVoiceState({ force: true });
       await syncVoiceConnections();
+      await renegotiateAllVoicePeers();
       await resumePendingRemoteAudio();
     } catch (error) {
       showOracle('Voice unavailable', error.message || 'Allow microphone access to use room voice chat.');
@@ -5679,6 +5780,7 @@
     if (payload.reactions) processReactions(payload.reactions);
     if (payload.voice) applyVoicePayload(payload.voice);
     processVoiceSignals(payload.voiceSignals);
+    resumePendingRemoteAudio();
     return payload;
   }
 
@@ -5706,9 +5808,10 @@
     if (state.roomPollTimer) clearInterval(state.roomPollTimer);
     state.roomPollTimer = setInterval(() => {
       fetchLiveRoomState().catch(() => {});
-    }, 1800);
+    }, 1200);
     fetchLiveRoomState().catch(() => {});
     startVoiceSignalPolling();
+    bindRemoteAudioUnlock();
   }
 
   function stopRoomPolling() {
@@ -5959,7 +6062,9 @@
           processReaction(message.reaction);
         }
         if (message.type === 'voice:signal') {
-          handleVoiceSignal(message.from, message.signal).catch(() => {});
+          handleVoiceSignal(message.from, message.signal)
+            .then(() => resumePendingRemoteAudio())
+            .catch(() => {});
         }
         if (message.type === 'room:error') {
           state.busy = false;
@@ -6396,6 +6501,7 @@
 
   function bindEvents() {
     bindLandingAudioUnlock();
+    bindRemoteAudioUnlock();
     bindLandingPlayActions();
     wireLandingPlayerSetup();
     els.game?.addEventListener('pointerdown', () => {

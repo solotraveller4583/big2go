@@ -308,7 +308,7 @@ function addRoomReaction(room, playerId, emoji) {
   const reactionEmoji = sanitizeReaction(emoji);
   if (!reactionEmoji) return { ok: false, error: 'Invalid reaction' };
   const now = Date.now();
-  if (player.lastReactionAt && now - player.lastReactionAt < 700) {
+  if (player.lastReactionAt && now - player.lastReactionAt < 450) {
     return { ok: false, error: 'Please wait before sending another reaction' };
   }
   player.lastReactionAt = now;
