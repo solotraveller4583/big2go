@@ -454,11 +454,214 @@ body.level-up-active .app-shell {
 .level-up-journey-strip {
   display: grid;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 10px 10px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   text-align: left;
+}
+
+.level-up-chapter {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--journey-accent) 85%, white);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--journey-accent) 35%, transparent);
+}
+
+.level-up-chapter.hidden {
+  display: none;
+}
+
+/* ── Rank journey: Rookie → Legend ── */
+.level-up-rank-path {
+  display: grid;
+  gap: 8px;
+}
+
+.level-up-rank-path-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.level-up-rank-path-label {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 236, 170, 0.78);
+}
+
+.level-up-rank-path-step {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--journey-accent) 88%, white);
+  white-space: nowrap;
+}
+
+.level-up-rank-rail {
+  position: relative;
+  height: 8px;
+  margin: 2px 0 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: visible;
+}
+
+.level-up-rank-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--journey-secondary), var(--journey-accent), var(--journey-tertiary));
+  background-size: 200% 100%;
+  animation: levelUpTrackShimmer 2.4s linear infinite;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--journey-accent) 45%, transparent);
+  transition: width 0.9s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.level-up-rank-pin {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 1000;
+  color: #2a0838;
+  background: var(--journey-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--journey-accent) 55%, transparent);
+  white-space: nowrap;
+  animation: levelUpRankPinPop 0.65s cubic-bezier(0.2, 0.9, 0.2, 1.15) 0.35s both;
+}
+
+@keyframes levelUpRankPinPop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.level-up-rank-stops {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.level-up-rank-stop {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 2px 4px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.level-up-rank-stop strong {
+  font-size: 0.58rem;
+  line-height: 1.15;
+  font-weight: 1000;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.level-up-rank-stop small {
+  font-size: 0.52rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.1;
+}
+
+.level-up-rank-node {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.level-up-rank-stop--completed .level-up-rank-node {
+  border-color: var(--tier-color);
+  background: color-mix(in srgb, var(--tier-color) 22%, rgba(0, 0, 0, 0.35));
+  box-shadow: 0 0 10px var(--tier-glow);
+  opacity: 0.92;
+}
+
+.level-up-rank-stop--completed strong {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.level-up-rank-stop--current {
+  border-color: color-mix(in srgb, var(--tier-color) 45%, transparent);
+  background: color-mix(in srgb, var(--tier-color) 10%, rgba(255, 255, 255, 0.04));
+  box-shadow: 0 0 18px var(--tier-glow);
+  transform: translateY(-2px);
+}
+
+.level-up-rank-stop--current .level-up-rank-node {
+  border-color: var(--tier-color);
+  background: color-mix(in srgb, var(--tier-color) 28%, rgba(0, 0, 0, 0.2));
+  box-shadow: 0 0 16px var(--tier-glow);
+  animation: levelUpRankNodePulse 1.8s ease-in-out infinite;
+}
+
+.level-up-rank-stop--current strong {
+  color: #fff;
+}
+
+.level-up-rank-stop--unlocked .level-up-rank-node {
+  border-color: var(--tier-color);
+  background: color-mix(in srgb, var(--tier-color) 35%, rgba(0, 0, 0, 0.15));
+  box-shadow: 0 0 22px var(--tier-glow);
+  animation: levelUpRankUnlock 0.85s cubic-bezier(0.2, 0.9, 0.2, 1.2) both;
+}
+
+.level-up-rank-stop--unlocked {
+  border-color: color-mix(in srgb, var(--tier-color) 55%, transparent);
+  background: color-mix(in srgb, var(--tier-color) 14%, rgba(255, 255, 255, 0.05));
+}
+
+.level-up-rank-stop--locked {
+  opacity: 0.42;
+}
+
+.level-up-rank-stop--locked .level-up-rank-node {
+  filter: grayscale(0.35);
+}
+
+.level-up-rank-unlock {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #2a1200;
+  background: linear-gradient(180deg, #ffe27a, var(--journey-accent));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--journey-accent) 35%, transparent);
+  animation: levelUpChipPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes levelUpRankNodePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 12px var(--tier-glow); }
+  50% { transform: scale(1.08); box-shadow: 0 0 22px var(--tier-glow); }
+}
+
+@keyframes levelUpRankUnlock {
+  0% { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+  60% { opacity: 1; transform: scale(1.15) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
 }
 
 .level-up-journey-top {
@@ -961,6 +1164,11 @@ body.level-up-active .app-shell {
   .level-up-screen.is-celebrating .level-up-card,
   .level-up-screen.is-celebrating .level-up-title,
   .level-up-screen.is-celebrating .level-up-avatar-wrap,
+  .level-up-rank-fill,
+  .level-up-rank-pin,
+  .level-up-rank-stop--current .level-up-rank-node,
+  .level-up-rank-stop--unlocked .level-up-rank-node,
+  .level-up-rank-unlock,
   .level-up-burst,
   .level-up-ring,
   .level-up-spark,
