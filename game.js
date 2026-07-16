@@ -239,6 +239,15 @@
 
   const CARNIVAL_CELEBRATION_HUES = [42, 320, 280, 15, 195, 330];
 
+  const LEVEL_JOURNEY_THEMES = [
+    { id: 'gold-rush', emoji: '🎠', accent: '#ffd24a', secondary: '#ff8a00', tertiary: '#ff2d95', chase: 2.1, motion: 'gallop' },
+    { id: 'neon-pulse', emoji: '✨', accent: '#ff2d95', secondary: '#ff47d4', tertiary: '#00e5ff', chase: 1.7, motion: 'pulse' },
+    { id: 'cyber-wave', emoji: '⚡', accent: '#00e5ff', secondary: '#4d9fff', tertiary: '#b347ff', chase: 2.5, motion: 'wave' },
+    { id: 'ruby-flame', emoji: '🔥', accent: '#ff4757', secondary: '#ff8a00', tertiary: '#ffd24a', chase: 1.9, motion: 'flare' },
+    { id: 'jade-luck', emoji: '🍀', accent: '#2ee59d', secondary: '#00e5ff', tertiary: '#ffd24a', chase: 2.3, motion: 'spark' },
+    { id: 'violet-crown', emoji: '👑', accent: '#b347ff', secondary: '#ff2d95', tertiary: '#ffd24a', chase: 1.5, motion: 'royal' }
+  ];
+
   const els = {
     home: document.querySelector('#home-screen'),
     game: document.querySelector('#game-screen'),
@@ -261,11 +270,10 @@
     levelUpAvatar: document.querySelector('#level-up-avatar'),
     levelUpFrom: document.querySelector('#level-up-from'),
     levelUpTo: document.querySelector('#level-up-to'),
-    levelUpMilestone: document.querySelector('#level-up-milestone'),
-    levelUpStats: document.querySelector('#level-up-stats'),
     levelUpQuote: document.querySelector('#level-up-quote'),
-    levelUpTier: document.querySelector('#level-up-tier'),
-    levelUpSkill: document.querySelector('#level-up-skill'),
+    levelUpJourneyStrip: document.querySelector('#level-up-journey-strip'),
+    levelUpJourneyIcon: document.querySelector('#level-up-journey-icon'),
+    levelUpNeonChase: document.querySelector('#level-up-neon-chase'),
     levelUpFxLayer: document.querySelector('#level-up-fx-layer'),
     levelUpContinue: document.querySelector('#level-up-continue'),
     exitConfirmDialog: document.querySelector('#exit-confirm-dialog'),
@@ -2482,12 +2490,92 @@
     state.levelUpFxTimers.forEach(timer => clearTimeout(timer));
     state.levelUpFxTimers = [];
     if (els.levelUp) {
-      els.levelUp.classList.remove('is-celebrating', 'level-up-screen--tier-promo', 'level-up-screen--legend');
+      els.levelUp.classList.remove(
+        'is-celebrating',
+        'level-up-screen--tier-promo',
+        'level-up-screen--legend',
+        'level-up-motion-gallop',
+        'level-up-motion-pulse',
+        'level-up-motion-wave',
+        'level-up-motion-flare',
+        'level-up-motion-spark',
+        'level-up-motion-royal'
+      );
       els.levelUp.removeAttribute('data-level');
       els.levelUp.removeAttribute('data-tier');
+      els.levelUp.removeAttribute('data-journey-theme');
       els.levelUp.style.removeProperty('--level-up-hue');
+      els.levelUp.style.removeProperty('--journey-accent');
+      els.levelUp.style.removeProperty('--journey-secondary');
+      els.levelUp.style.removeProperty('--journey-tertiary');
+      els.levelUp.style.removeProperty('--neon-chase-speed');
     }
+    if (els.levelUpNeonChase) els.levelUpNeonChase.innerHTML = '';
     if (els.levelUpFxLayer) els.levelUpFxLayer.innerHTML = '';
+  }
+
+  function getLevelJourneyTheme(levelUp) {
+    const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(levelUp?.level) || STARTING_LEVEL));
+    const tierPromo = crossedSkillTier(levelUp?.previousLevel || level - 1, level);
+    if (level >= MAX_LEVEL) {
+      return { ...LEVEL_JOURNEY_THEMES[0], id: 'legend-crown', emoji: '🏆', accent: '#ffd700', secondary: '#fff4b0', tertiary: '#ff2d95', chase: 1.2, motion: 'royal' };
+    }
+    if (tierPromo) {
+      const promoThemes = ['violet-crown', 'ruby-flame', 'cyber-wave', 'gold-rush'];
+      const promoId = promoThemes[Math.floor(level / 8) % promoThemes.length];
+      const base = LEVEL_JOURNEY_THEMES.find(entry => entry.id === promoId) || LEVEL_JOURNEY_THEMES[0];
+      return { ...base, chase: Math.max(1.2, base.chase - 0.3) };
+    }
+    return LEVEL_JOURNEY_THEMES[(level - 1) % LEVEL_JOURNEY_THEMES.length];
+  }
+
+  function buildNeonChaseTrack(theme, level) {
+    if (!els.levelUpNeonChase) return;
+    els.levelUpNeonChase.innerHTML = '';
+    const bulbCount = 28 + (level % 5) * 2;
+    const colors = [theme.accent, theme.secondary, theme.tertiary];
+    for (let i = 0; i < bulbCount; i += 1) {
+      const bulb = document.createElement('span');
+      bulb.className = 'level-up-neon-bulb';
+      const t = i / bulbCount;
+      if (t < 0.25) {
+        const p = t / 0.25;
+        bulb.style.left = `${2 + p * 96}%`;
+        bulb.style.top = '0%';
+      } else if (t < 0.5) {
+        const p = (t - 0.25) / 0.25;
+        bulb.style.left = '100%';
+        bulb.style.top = `${2 + p * 96}%`;
+      } else if (t < 0.75) {
+        const p = (t - 0.5) / 0.25;
+        bulb.style.left = `${98 - p * 96}%`;
+        bulb.style.top = '100%';
+      } else {
+        const p = (t - 0.75) / 0.25;
+        bulb.style.left = '0%';
+        bulb.style.top = `${98 - p * 96}%`;
+      }
+      bulb.style.setProperty('--bulb-i', String(i));
+      bulb.style.setProperty('--bulb-count', String(bulbCount));
+      bulb.style.setProperty('--bulb-color', colors[i % colors.length]);
+      bulb.style.animationDuration = `${theme.chase}s`;
+      els.levelUpNeonChase.appendChild(bulb);
+    }
+  }
+
+  function applyLevelUpJourneyTheme(levelUp) {
+    const theme = getLevelJourneyTheme(levelUp);
+    const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(levelUp?.level) || STARTING_LEVEL));
+    if (!els.levelUp) return theme;
+    els.levelUp.dataset.journeyTheme = theme.id;
+    els.levelUp.style.setProperty('--journey-accent', theme.accent);
+    els.levelUp.style.setProperty('--journey-secondary', theme.secondary);
+    els.levelUp.style.setProperty('--journey-tertiary', theme.tertiary);
+    els.levelUp.style.setProperty('--neon-chase-speed', `${theme.chase}s`);
+    els.levelUp.classList.add(`level-up-motion-${theme.motion}`);
+    if (els.levelUpJourneyIcon) els.levelUpJourneyIcon.textContent = theme.emoji;
+    buildNeonChaseTrack(theme, level);
+    return theme;
   }
 
   function getLevelCelebrationStyle(levelUp) {
@@ -2616,6 +2704,7 @@
     const style = getLevelCelebrationStyle(levelUp);
     if (!els.levelUp) return;
     clearLevelUpCelebration();
+    applyLevelUpJourneyTheme(levelUp);
 
     els.levelUp.dataset.level = String(style.level);
     els.levelUp.dataset.tier = style.tier.skill;
@@ -2757,6 +2846,10 @@
     const progress = getProfileProgress(levelUp.totalWins || 0);
     const tier = levelUp.tier || getLevelTier(levelUp.level);
     const winsToNext = progress.maxed ? 0 : progress.winsNeeded;
+    const subject = levelUp.kind === 'human' ? t('levelUp.yourWins') : t('levelUp.rivalWins', { name: levelUp.name });
+    const nextLabel = progress.maxed
+      ? t('levelUp.legendMax')
+      : t('levelUp.winsToNext', { count: winsToNext });
 
     if (els.levelUpEyebrow) els.levelUpEyebrow.textContent = copy.eyebrow;
     if (els.levelUpTitle) els.levelUpTitle.textContent = copy.title;
@@ -2764,25 +2857,10 @@
     if (els.levelUpFrom) els.levelUpFrom.textContent = `Lv ${levelUp.previousLevel}`;
     if (els.levelUpTo) els.levelUpTo.textContent = `Lv ${levelUp.level}`;
 
-    if (els.levelUpMilestone) {
-      els.levelUpMilestone.classList.toggle('hidden', !copy.milestone);
-      els.levelUpMilestone.textContent = copy.tierLabel || (levelUp.kind === 'human' ? '⭐ Rank Promotion' : '⭐ Rival Milestone');
-    }
-
-    if (els.levelUpTier) {
-      els.levelUpTier.textContent = copy.tierLabel || `${tier.emoji} ${tier.title}`;
-      els.levelUpTier.classList.remove('hidden');
-    }
-
-    if (els.levelUpSkill) {
-      const showSkill = Boolean(copy.skillNote);
-      els.levelUpSkill.classList.toggle('hidden', !showSkill);
-      els.levelUpSkill.textContent = showSkill ? `⚡ ${copy.skillNote}` : '';
-    }
-
     if (els.levelUpQuote) {
-      els.levelUpQuote.textContent = copy.quote;
-      els.levelUpQuote.classList.remove('hidden');
+      const showQuote = Boolean(copy.quote && (copy.milestone || levelUp.level >= MAX_LEVEL - 2));
+      els.levelUpQuote.textContent = copy.quote || '';
+      els.levelUpQuote.classList.toggle('hidden', !showQuote);
     }
 
     if (els.levelUpAvatar) {
@@ -2799,20 +2877,31 @@
       }
     }
 
-    if (els.levelUpStats) {
-      const subject = levelUp.kind === 'human' ? 'Your Wins' : `${levelUp.name} Wins`;
-      els.levelUpStats.innerHTML = `
-        <div class="level-up-stat">
-          <small>${subject}</small>
-          <strong>${levelUp.totalWins || 0}</strong>
+    if (els.levelUpJourneyStrip) {
+      const milestoneChip = copy.milestone
+        ? `<span class="level-up-chip level-up-chip--milestone">${copy.tierLabel || tier.emoji + ' ' + tier.title}</span>`
+        : `<span class="level-up-chip">${tier.emoji} ${tier.title}</span>`;
+      const skillChip = copy.skillNote
+        ? `<span class="level-up-chip level-up-chip--skill">⚡ ${copy.skillNote}</span>`
+        : '';
+      els.levelUpJourneyStrip.innerHTML = `
+        <div class="level-up-journey-top">
+          ${milestoneChip}
+          ${skillChip}
         </div>
-        <div class="level-up-stat">
-          <small>Rank</small>
-          <strong>${tier.emoji} ${tier.title}</strong>
+        <div class="level-up-journey-stats">
+          <div class="level-up-journey-stat">
+            <small>${subject}</small>
+            <strong>${levelUp.totalWins || 0}</strong>
+          </div>
+          <div class="level-up-journey-stat">
+            <small>${t('levelUp.nextStop')}</small>
+            <strong>${nextLabel}</strong>
+          </div>
         </div>
-        <div class="level-up-stat level-up-stat--wide">
-          <small>Next Level In</small>
-          <strong>${progress.maxed ? 'Legend Mode — MAX' : `${winsToNext} more win${winsToNext === 1 ? '' : 's'}`}</strong>
+        <div class="level-up-journey-track" aria-hidden="true">
+          <span class="level-up-journey-fill" style="width:${Math.min(100, Math.max(8, ((levelUp.level - 1) / (MAX_LEVEL - 1)) * 100))}%"></span>
+          <span class="level-up-journey-marker" style="left:${Math.min(96, Math.max(4, ((levelUp.level - 1) / (MAX_LEVEL - 1)) * 100))}%">Lv ${levelUp.level}</span>
         </div>`;
     }
   }
