@@ -268,9 +268,12 @@
     sessionBackHome: document.querySelector('#session-back-home'),
     resultStory: document.querySelector('#game-result-story-screen'),
     resultStoryHeadline: document.querySelector('#result-story-headline'),
+    resultStoryHero: document.querySelector('#result-story-hero'),
     resultStoryPlayers: document.querySelector('#result-story-players'),
     resultStoryStats: document.querySelector('#result-story-stats'),
     resultStoryFarewells: document.querySelector('#result-story-farewells'),
+    resultStoryNeonChase: document.querySelector('#result-story-neon-chase'),
+    resultStoryFxLayer: document.querySelector('#result-story-fx-layer'),
     resultStoryHome: document.querySelector('#result-story-home'),
     resultStoryPlayAgain: document.querySelector('#result-story-play-again'),
     levelUp: document.querySelector('#level-up-screen'),
@@ -672,6 +675,7 @@
     els.game?.classList.add('hidden');
     els.sessionComplete?.classList.add('hidden');
     els.resultStory?.classList.add('hidden');
+    els.resultStory?.classList.remove('is-revealing');
     els.levelUp?.classList.add('hidden');
     document.body.classList.remove('live-room-active', 'result-story-active', 'session-complete-active', 'level-up-active');
     els.voicePanel?.classList.add('hidden');
@@ -686,14 +690,6 @@
     renderRoomRecovery();
     window.scrollTo(0, 0);
     startLandingMusic();
-  }
-
-  function showResultStoryScreen() {
-    stopLandingMusic();
-    hideAllScreens();
-    els.resultStory?.classList.remove('hidden');
-    document.body.classList.add('result-story-active');
-    window.scrollTo(0, 0);
   }
 
   function captureMatchStory(winner, coinPrize = 0) {
@@ -721,78 +717,200 @@
     };
   }
 
+  function showResultStoryScreen() {
+    stopLandingMusic();
+    hideAllScreens();
+    els.resultStory?.classList.remove('hidden');
+    els.resultStory?.classList.add('is-revealing');
+    document.body.classList.add('result-story-active');
+    window.scrollTo(0, 0);
+  }
+
+  function buildResultStoryNeonChase(container, humanWon) {
+    if (!container) return;
+    container.innerHTML = '';
+    const theme = humanWon
+      ? { accent: '#ffd24a', secondary: '#ff8a00', tertiary: '#ff2d95', chase: 2.1 }
+      : { accent: '#7dd3fc', secondary: '#b347ff', tertiary: '#00e5ff', chase: 2.4 };
+    const colors = [theme.accent, theme.secondary, theme.tertiary];
+    const bulbCount = 28;
+    for (let i = 0; i < bulbCount; i += 1) {
+      const bulb = document.createElement('span');
+      bulb.className = 'result-story-neon-bulb';
+      const t = i / bulbCount;
+      if (t < 0.25) {
+        bulb.style.left = `${2 + (t / 0.25) * 96}%`;
+        bulb.style.top = '0%';
+      } else if (t < 0.5) {
+        bulb.style.left = '100%';
+        bulb.style.top = `${2 + ((t - 0.25) / 0.25) * 96}%`;
+      } else if (t < 0.75) {
+        bulb.style.left = `${98 - ((t - 0.5) / 0.25) * 96}%`;
+        bulb.style.top = '100%';
+      } else {
+        bulb.style.left = '0%';
+        bulb.style.top = `${98 - ((t - 0.75) / 0.25) * 96}%`;
+      }
+      bulb.style.setProperty('--bulb-i', String(i));
+      bulb.style.setProperty('--bulb-count', String(bulbCount));
+      bulb.style.setProperty('--bulb-color', colors[i % colors.length]);
+      bulb.style.animationDuration = `${theme.chase}s`;
+      container.appendChild(bulb);
+    }
+  }
+
+  function spawnResultStoryFx(layer, humanWon) {
+    if (!layer) return;
+    layer.innerHTML = '';
+    const symbols = ['♠', '♥', '♦', '♣', '★', '✨'];
+    for (let i = 0; i < 8; i += 1) {
+      const bit = document.createElement('span');
+      bit.className = 'result-story-float-bit';
+      bit.textContent = symbols[i % symbols.length];
+      bit.style.setProperty('--fx-x', `${6 + Math.random() * 88}%`);
+      bit.style.setProperty('--fx-delay', `${Math.random() * 2.2}s`);
+      bit.style.setProperty('--fx-drift', `${(Math.random() - 0.5) * 70}px`);
+      bit.style.setProperty('--fx-duration', `${3 + Math.random() * 2}s`);
+      layer.appendChild(bit);
+    }
+    const wave = document.createElement('div');
+    wave.className = 'result-story-shockwave';
+    layer.appendChild(wave);
+    setTimeout(() => wave.remove(), 1200);
+  }
+
+  function renderResultStoryHero(winner) {
+    if (!els.resultStoryHero || !winner) return;
+    els.resultStoryHero.innerHTML = '';
+    const rings = document.createElement('div');
+    rings.className = 'result-story-hero-rings';
+    rings.setAttribute('aria-hidden', 'true');
+    rings.innerHTML = '<span></span><span></span>';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'result-story-hero-avatar';
+    if (winner.isHuman) {
+      renderPlayerProfileAvatar(avatar, { extraClass: 'result-story-hero-avatar' });
+    } else {
+      window.Big2GoAICharacters?.renderAvatar(avatar, { characterId: winner.characterId, name: winner.name }, {
+        className: 'character-avatar',
+        imgClassName: 'character-avatar-img'
+      });
+    }
+
+    const crown = document.createElement('span');
+    crown.className = 'result-story-hero-crown';
+    crown.textContent = '🏆';
+    crown.setAttribute('aria-hidden', 'true');
+
+    const label = document.createElement('p');
+    label.className = 'result-story-hero-name';
+    label.textContent = winner.name;
+
+    const badge = document.createElement('span');
+    badge.className = 'result-story-hero-badge';
+    badge.textContent = t('result.winner');
+
+    els.resultStoryHero.append(rings, avatar, crown, label, badge);
+  }
+
   function renderGameResultStory(story) {
     if (!story) return;
+    const humanWon = Boolean(story.humanWon);
+    els.resultStory?.classList.toggle('result-story-screen--win', humanWon);
+    els.resultStory?.classList.toggle('result-story-screen--loss', !humanWon);
+
+    buildResultStoryNeonChase(els.resultStoryNeonChase, humanWon);
+    spawnResultStoryFx(els.resultStoryFxLayer, humanWon);
+
+    const winner = story.players.find(player => player.won) || story.players[0];
     if (els.resultStoryHeadline) {
-      els.resultStoryHeadline.innerHTML = story.humanWon
-        ? `You won the table! +${coinIcon()} ${story.coinPrize}`
-        : `${story.winnerName} won this round`;
+      els.resultStoryHeadline.innerHTML = humanWon
+        ? `${t('result.youWon')} +${coinIcon()} ${story.coinPrize}`
+        : t('result.theyWon', { name: story.winnerName });
     }
+
+    renderResultStoryHero(winner);
+
     if (els.resultStoryStats) {
       const humanProfile = loadPlayerProfile();
-      const humanProgress = getProfileProgress(humanProfile.totalWins);
       const humanTier = getLevelTier(humanProfile.level);
       els.resultStoryStats.innerHTML = `
-        <div class="result-story-stat"><small>Your Rank</small><strong>${humanTier.emoji} Lv ${humanTier.level}</strong></div>
-        <div class="result-story-stat"><small>Tier</small><strong>${humanTier.title}</strong></div>
-        <div class="result-story-stat"><small>Level Progress</small><strong>${humanProgress.maxed ? 'MAX' : `${humanProgress.current} / ${humanProgress.target}`}</strong></div>
-        <div class="result-story-stat"><small>Your Coins</small><strong>${coinIcon()} ${story.coinsBalance}</strong></div>
-        <div class="result-story-stat result-story-stat--wide"><small>Best Combo</small><strong>${story.bestCombo}</strong></div>`;
+        <div class="result-story-chip">
+          <span class="result-story-chip-icon" aria-hidden="true">🪙</span>
+          <small>${t('result.yourCoins')}</small>
+          <strong>${story.coinsBalance}</strong>
+        </div>
+        <div class="result-story-chip">
+          <span class="result-story-chip-icon" aria-hidden="true">${humanTier.emoji}</span>
+          <small>${t('result.yourRank')}</small>
+          <strong>Lv ${humanTier.level}</strong>
+        </div>
+        <div class="result-story-chip">
+          <span class="result-story-chip-icon" aria-hidden="true">✨</span>
+          <small>${t('result.sparks')}</small>
+          <strong>${story.sparks}</strong>
+        </div>`;
     }
+
     if (els.resultStoryPlayers) {
-      els.resultStoryPlayers.innerHTML = '';
-      story.players.forEach(player => {
-        const row = document.createElement('article');
-        row.className = `result-story-player${player.won ? ' won' : ''}${player.isHuman ? ' human' : ''}`;
-        const avatar = document.createElement('div');
-        avatar.className = 'result-story-player-avatar';
+      const others = story.players.filter(player => !player.won);
+      els.resultStoryPlayers.innerHTML = others.length
+        ? `<p class="result-story-table-label">${t('result.table')}</p>
+           <div class="result-story-table-row">
+             ${others.map(player => {
+               const tier = getLevelTier(player.level || STARTING_LEVEL);
+               const status = player.finished || player.cardsLeft === 0
+                 ? t('result.out')
+                 : t('result.cardsLeft', { count: player.cardsLeft });
+               return `<div class="result-story-mini${player.isHuman ? ' human' : ''}">
+                 <div class="result-story-mini-avatar" data-player="${player.name}"></div>
+                 <strong>${player.name}</strong>
+                 <span>${status}</span>
+                 <small>${tier.emoji} Lv ${player.level || STARTING_LEVEL}</small>
+               </div>`;
+             }).join('')}
+           </div>`
+        : '';
+      els.resultStoryPlayers.querySelectorAll('.result-story-mini-avatar').forEach(node => {
+        const player = others.find(entry => entry.name === node.dataset.player);
+        if (!player) return;
         if (player.isHuman) {
-          renderPlayerProfileAvatar(avatar, { extraClass: 'result-story-player-avatar' });
+          renderPlayerProfileAvatar(node, { extraClass: 'result-story-mini-avatar' });
         } else {
-          window.Big2GoAICharacters?.renderAvatar(avatar, { characterId: player.characterId, name: player.name }, {
+          window.Big2GoAICharacters?.renderAvatar(node, { characterId: player.characterId, name: player.name }, {
             className: 'character-avatar',
             imgClassName: 'character-avatar-img'
           });
         }
-        const copy = document.createElement('div');
-        copy.className = 'result-story-player-copy';
-        const status = player.won ? 'Winner' : (player.finished || player.cardsLeft === 0 ? 'Out' : `${player.cardsLeft} cards left`);
-        copy.innerHTML = `
-          <strong>${player.name} · ${getLevelTier(player.level || STARTING_LEVEL).emoji} Lv ${player.level || STARTING_LEVEL}</strong>
-          <span>${status}</span>
-          <small>${coinIcon()} ${player.coins}</small>`;
-        const badge = document.createElement('span');
-        badge.className = 'result-story-player-badge';
-        badge.textContent = player.won ? '🏆' : (player.finished || player.cardsLeft === 0 ? '✓' : '…');
-        row.append(avatar, copy, badge);
-        els.resultStoryPlayers.appendChild(row);
       });
     }
+
     if (els.resultStoryFarewells) {
-      els.resultStoryFarewells.innerHTML = '';
       const farewells = story.farewells?.length ? story.farewells : [];
-      if (!farewells.length) {
-        const empty = document.createElement('p');
-        empty.className = 'result-story-empty';
-        empty.textContent = g('victory.seeYou');
-        els.resultStoryFarewells.appendChild(empty);
+      const highlight = farewells.find(entry => entry.character?.id === winner?.characterId)
+        || farewells[0];
+      if (!highlight) {
+        els.resultStoryFarewells.innerHTML = `<p class="result-story-quote-empty">${g('victory.seeYou')}</p>`;
         return;
       }
-      farewells.forEach(entry => {
-        const row = document.createElement('div');
-        row.className = 'result-story-farewell';
-        const avatar = document.createElement('div');
-        avatar.className = 'result-story-farewell-avatar';
-        window.Big2GoAICharacters?.renderAvatar(avatar, entry.character || entry.player, {
+      const name = highlight.character?.name || highlight.player?.name || 'Rival';
+      const message = highlight.message || g('victory.goodGame');
+      els.resultStoryFarewells.innerHTML = `
+        <div class="result-story-quote-bubble">
+          <div class="result-story-quote-avatar"></div>
+          <div class="result-story-quote-copy">
+            <strong>${t('result.tableSays', { name })}</strong>
+            <p>"${message}"</p>
+          </div>
+        </div>`;
+      const avatarNode = els.resultStoryFarewells.querySelector('.result-story-quote-avatar');
+      if (avatarNode) {
+        window.Big2GoAICharacters?.renderAvatar(avatarNode, highlight.character || highlight.player, {
           className: 'character-avatar',
           imgClassName: 'character-avatar-img'
         });
-        const copy = document.createElement('div');
-        copy.className = 'result-story-farewell-copy';
-        copy.innerHTML = `<strong>${entry.character?.name || entry.player?.name || 'Rival'}</strong><p>"${entry.message || g('victory.goodGame')}"</p>`;
-        row.append(avatar, copy);
-        els.resultStoryFarewells.appendChild(row);
-      });
+      }
     }
   }
 
@@ -2979,19 +3097,79 @@
     }
   }
 
-  function spawnDefeatFx(layer) {
+  function spawnDefeatFx(layer, theme) {
     if (!layer) return;
-    const symbols = ['♠', '♥', '♦', '♣', '3', '2', '🎴', '✨'];
-    for (let i = 0; i < 10; i += 1) {
+    const symbols = ['♠', '♥', '♦', '♣', '3', '2', '🎴', '✨', '★', '☁️'];
+    for (let i = 0; i < 16; i += 1) {
       const bit = document.createElement('span');
-      bit.className = 'defeat-float-bit';
+      bit.className = i % 3 === 0 ? 'defeat-float-bit defeat-float-bit--spark' : 'defeat-float-bit';
       bit.textContent = symbols[i % symbols.length];
-      bit.style.setProperty('--fx-x', `${8 + Math.random() * 84}%`);
-      bit.style.setProperty('--fx-delay', `${Math.random() * 2.4}s`);
-      bit.style.setProperty('--fx-drift', `${(Math.random() - 0.5) * 80}px`);
-      bit.style.setProperty('--fx-duration', `${3.2 + Math.random() * 2.4}s`);
+      bit.style.setProperty('--fx-x', `${4 + Math.random() * 92}%`);
+      bit.style.setProperty('--fx-delay', `${Math.random() * 2.8}s`);
+      bit.style.setProperty('--fx-drift', `${(Math.random() - 0.5) * 100}px`);
+      bit.style.setProperty('--fx-duration', `${2.8 + Math.random() * 2.8}s`);
+      if (theme?.accent) bit.style.setProperty('--fx-color', theme.accent);
       layer.appendChild(bit);
     }
+    for (let i = 0; i < 3; i += 1) {
+      const spot = document.createElement('span');
+      spot.className = 'defeat-spotlight';
+      spot.style.setProperty('--spot-x', `${20 + i * 30}%`);
+      spot.style.setProperty('--spot-delay', `${i * 0.6}s`);
+      layer.appendChild(spot);
+    }
+  }
+
+  function spawnDefeatShockwave(layer) {
+    if (!layer) return;
+    const wave = document.createElement('div');
+    wave.className = 'defeat-shockwave';
+    layer.appendChild(wave);
+    setTimeout(() => wave.remove(), 1400);
+  }
+
+  function buildDefeatRivalHero(rivalCopy, defeatTheme) {
+    const hero = document.createElement('div');
+    hero.className = 'victory-defeat-hero victory-stagger-3';
+
+    const rings = document.createElement('div');
+    rings.className = 'victory-hero-rings';
+    rings.setAttribute('aria-hidden', 'true');
+    rings.innerHTML = '<span></span><span></span><span></span>';
+
+    const avatarWrap = document.createElement('div');
+    avatarWrap.className = 'victory-hero-avatar';
+    window.Big2GoAICharacters?.renderAvatar(avatarWrap, rivalCopy.character, {
+      className: 'character-avatar',
+      imgClassName: 'character-avatar-img'
+    });
+
+    if (defeatTheme?.emoji) {
+      const crown = document.createElement('span');
+      crown.className = 'victory-hero-crown';
+      crown.textContent = defeatTheme.emoji;
+      crown.setAttribute('aria-hidden', 'true');
+      avatarWrap.appendChild(crown);
+    }
+
+    hero.appendChild(rings);
+    hero.appendChild(avatarWrap);
+
+    const bubble = document.createElement('div');
+    bubble.className = 'victory-rival-bubble';
+
+    const rivalSpeaker = document.createElement('strong');
+    rivalSpeaker.className = 'victory-rival-speaker';
+    rivalSpeaker.textContent = rivalCopy.speakerLabel;
+
+    const rivalQuote = document.createElement('p');
+    rivalQuote.className = 'victory-rival-quote';
+    rivalQuote.textContent = `"${rivalCopy.quote}"`;
+
+    bubble.appendChild(rivalSpeaker);
+    bubble.appendChild(rivalQuote);
+    hero.appendChild(bubble);
+    return hero;
   }
 
   function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0, levelUp = null) {
@@ -3018,12 +3196,21 @@
     const bg = document.createElement('div');
     bg.className = 'victory-bg';
     bg.setAttribute('aria-hidden', 'true');
-    bg.innerHTML = '<div class="victory-bg-glow"></div><div class="victory-bg-rays"></div>';
+    bg.innerHTML = isDefeat
+      ? `<div class="victory-bg-vignette"></div>
+         <div class="victory-bg-glow"></div>
+         <div class="victory-bg-rays"></div>
+         <div class="victory-marquee" aria-hidden="true">
+           <div class="victory-marquee__track">
+             <span>${t('defeat.marquee')}</span><span>${t('defeat.marquee')}</span>
+           </div>
+         </div>`
+      : '<div class="victory-bg-glow"></div><div class="victory-bg-rays"></div>';
 
     const fxLayer = document.createElement('div');
     fxLayer.className = 'victory-fx-layer';
     fxLayer.setAttribute('aria-hidden', 'true');
-    if (isDefeat) spawnDefeatFx(fxLayer);
+    if (isDefeat) spawnDefeatFx(fxLayer, defeatTheme);
 
     const stage = document.createElement('div');
     stage.className = 'victory-stage';
@@ -3034,7 +3221,7 @@
     const neonChase = document.createElement('div');
     neonChase.className = 'victory-neon-chase';
     neonChase.setAttribute('aria-hidden', 'true');
-    if (isDefeat && defeatTheme) buildVictoryNeonChase(neonChase, defeatTheme, 24 + (state.round % 4) * 2);
+    if (isDefeat && defeatTheme) buildVictoryNeonChase(neonChase, defeatTheme, 32 + (state.round % 3) * 4);
     else if (isWin) buildVictoryNeonChase(neonChase, { accent: '#ffd24a', secondary: '#ff8a00', tertiary: '#ff2d95', chase: 2.2 }, 22);
 
     const neonGlow = document.createElement('div');
@@ -3044,14 +3231,21 @@
     const card = document.createElement('div');
     card.className = `victory-card${isDefeat ? ' victory-card--defeat' : ''}${isWin ? ' victory-card--win' : ''}`;
 
+    if (isDefeat) {
+      const shimmer = document.createElement('div');
+      shimmer.className = 'victory-card-shimmer';
+      shimmer.setAttribute('aria-hidden', 'true');
+      card.appendChild(shimmer);
+    }
+
     const badge = document.createElement('div');
-    badge.className = `victory-badge${isDefeat ? ' victory-badge--defeat' : ''}${isWin ? ' victory-badge--win' : ''}`;
+    badge.className = `victory-badge${isDefeat ? ' victory-badge--defeat victory-stagger-1' : ''}${isWin ? ' victory-badge--win' : ''}`;
     badge.textContent = rivalCopy
       ? (winner.isHuman ? t('victory.badgeWin') : t('victory.badgeDefeat'))
       : (winner.isHuman ? 'Big2Go Champion' : 'Big2Go Match Over');
 
     const title = document.createElement('h2');
-    title.className = 'victory-title';
+    title.className = `victory-title${isDefeat ? ' victory-stagger-2' : ''}`;
     title.textContent = rivalCopy
       ? rivalCopy.title
       : (winner.isHuman ? '🎉 YOU WIN!' : `${winner.name} wins`);
@@ -3069,12 +3263,15 @@
     let comeback = null;
     if (isDefeat) {
       comeback = document.createElement('p');
-      comeback.className = 'victory-comeback';
+      comeback.className = 'victory-comeback victory-stagger-2';
       comeback.textContent = t('defeat.comeback');
     }
 
     let rivalPanel = null;
-    if (rivalCopy) {
+    let defeatHero = null;
+    if (rivalCopy && isDefeat) {
+      defeatHero = buildDefeatRivalHero(rivalCopy, defeatTheme);
+    } else if (rivalCopy) {
       rivalPanel = document.createElement('div');
       rivalPanel.className = `victory-rival victory-rival--${rivalCopy.character.id}${isDefeat ? ' victory-rival--defeat' : ''}`;
 
@@ -3113,20 +3310,23 @@
     }
 
     const stats = document.createElement('div');
-    stats.className = 'victory-stats';
+    stats.className = `victory-stats${isDefeat ? ' victory-stats--defeat victory-stagger-4' : ''}`;
     if (isDefeat) {
       stats.innerHTML = `
-        <div class="victory-stat">
+        <div class="victory-stat victory-stat--coin">
+          <span class="victory-stat-icon" aria-hidden="true">🪙</span>
           <small>${t('defeat.coinsSpent')}</small>
-          <strong>${coinIcon()} ${ENTRY_FEE_COINS}</strong>
+          <strong>${ENTRY_FEE_COINS}</strong>
         </div>
-        <div class="victory-stat">
+        <div class="victory-stat victory-stat--spark">
+          <span class="victory-stat-icon" aria-hidden="true">✨</span>
           <small>${t('defeat.sparks')}</small>
           <strong>${state.sparks}</strong>
         </div>
-        <div class="victory-stat">
+        <div class="victory-stat victory-stat--table">
+          <span class="victory-stat-icon" aria-hidden="true">🎴</span>
           <small>${t('defeat.table')}</small>
-          <strong>${state.players.length} ${t('defeat.players')}</strong>
+          <strong>${state.players.length}</strong>
         </div>`;
     } else {
       stats.innerHTML = `
@@ -3145,19 +3345,24 @@
     }
 
     const rewards = document.createElement('div');
-    rewards.className = 'victory-rewards';
+    rewards.className = `victory-rewards${isDefeat ? ' victory-rewards--defeat victory-stagger-4' : ''}`;
     rewards.innerHTML = winner.isHuman
       ? `<div class="reward-line">${coinIcon()} +${coinPrize} ${t('victory.virtualCoins')}</div><div class="reward-line reward-line--note">✨ ${t('victory.arcadeNote')}</div>`
-      : `<div class="reward-line reward-line--defeat">${t('defeat.goodGame')} ${coinIcon()} ${ENTRY_FEE_COINS}</div><div class="reward-line reward-line--note">${t('defeat.coinsNote')}</div>`;
+      : `<div class="reward-line reward-line--note reward-line--solo">${t('defeat.coinsNote')}</div>`;
 
     const actions = document.createElement('div');
-    actions.className = 'victory-actions victory-actions--quad';
+    actions.className = `victory-actions victory-actions--quad${isDefeat ? ' victory-actions--defeat victory-stagger-5' : ''}`;
 
     const newButton = document.createElement('button');
     newButton.className = `primary${isDefeat ? ' victory-rematch-btn' : ''}`;
-    newButton.textContent = isLiveRoom
-      ? (isRoomHost ? 'Start Room Rematch' : 'Waiting for Host')
-      : (isDefeat ? t('defeat.rematchNow') : (rivalCopy?.rematchLabel || 'New Game'));
+    newButton.innerHTML = isDefeat && !isLiveRoom
+      ? `<span class="victory-rematch-btn__shine" aria-hidden="true"></span><span class="victory-rematch-btn__label">${t('defeat.rematchNow')}</span>`
+      : '';
+    if (!isDefeat || isLiveRoom) {
+      newButton.textContent = isLiveRoom
+        ? (isRoomHost ? 'Start Room Rematch' : 'Waiting for Host')
+        : (rivalCopy?.rematchLabel || 'New Game');
+    }
     newButton.disabled = Boolean(isLiveRoom && !isRoomHost);
     newButton.addEventListener('click', async () => {
       if (isLiveRoom) {
@@ -3203,7 +3408,8 @@
     card.appendChild(title);
     if (comeback) card.appendChild(comeback);
     if (!rivalCopy) card.appendChild(message);
-    if (rivalPanel) card.appendChild(rivalPanel);
+    if (defeatHero) card.appendChild(defeatHero);
+    else if (rivalPanel) card.appendChild(rivalPanel);
     card.appendChild(stats);
     card.appendChild(rewards);
     card.appendChild(actions);
@@ -3217,8 +3423,10 @@
     overlay.appendChild(stage);
     document.body.appendChild(overlay);
 
-    if (isDefeat) playUiSound('defeat');
-    else if (winner?.isHuman && !state.liveRoom?.code) playVictoryCelebrationMusic();
+    if (isDefeat) {
+      playUiSound('defeat');
+      requestAnimationFrame(() => spawnDefeatShockwave(fxLayer));
+    } else if (winner?.isHuman && !state.liveRoom?.code) playVictoryCelebrationMusic();
   }
 
   function announceVictory(winner) {

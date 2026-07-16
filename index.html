@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="big2go-premium.css" />
   <link rel="stylesheet" href="big2go-final-mobile.css" />
   <link rel="stylesheet" href="big2go-app-redesign.css?v=4" />
-  <link rel="stylesheet" href="big2go-victory-screen.css?v=1" />
+  <link rel="stylesheet" href="big2go-victory-screen.css?v=2" />
   <link rel="stylesheet" href="big2go-cascade-guard.css" />
   <link rel="stylesheet" href="big2go-polish-guard.css" />
   <link rel="stylesheet" href="big2go-hand-guard.css" />
@@ -37,7 +37,7 @@
   <link rel="stylesheet" href="big2go-mobile-redesign.css?v=9" />
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=3" />
   <link rel="stylesheet" href="big2go-session-complete.css?v=1" />
-  <link rel="stylesheet" href="big2go-result-story.css?v=2" />
+  <link rel="stylesheet" href="big2go-result-story.css?v=3" />
   <link rel="stylesheet" href="big2go-level-up.css?v=6" />
   <link rel="stylesheet" href="big2go-landing-v3.css?v=33" />
   <link rel="stylesheet" href="big2go-play-demo.css?v=3" />
@@ -369,25 +369,31 @@
 
     <section class="panel result-story-screen hidden" id="game-result-story-screen" aria-label="Game result story">
       <div class="result-story-bg" aria-hidden="true">
+        <div class="result-story-bg-glow"></div>
+        <div class="result-story-bg-rays"></div>
         <div class="result-story-float-card result-story-float-card--a">3♦</div>
         <div class="result-story-float-card result-story-float-card--b">2♠</div>
         <div class="result-story-float-card result-story-float-card--c">A♥</div>
         <div class="result-story-float-card result-story-float-card--d">K♣</div>
-        <div class="result-story-coin-sparkles"></div>
       </div>
-      <div class="result-story-card">
-        <div class="result-story-brand" aria-label="Big2Go">
-          <span class="result-story-brand-mark">B2</span>
-          <strong>Big<span>2Go</span></strong>
-        </div>
-        <p class="result-story-eyebrow" data-i18n="result.eyebrow">Game Result Story</p>
-        <h1 class="result-story-headline" id="result-story-headline" data-i18n="result.headline">Match complete</h1>
-        <div class="result-story-stats" id="result-story-stats"></div>
-        <div class="result-story-players" id="result-story-players"></div>
-        <div class="result-story-farewells" id="result-story-farewells" aria-live="polite"></div>
-        <div class="result-story-actions">
-          <button type="button" class="primary" id="result-story-play-again" data-i18n="result.playAgain">Play Again</button>
-          <button type="button" class="secondary" id="result-story-home" data-i18n="result.home">🏠 Back to Home</button>
+      <div class="result-story-fx-layer" id="result-story-fx-layer" aria-hidden="true"></div>
+      <div class="result-story-stage">
+        <div class="result-story-neon-frame">
+          <div class="result-story-neon-chase" id="result-story-neon-chase" aria-hidden="true"></div>
+          <div class="result-story-neon-glow" aria-hidden="true"></div>
+          <div class="result-story-card">
+            <div class="result-story-card-shimmer" aria-hidden="true"></div>
+            <p class="result-story-eyebrow result-story-stagger-1" data-i18n="result.eyebrow">Round Complete</p>
+            <h1 class="result-story-headline result-story-stagger-2" id="result-story-headline" data-i18n="result.headline">Match complete</h1>
+            <div class="result-story-hero result-story-stagger-3" id="result-story-hero"></div>
+            <div class="result-story-highlights result-story-stagger-4" id="result-story-stats"></div>
+            <div class="result-story-table result-story-stagger-4" id="result-story-players"></div>
+            <div class="result-story-quote result-story-stagger-5" id="result-story-farewells" aria-live="polite"></div>
+            <div class="result-story-actions result-story-stagger-5">
+              <button type="button" class="primary result-story-play-btn" id="result-story-play-again" data-i18n="result.playAgain">Play Again</button>
+              <button type="button" class="secondary" id="result-story-home" data-i18n="result.home">🏠 Back to Home</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -490,11 +496,11 @@
   </main>
   <div id="coin-fx-layer" class="coin-fx-layer" aria-hidden="true"></div>
 
-  <script src="i18n.js?v=6" defer></script>
+  <script src="i18n.js?v=7" defer></script>
   <script src="playDemoScenes.js?v=1" defer></script>
   <script src="aiDialogue.js?v=1" defer></script>
   <script src="aiCharacters.js?v=13" defer></script>
   <script src="aiReactions.js?v=6" defer></script>
-  <script src="game.js?v=124" defer></script>
+  <script src="game.js?v=126" defer></script>
 </body>
 </html>
