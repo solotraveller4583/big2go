@@ -4926,6 +4926,8 @@
       const humanTurn = state.currentPlayer === state.humanIndex;
       const selected = selectedCards();
       const result = selected.length ? validateHumanPlay(selected) : null;
+      els.game?.classList.toggle('gp-your-turn', humanTurn);
+      els.game?.classList.toggle('gp-has-selection', state.selected.size > 0);
       els.play.textContent = result?.ok ? `Play ${describePlay(result.play)}` : 'Play Selected';
       els.play.disabled = !humanTurn || !canHumanAct() || !result?.ok;
       els.pass.disabled = !humanTurn || !state.trick.play;
@@ -4938,6 +4940,7 @@
         window.Big2GoAIReactions?.clearHumanIdleTimer(true);
       }
     } else {
+      els.game?.classList.remove('gp-your-turn', 'gp-has-selection');
       els.play.disabled = true;
       els.pass.disabled = true;
       els.hint.disabled = true;
