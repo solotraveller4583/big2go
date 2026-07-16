@@ -311,6 +311,8 @@
     profileRankPath: document.querySelector('#profile-rank-path'),
     profileRivalsTitle: document.querySelector('#profile-rivals-title'),
     profileRivalsGrid: document.querySelector('#profile-rivals-grid'),
+    roomScreen: document.querySelector('#room-screen'),
+    roomClose: document.querySelector('#room-close'),
     exitConfirmDialog: document.querySelector('#exit-confirm-dialog'),
     playerCount: document.querySelector('#player-count'),
     start: document.querySelector('#start-button'),
@@ -700,7 +702,8 @@
     els.resultStory?.classList.remove('is-revealing');
     els.levelUp?.classList.add('hidden');
     els.profileScreen?.classList.add('hidden');
-    document.body.classList.remove('live-room-active', 'result-story-active', 'session-complete-active', 'level-up-active', 'profile-active');
+    els.roomScreen?.classList.add('hidden');
+    document.body.classList.remove('live-room-active', 'result-story-active', 'session-complete-active', 'level-up-active', 'profile-active', 'room-lobby-active');
     els.voicePanel?.classList.add('hidden');
   }
 
@@ -5978,19 +5981,24 @@
     if (room?.players) state.liveRoomPlayers = room.players.slice();
     if (codeEl) codeEl.textContent = room.code;
     if (countEl) countEl.textContent = String(room.playerCount || 0);
-    if (roleEl) roleEl.textContent = isHost ? 'You are Host' : myPlayerId ? 'You joined as Friend' : 'Create or join a room';
+    if (roleEl) {
+      roleEl.textContent = isHost
+        ? t('room.roleHost')
+        : myPlayerId
+          ? t('room.roleFriend')
+          : t('room.roleDefault');
+    }
     if (copyEl) copyEl.disabled = !hasCode;
     if (shareEl) shareEl.disabled = !hasCode;
     if (playersEl) {
       playersEl.innerHTML = '';
-      room.players.forEach((player, index) => {
+      room.players.forEach((player) => {
         const item = document.createElement('li');
-        const displayName = player.id === myPlayerId ? 'You' : player.name;
-        const tags = [];
-        if (player.id === room.hostId) tags.push('Host');
-        if (player.connected === false) tags.push(player.timedOut ? 'Timed out' : 'Disconnected');
-        else tags.push('Online');
-        item.innerHTML = `${index + 1}. ${displayName} · ${coinIcon()} ${Number.isFinite(player.coins) ? player.coins : STARTING_COINS}${tags.length ? ` · ${tags.join(' · ')}` : ''}`;
+        const displayName = player.id === myPlayerId ? t('room.you') : player.name;
+        const hostMark = player.id === room.hostId ? ' ★' : '';
+        const offlineMark = player.connected === false ? ' · …' : '';
+        item.textContent = `${displayName}${hostMark}${offlineMark}`;
+        item.title = player.id === room.hostId ? t('room.host') : displayName;
         if (player.connected === false) item.dataset.left = 'true';
         playersEl.appendChild(item);
       });
@@ -5998,7 +6006,11 @@
     if (startEl) {
       startEl.hidden = Boolean(myPlayerId && !isHost);
       startEl.disabled = !isHost || room.status === 'playing';
-      startEl.textContent = room.status === 'playing' ? 'Game Started' : room.playerCount >= 2 ? 'Start Game' : 'Sync / Start';
+      startEl.textContent = room.status === 'playing'
+        ? t('room.gameStarted')
+        : room.playerCount >= 2
+          ? t('room.startGame')
+          : t('room.syncStart');
     }
     if (room.notice && room.notice !== state.lastRoomNotice) {
       state.lastRoomNotice = room.notice;
@@ -6276,7 +6288,7 @@
       joinButton?.click();
     });
 
-    createButton?.addEventListener('click', async () => {
+    createButton.onclick = async () => {
       createButton.disabled = true;
       setRoomStatus('Creating private room…', 'waiting');
       try {
@@ -6292,22 +6304,22 @@
         createButton.disabled = false;
         setRoomStatus('Room backend is not online yet. Deploy the Node/WebSocket service to enable live rooms.', 'error');
       }
-    });
+    };
 
-    joinButton?.addEventListener('click', async () => {
+    joinButton.onclick = async () => {
       const code = String(input?.value || inviteCode || savedCode || '').trim();
       await joinRoomFromModal(code, playerName(), { joinButton, input });
-    });
+    };
 
-    startButton?.addEventListener('click', async () => {
+    startButton.onclick = async () => {
       startButton.disabled = true;
       setRoomStatus('Syncing room and starting…', 'waiting');
       await fetchLiveRoomState().catch(() => null);
       const started = await sendLiveRoomMessage({ type: 'room:start' });
       if (!started) startButton.disabled = false;
-    });
+    };
 
-    copyButton?.addEventListener('click', async () => {
+    copyButton.onclick = async () => {
       const code = document.querySelector('#room-code-display')?.textContent?.trim();
       if (!code || code === '-----') return;
       try {
@@ -6316,9 +6328,9 @@
       } catch (_) {
         setRoomStatus(`Code: ${code}`, 'ready');
       }
-    });
+    };
 
-    shareButton?.addEventListener('click', async () => {
+    shareButton.onclick = async () => {
       const code = document.querySelector('#room-code-display')?.textContent?.trim();
       if (!code || code === '-----') return;
       const inviteUrl = buildRoomInviteUrl(code);
@@ -6338,51 +6350,95 @@
           setRoomStatus(`Share this link: ${inviteUrl}`, 'ready');
         }
       }
+    };
+  }
+
+  function setRoomLobbyTab(tab) {
+    const mode = tab === 'join' ? 'join' : 'create';
+    document.querySelector('#room-panel-create')?.classList.toggle('hidden', mode !== 'create');
+    document.querySelector('#room-panel-join')?.classList.toggle('hidden', mode !== 'join');
+    document.querySelectorAll('[data-room-tab]').forEach(button => {
+      const active = button.dataset.roomTab === mode;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-selected', active ? 'true' : 'false');
     });
   }
 
+  function hideRoomScreen() {
+    els.roomScreen?.classList.add('hidden');
+    document.body.classList.remove('room-lobby-active');
+    showLandingScreen();
+  }
+
   function showPrivateRoom(inviteCode = null) {
+    playUiSound('click');
     state.pendingRoomInvite = isValidRoomCode(inviteCode) ? normalizeRoomCode(inviteCode) : null;
 
     const saved = getRoomSession();
     const savedCode = saved?.code && isValidRoomCode(saved.code) ? saved.code : null;
     const reconnectMode = Boolean(savedCode && !state.liveRoom?.code && !state.pendingRoomInvite);
     const invited = Boolean(state.pendingRoomInvite);
-    const introCopy = reconnectMode
-      ? `You have a saved seat in room <strong>${savedCode}</strong>. Tap <strong>Rejoin Room</strong> to pick up where you left off.`
-      : invited
-      ? `You were invited to room <strong>${state.pendingRoomInvite}</strong>. Enter your name below and tap <strong>Join</strong>.`
-      : 'Create a room, send the invite link, then start as soon as 1 friend joins.';
 
-    showHelp('Private Room', `
-      <div class="room-modal room-simple${invited ? ' room-invite-mode' : ''}${reconnectMode ? ' room-reconnect-mode' : ''}">
-        <p class="room-copy">${introCopy}</p>
-        <div class="room-role-pill" id="room-role">${reconnectMode ? 'Reconnect' : invited ? 'Friend Invite' : 'Create or join a room'}</div>
-        <label class="room-join-label" for="room-name-input">Your name</label>
-        <input class="room-name-input" id="room-name-input" maxlength="18" autocomplete="nickname" placeholder="Your name" aria-label="Your player name" value="${reconnectMode && saved?.playerName ? saved.playerName.replace(/"/g, '&quot;') : ''}" />
-        <div class="room-code-card">
-          <span>Room Code</span>
-          <strong id="room-code-display">${invited ? state.pendingRoomInvite : reconnectMode ? savedCode : '-----'}</strong>
-        </div>
-        <div class="room-actions"${invited || reconnectMode ? ' hidden' : ''}>
-          <button type="button" class="primary" id="room-create-button">Create Room</button>
-          <button type="button" class="secondary" id="room-copy-button" disabled>Copy Code</button>
-          <button type="button" class="secondary" id="room-share-button" disabled>Share Link</button>
-        </div>
-        <label class="room-join-label" for="room-code-input">${reconnectMode ? 'Your room' : 'Friend code'}</label>
-        <div class="room-join-row">
-          <input id="room-code-input" maxlength="5" inputmode="text" autocomplete="off" placeholder="ABCDE" aria-label="Enter room code" value="${invited ? state.pendingRoomInvite : reconnectMode ? savedCode : ''}"${invited ? ' readonly' : ''} />
-          <button type="button" class="primary" id="room-join-button">${reconnectMode ? 'Rejoin Room' : invited ? 'Join Room' : 'Join'}</button>
-        </div>
-        <div class="room-live-row">
-          <span>Players joined</span>
-          <strong id="room-player-count">0</strong>
-        </div>
-        <button type="button" class="primary room-start" id="room-start-button" disabled>Start Game</button>
-        <p id="room-status" class="room-status" data-tone="neutral">${reconnectMode ? 'Tap Rejoin Room to restore your saved seat.' : invited ? 'Enter your name, then tap Join Room.' : 'Create a room or enter your friend’s code.'}</p>
-        <ul id="room-player-list" class="room-player-list"></ul>
-      </div>`);
-    setTimeout(attachRoomModalEvents, 0);
+    const codeDisplay = document.querySelector('#room-code-display');
+    const nameInput = document.querySelector('#room-name-input');
+    const codeInput = document.querySelector('#room-code-input');
+    const joinButton = document.querySelector('#room-join-button');
+    const startButton = document.querySelector('#room-start-button');
+    const copyButton = document.querySelector('#room-copy-button');
+    const shareButton = document.querySelector('#room-share-button');
+    const playersEl = document.querySelector('#room-player-list');
+    const countEl = document.querySelector('#room-player-count');
+
+    if (codeDisplay) {
+      codeDisplay.textContent = invited
+        ? state.pendingRoomInvite
+        : reconnectMode
+          ? savedCode
+          : state.liveRoom?.code || '-----';
+    }
+    if (nameInput) {
+      nameInput.value = reconnectMode && saved?.playerName
+        ? saved.playerName
+        : getPlayerDisplayName();
+    }
+    if (codeInput) {
+      codeInput.value = invited ? state.pendingRoomInvite : reconnectMode ? savedCode : '';
+      if (invited) codeInput.setAttribute('readonly', 'readonly');
+      else codeInput.removeAttribute('readonly');
+    }
+    if (joinButton) {
+      joinButton.textContent = reconnectMode
+        ? t('room.rejoin')
+        : invited
+          ? t('room.joinRoom')
+          : t('room.join');
+    }
+    if (playersEl) playersEl.innerHTML = '';
+    if (countEl) countEl.textContent = '0';
+    if (startButton) {
+      startButton.disabled = true;
+      startButton.hidden = false;
+      startButton.textContent = t('room.startGame');
+    }
+    if (copyButton) copyButton.disabled = !state.liveRoom?.code;
+    if (shareButton) shareButton.disabled = !state.liveRoom?.code;
+
+    setRoomLobbyTab(invited || reconnectMode ? 'join' : 'create');
+    setRoomStatus(
+      reconnectMode
+        ? t('room.statusRejoin')
+        : invited
+          ? t('room.statusInvite')
+          : t('room.statusDefault'),
+      reconnectMode || invited ? 'ready' : 'neutral'
+    );
+
+    hideAllScreens();
+    els.roomScreen?.classList.remove('hidden');
+    document.body.classList.add('room-lobby-active');
+    window.scrollTo(0, 0);
+    window.Big2GoI18n?.apply?.(els.roomScreen);
+    attachRoomModalEvents();
   }
 
   function shareGame() {
@@ -6509,6 +6565,10 @@
     }, { passive: true, capture: true });
     els.demo?.addEventListener('click', showPlayDemo);
     els.privateRoom?.addEventListener('click', () => showPrivateRoom());
+    els.roomClose?.addEventListener('click', hideRoomScreen);
+    document.querySelectorAll('[data-room-tab]').forEach(button => {
+      button.addEventListener('click', () => setRoomLobbyTab(button.dataset.roomTab));
+    });
     els.roomRejoin?.addEventListener('click', rejoinSavedRoom);
     els.roomExitSession?.addEventListener('click', exitSavedRoom);
     els.share.addEventListener('click', shareGame);
@@ -6549,11 +6609,14 @@
       button.addEventListener('click', () => {
         document.querySelectorAll('[data-home-tab]').forEach(tab => tab.classList.toggle('active', tab === button));
         const tab = button.dataset.homeTab;
+        if (tab === 'profile') {
+          showPlayerProfilePanel();
+          return;
+        }
         const copy = {
           play: ['Play', '<p>Choose your table and tap <strong>PLAY NOW</strong> to start a fast Big Two match.</p>'],
           rank: ['Rank Ladder', '<div class="rank-modal"><div class="modal-row"><strong>Bronze III</strong><span>145 / 250 RP</span></div><div class="modal-row"><strong>Next Rank</strong><span>Bronze II</span></div><div class="modal-row"><strong>Reward</strong><span>Gold Trim Card Back</span></div></div>'],
-          rewards: ['Rewards', '<div class="reward-modal"><div class="modal-row"><strong>Daily Chest</strong><span>Ready</span></div><div class="modal-row"><strong>Win Chest</strong><span>2 / 5 wins</span></div><div class="modal-row"><strong>Today\'s Goal</strong><span>Win 1 match</span></div></div>'],
-          profile: ['Profile', buildPlayerProfileHtml()]
+          rewards: ['Rewards', '<div class="reward-modal"><div class="modal-row"><strong>Daily Chest</strong><span>Ready</span></div><div class="modal-row"><strong>Win Chest</strong><span>2 / 5 wins</span></div><div class="modal-row"><strong>Today\'s Goal</strong><span>Win 1 match</span></div></div>']
         }[tab] || ['Big2Go', '<p>Play fast Big Two battles and climb the table.</p>'];
         showHelp(copy[0], copy[1]);
       });
