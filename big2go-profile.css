@@ -349,76 +349,148 @@ body.profile-active .app-shell {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: 7px;
   overflow: hidden;
 }
 
 .profile-rival-card {
   min-height: 0;
+  min-width: 0;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto auto auto;
+  gap: 3px;
+  padding: 5px 4px 4px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--rival-accent, #ffd24a) 32%, transparent);
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--rival-accent, #ffd24a) 16%, transparent), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 6px 14px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  text-align: center;
+}
+
+.profile-rival-frame {
+  position: relative;
+  min-height: 0;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 100%;
+  margin: 0 auto;
+}
+
+.profile-rival-lv {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  z-index: 3;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 7px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
-  overflow: hidden;
-}
-
-.profile-rival-avatar {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
+  gap: 2px;
+  padding: 2px 5px 2px 4px;
   border-radius: 999px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 200, 61, 0.35);
-  background: rgba(7, 9, 29, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(180deg, rgba(12, 8, 36, 0.94), rgba(6, 4, 22, 0.88));
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--rival-accent, #ffd24a) 45%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
-.profile-rival-avatar-img-wrap,
-.profile-rival-avatar .profile-rival-avatar-img-wrap {
+.profile-rival-lv-tag {
+  font-size: 0.48rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 236, 170, 0.82);
+}
+
+.profile-rival-lv-num {
+  font-size: 0.72rem;
+  font-weight: 1000;
+  line-height: 1;
+  color: #ffe68f;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--rival-accent, #ffd24a) 40%, transparent);
+}
+
+.profile-rival-tier-icon {
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.profile-rival-avatar,
+.profile-rival-frame .character-avatar {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
+  border-radius: 14px;
+  overflow: hidden;
   display: grid;
   place-items: center;
+  border: 2px solid color-mix(in srgb, var(--rival-accent, #ffd24a) 72%, white);
+  background:
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--rival-secondary, #ff2d95) 22%, transparent), transparent 52%),
+    rgba(7, 9, 29, 0.72);
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--rival-accent, #ffd24a) 28%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
-.profile-rival-avatar-img {
+.profile-rival-avatar .character-avatar-img,
+.profile-rival-frame .character-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.profile-rival-copy {
-  min-width: 0;
-  display: grid;
-  gap: 1px;
+.profile-rival-glow {
+  position: absolute;
+  inset: 8%;
+  z-index: 0;
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rival-accent, #ffd24a) 24%, transparent), transparent 68%);
+  pointer-events: none;
+  animation: profileRivalGlow 3.2s ease-in-out infinite;
 }
 
-.profile-rival-copy strong {
-  font-size: 0.64rem;
+@keyframes profileRivalGlow {
+  0%, 100% { opacity: 0.55; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+.profile-rival-name {
+  font-size: clamp(0.58rem, 2.4vw, 0.66rem);
   font-weight: 1000;
+  line-height: 1.15;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.profile-rival-copy span {
-  font-size: 0.56rem;
-  font-weight: 800;
-  color: rgba(255, 230, 143, 0.92);
-  white-space: nowrap;
+.profile-rival-xp {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.profile-rival-copy small {
-  font-size: 0.52rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.62);
+.profile-rival-xp span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--rival-secondary, #ff2d95), var(--rival-accent, #ffd24a));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--rival-accent, #ffd24a) 45%, transparent);
+}
+
+.profile-rival-meta {
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.68);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -461,15 +533,17 @@ body.profile-active .app-shell {
   .profile-gender-btn { min-width: 38px; min-height: 24px; font-size: 0.58rem; }
   .profile-stat { padding: 6px 8px; }
   .profile-rivals-grid { gap: 5px; }
-  .profile-rival-card { padding: 5px 6px; gap: 5px; }
-  .profile-rival-avatar { width: 28px; height: 28px; }
+  .profile-rival-card { padding: 4px 3px 3px; gap: 2px; }
+  .profile-rival-lv-num { font-size: 0.66rem; }
+  .profile-rival-name { font-size: 0.56rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .profile-bg-glow,
   .profile-bg-rays,
   .profile-neon-frame,
-  .profile-hero-avatar {
+  .profile-hero-avatar,
+  .profile-rival-glow {
     animation: none !important;
   }
 }

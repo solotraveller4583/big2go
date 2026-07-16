@@ -203,6 +203,8 @@
       'profile.winsProgress': '{current} / {target} wins',
       'profile.rivalsTitle': 'Rival Levels',
       'profile.chooseIcon': 'Choose profile icon',
+      'profile.rivalLevel': 'Level {level}',
+      'profile.rivalShort': '{current}/{target} to next',
       'profile.rivalProgress': '{wins} wins · {current}/{target}',
       'profile.rivalMax': 'Legend · MAX'
     },
@@ -394,6 +396,8 @@
       'profile.winsProgress': '{current} / {target} ชนะ',
       'profile.rivalsTitle': 'เลเวลคู่แข่ง',
       'profile.chooseIcon': 'เลือกไอคอนโปรไฟล์',
+      'profile.rivalLevel': 'เลเวล {level}',
+      'profile.rivalShort': '{current}/{target} ถัดไป',
       'profile.rivalProgress': '{wins} ชนะ · {current}/{target}',
       'profile.rivalMax': 'ตำนาน · MAX'
     },
@@ -585,6 +589,8 @@
       'profile.winsProgress': '{current} / {target} 胜',
       'profile.rivalsTitle': '对手等级',
       'profile.chooseIcon': '选择头像',
+      'profile.rivalLevel': '等级 {level}',
+      'profile.rivalShort': '还需 {current}/{target}',
       'profile.rivalProgress': '{wins} 胜 · {current}/{target}',
       'profile.rivalMax': '传奇 · 满级'
     },
@@ -776,6 +782,8 @@
       'profile.winsProgress': '{current} / {target} 勝',
       'profile.rivalsTitle': 'ライバルレベル',
       'profile.chooseIcon': 'アイコンを選ぶ',
+      'profile.rivalLevel': 'レベル {level}',
+      'profile.rivalShort': '次まで {current}/{target}',
       'profile.rivalProgress': '{wins} 勝 · {current}/{target}',
       'profile.rivalMax': 'レジェンド · MAX'
     },
@@ -967,6 +975,8 @@
       'profile.winsProgress': '{current} / {target} 승',
       'profile.rivalsTitle': '라이벌 레벨',
       'profile.chooseIcon': '프로필 아이콘 선택',
+      'profile.rivalLevel': '레벨 {level}',
+      'profile.rivalShort': '다음까지 {current}/{target}',
       'profile.rivalProgress': '{wins}승 · {current}/{target}',
       'profile.rivalMax': '레전드 · MAX'
     }

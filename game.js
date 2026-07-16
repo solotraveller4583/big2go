@@ -1729,23 +1729,37 @@
         const rivalProfile = loadAiProfile(character.id);
         const rivalTier = getLevelTier(rivalProfile.level);
         const rivalProgress = getProfileProgress(rivalProfile.totalWins);
-        const progressLabel = rivalProgress.maxed
+        const rivalTheme = DEFEAT_RIVAL_THEMES[character.id] || DEFEAT_RIVAL_THEMES.default;
+        const tierStyle = LEVEL_TIER_PATH[rivalTier.skill] || LEVEL_TIER_PATH.rookie;
+        const progressPct = rivalProgress.maxed
+          ? 100
+          : Math.round((rivalProgress.current / Math.max(1, rivalProgress.target)) * 100);
+        const metaLabel = rivalProgress.maxed
           ? t('profile.rivalMax')
-          : t('profile.rivalProgress', { wins: rivalProfile.totalWins, current: rivalProgress.current, target: rivalProgress.target });
+          : t('profile.rivalShort', { current: rivalProgress.current, target: rivalProgress.target });
         const card = document.createElement('article');
-        card.className = 'profile-rival-card';
+        card.className = `profile-rival-card profile-rival-card--${character.id}`;
+        card.style.setProperty('--rival-accent', rivalTheme.accent);
+        card.style.setProperty('--rival-secondary', rivalTheme.secondary);
+        card.style.setProperty('--rival-tier-color', tierStyle.color);
         card.innerHTML = `
-          <div class="profile-rival-avatar"></div>
-          <div class="profile-rival-copy">
-            <strong>${character.name}</strong>
-            <span>Lv ${rivalTier.level} ${rivalTier.emoji}</span>
-            <small>${progressLabel}</small>
-          </div>`;
+          <div class="profile-rival-frame">
+            <div class="profile-rival-lv" aria-label="${t('profile.rivalLevel', { level: rivalTier.level })}">
+              <span class="profile-rival-lv-tag">Lv</span>
+              <strong class="profile-rival-lv-num">${rivalTier.level}</strong>
+              <span class="profile-rival-tier-icon" aria-hidden="true">${rivalTier.emoji}</span>
+            </div>
+            <div class="profile-rival-avatar"></div>
+            <span class="profile-rival-glow" aria-hidden="true"></span>
+          </div>
+          <strong class="profile-rival-name">${character.name}</strong>
+          <div class="profile-rival-xp" aria-hidden="true"><span style="width:${progressPct}%"></span></div>
+          <small class="profile-rival-meta">${metaLabel}</small>`;
         els.profileRivalsGrid.appendChild(card);
         const avatarContainer = card.querySelector('.profile-rival-avatar');
         window.Big2GoAICharacters?.renderAvatar?.(avatarContainer, character, {
-          className: 'profile-rival-avatar-img-wrap',
-          imgClassName: 'profile-rival-avatar-img'
+          className: 'character-avatar',
+          imgClassName: 'character-avatar-img'
         });
       });
     }
