@@ -288,6 +288,7 @@
     levelUpJourneyIcon: document.querySelector('#level-up-journey-icon'),
     levelUpNeonChase: document.querySelector('#level-up-neon-chase'),
     levelUpFxLayer: document.querySelector('#level-up-fx-layer'),
+    levelUpMarqueeTrack: document.querySelector('#level-up-marquee-track'),
     levelUpContinue: document.querySelector('#level-up-continue'),
     exitConfirmDialog: document.querySelector('#exit-confirm-dialog'),
     playerCount: document.querySelector('#player-count'),
@@ -2628,6 +2629,8 @@
     if (els.levelUp) {
       els.levelUp.classList.remove(
         'is-celebrating',
+        'is-revealing',
+        'is-revealed',
         'level-up-screen--tier-promo',
         'level-up-screen--legend',
         'level-up-motion-gallop',
@@ -2648,6 +2651,61 @@
     }
     if (els.levelUpNeonChase) els.levelUpNeonChase.innerHTML = '';
     if (els.levelUpFxLayer) els.levelUpFxLayer.innerHTML = '';
+    if (els.levelUpMarqueeTrack) els.levelUpMarqueeTrack.innerHTML = '';
+    if (els.levelUpTo) els.levelUpTo.classList.remove('is-bursting');
+  }
+
+  function buildLevelUpMarquee(levelUp, theme, copy) {
+    if (!els.levelUpMarqueeTrack) return;
+    const tier = levelUp.tier || getLevelTier(levelUp.level);
+    const items = [
+      `★ ${t('levelUp.eyebrow')} ★`,
+      `${theme.emoji} Lv ${levelUp.level}`,
+      tier.emoji + ' ' + tier.title,
+      copy.title,
+      '✨ Big2Go ✨',
+      `${theme.emoji} ${copy.eyebrow}`
+    ];
+    const segment = items.map(item => `<span class="level-up-marquee__item">${item}</span>`).join('');
+    els.levelUpMarqueeTrack.innerHTML = segment + segment;
+  }
+
+  function spawnLevelUpShockwave() {
+    if (!els.levelUpFxLayer) return;
+    const wave = document.createElement('div');
+    wave.className = 'level-up-shockwave';
+    els.levelUpFxLayer.appendChild(wave);
+    scheduleLevelUpFx(() => wave.remove(), 1300);
+  }
+
+  function spawnLevelUpAmbientBits(theme) {
+    if (!els.levelUpFxLayer) return;
+    const symbols = ['★', '✨', '♠', '♥', '♦', '♣', 'Lv', '↑', theme?.emoji || '🎠'];
+    for (let i = 0; i < 12; i += 1) {
+      const bit = document.createElement('span');
+      bit.className = 'level-up-ambient-bit';
+      bit.textContent = symbols[i % symbols.length];
+      bit.style.setProperty('--ab-x', `${4 + Math.random() * 92}%`);
+      bit.style.setProperty('--ab-delay', `${Math.random() * 3}s`);
+      bit.style.setProperty('--ab-drift', `${(Math.random() - 0.5) * 80}px`);
+      bit.style.setProperty('--ab-duration', `${3.2 + Math.random() * 2.4}s`);
+      if (theme?.accent) bit.style.setProperty('--ab-color', theme.accent);
+      els.levelUpFxLayer.appendChild(bit);
+    }
+    for (let i = 0; i < 2; i += 1) {
+      const spot = document.createElement('span');
+      spot.className = 'level-up-spotlight';
+      spot.style.setProperty('--spot-x', `${22 + i * 36}%`);
+      spot.style.setProperty('--spot-delay', `${i * 0.5}s`);
+      els.levelUpFxLayer.appendChild(spot);
+    }
+  }
+
+  function triggerLevelBurst() {
+    if (!els.levelUpTo) return;
+    els.levelUpTo.classList.remove('is-bursting');
+    void els.levelUpTo.offsetWidth;
+    els.levelUpTo.classList.add('is-bursting');
   }
 
   function getLevelJourneyTheme(levelUp) {
@@ -2840,14 +2898,22 @@
     const style = getLevelCelebrationStyle(levelUp);
     if (!els.levelUp) return;
     clearLevelUpCelebration();
-    applyLevelUpJourneyTheme(levelUp);
+    const theme = applyLevelUpJourneyTheme(levelUp);
+    const copy = getLevelUpCopy(levelUp);
+    buildLevelUpMarquee(levelUp, theme, copy);
 
     els.levelUp.dataset.level = String(style.level);
     els.levelUp.dataset.tier = style.tier.skill;
     els.levelUp.style.setProperty('--level-up-hue', `${style.hue}deg`);
-    els.levelUp.classList.add('is-celebrating');
+    els.levelUp.classList.add('is-celebrating', 'is-revealing');
     if (style.tierPromo) els.levelUp.classList.add('level-up-screen--tier-promo');
     if (style.level >= MAX_LEVEL) els.levelUp.classList.add('level-up-screen--legend');
+
+    spawnLevelUpShockwave();
+    spawnLevelUpAmbientBits(theme);
+    scheduleLevelUpFx(() => triggerLevelBurst(), 280);
+    scheduleLevelUpFx(() => els.levelUpTo?.classList.remove('is-bursting'), 1050);
+    scheduleLevelUpFx(() => els.levelUp?.classList.add('is-revealed'), 1100);
 
     playLevelUpFanfare(levelUp);
     renderConfetti(style.confettiIntensity, style.palette);
@@ -3047,6 +3113,7 @@
     hideAllScreens();
     renderLevelUpScreen(levelUp);
     els.levelUp?.classList.remove('hidden');
+    els.levelUp?.classList.add('is-revealing');
     document.body.classList.add('level-up-active');
     window.scrollTo(0, 0);
     playLevelUpCelebration(levelUp);

@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=3" />
   <link rel="stylesheet" href="big2go-session-complete.css?v=1" />
   <link rel="stylesheet" href="big2go-result-story.css?v=3" />
-  <link rel="stylesheet" href="big2go-level-up.css?v=6" />
+  <link rel="stylesheet" href="big2go-level-up.css?v=7" />
   <link rel="stylesheet" href="big2go-landing-v3.css?v=33" />
   <link rel="stylesheet" href="big2go-play-demo.css?v=3" />
   <link rel="stylesheet" href="big2go-gameplay-premium.css?v=30" />
@@ -403,37 +403,46 @@
       <div class="level-up-bg" aria-hidden="true">
         <div class="level-up-carnival-glow"></div>
         <div class="level-up-rays level-up-rays--carnival"></div>
+        <div class="level-up-float-card level-up-float-card--a">Lv</div>
+        <div class="level-up-float-card level-up-float-card--b">★</div>
+        <div class="level-up-float-card level-up-float-card--c">✨</div>
+        <div class="level-up-float-card level-up-float-card--d">👑</div>
         <div class="level-up-star level-up-star--a"></div>
         <div class="level-up-star level-up-star--b"></div>
         <div class="level-up-star level-up-star--c"></div>
         <div class="level-up-star level-up-star--d"></div>
+      </div>
+      <div class="level-up-marquee" aria-hidden="true">
+        <div class="level-up-marquee__track" id="level-up-marquee-track"></div>
       </div>
       <div class="level-up-stage">
         <div class="level-up-neon-frame">
           <div class="level-up-neon-chase" id="level-up-neon-chase" aria-hidden="true"></div>
           <div class="level-up-neon-frame__glow" aria-hidden="true"></div>
           <div class="level-up-card">
-            <div class="level-up-winner-ribbon" aria-hidden="true"><span data-i18n="levelUp.ribbon">YOU WIN</span></div>
-            <div class="level-up-journey-icon" id="level-up-journey-icon" aria-hidden="true">🎠</div>
-            <header class="level-up-head">
+            <div class="level-up-card-shimmer" aria-hidden="true"></div>
+            <div class="level-up-winner-ribbon level-up-stagger-1" aria-hidden="true"><span data-i18n="levelUp.ribbon">YOU WIN</span></div>
+            <div class="level-up-journey-icon level-up-stagger-1" id="level-up-journey-icon" aria-hidden="true">🎠</div>
+            <header class="level-up-head level-up-stagger-2">
               <p class="level-up-eyebrow" id="level-up-eyebrow" data-i18n="levelUp.eyebrow">Level Up</p>
               <h1 class="level-up-title" id="level-up-title" data-i18n="levelUp.youWin">You Win!</h1>
               <p class="level-up-message" id="level-up-message" data-i18n="levelUp.message">You reached a new level at the Big2Go table.</p>
             </header>
-            <div class="level-up-hero-compact" aria-label="Level progression">
+            <div class="level-up-hero-cinema level-up-stagger-3" aria-label="Level progression">
+              <div class="level-up-hero-rings" aria-hidden="true"><span></span><span></span><span></span></div>
               <div class="level-up-avatar-wrap" id="level-up-avatar-wrap">
                 <span class="level-up-avatar-crown" aria-hidden="true">👑</span>
                 <div id="level-up-avatar"></div>
               </div>
-              <div class="level-up-level-rise">
+              <div class="level-up-level-burst">
                 <span class="level-up-from" id="level-up-from">Lv 1</span>
-                <span class="level-up-arrow" aria-hidden="true">➜</span>
+                <span class="level-up-burst-arrow" aria-hidden="true">➜</span>
                 <span class="level-up-to" id="level-up-to">Lv 2</span>
               </div>
             </div>
-            <div class="level-up-journey-strip" id="level-up-journey-strip"></div>
-            <p class="level-up-quote hidden" id="level-up-quote"></p>
-            <div class="level-up-actions">
+            <div class="level-up-journey-strip level-up-stagger-4" id="level-up-journey-strip"></div>
+            <p class="level-up-quote hidden level-up-stagger-4" id="level-up-quote"></p>
+            <div class="level-up-actions level-up-stagger-5">
               <button type="button" class="primary level-up-continue-btn" id="level-up-continue" data-i18n="levelUp.continue">Continue</button>
             </div>
           </div>
@@ -501,6 +510,6 @@
   <script src="aiDialogue.js?v=1" defer></script>
   <script src="aiCharacters.js?v=13" defer></script>
   <script src="aiReactions.js?v=6" defer></script>
-  <script src="game.js?v=126" defer></script>
+  <script src="game.js?v=127" defer></script>
 </body>
 </html>
