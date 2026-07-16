@@ -239,6 +239,16 @@
 
   const CARNIVAL_CELEBRATION_HUES = [42, 320, 280, 15, 195, 330];
 
+  const DEFEAT_RIVAL_THEMES = {
+    bruno: { accent: '#ff8a00', secondary: '#ff2d95', tertiary: '#ffd24a', emoji: '🔥', chase: 1.9 },
+    luna: { accent: '#ff47d4', secondary: '#b347ff', tertiary: '#00e5ff', emoji: '🌙', chase: 2.2 },
+    kiro: { accent: '#00e5ff', secondary: '#4d9fff', tertiary: '#b347ff', emoji: '📊', chase: 1.7 },
+    pico: { accent: '#ffd24a', secondary: '#00e5ff', tertiary: '#ff4757', emoji: '⚡', chase: 1.5 },
+    bao: { accent: '#ffb347', secondary: '#ff4757', tertiary: '#ffd24a', emoji: '🥟', chase: 2.0 },
+    tora: { accent: '#7dd3fc', secondary: '#b347ff', tertiary: '#ffd24a', emoji: '☁️', chase: 2.4 },
+    default: { accent: '#00e5ff', secondary: '#ff2d95', tertiary: '#ffd24a', emoji: '🎭', chase: 2.0 }
+  };
+
   const LEVEL_JOURNEY_THEMES = [
     { id: 'gold-rush', emoji: '🎠', accent: '#ffd24a', secondary: '#ff8a00', tertiary: '#ff2d95', chase: 2.1, motion: 'gallop' },
     { id: 'neon-pulse', emoji: '✨', accent: '#ff2d95', secondary: '#ff47d4', tertiary: '#00e5ff', chase: 1.7, motion: 'pulse' },
@@ -2295,6 +2305,14 @@
           { f: 783.99, d: .14, w: .22, type: 'triangle', g: .04 },
           { f: 1046.5, d: .16, w: .34, type: 'sine', g: .032 },
           { chord: [659.25, 783.99, 1046.5, 1318.51], d: .36, w: .48, type: 'sine', g: .02 }
+        ],
+        defeat: [
+          { f: 392, d: .09, w: 0, type: 'sine', g: .028 },
+          { f: 311.13, d: .1, w: .07, type: 'triangle', g: .026 },
+          { f: 246.94, d: .12, w: .16, type: 'sine', g: .024 },
+          { noise: true, d: .04, w: .18, g: .01, ff: 520 },
+          { f: 440, d: .12, w: .34, type: 'triangle', g: .032 },
+          { f: 554.37, d: .14, w: .44, type: 'sine', g: .028 }
         ]
       };
     const plan = sequences[kind] || sequences.click;
@@ -2928,24 +2946,108 @@
     playUiSound('click');
   }
 
+  function getDefeatRivalTheme(characterId) {
+    return DEFEAT_RIVAL_THEMES[characterId] || DEFEAT_RIVAL_THEMES.default;
+  }
+
+  function buildVictoryNeonChase(container, theme, bulbCount = 26) {
+    if (!container) return;
+    container.innerHTML = '';
+    const colors = [theme.accent, theme.secondary, theme.tertiary || theme.secondary];
+    for (let i = 0; i < bulbCount; i += 1) {
+      const bulb = document.createElement('span');
+      bulb.className = 'victory-neon-bulb';
+      const t = i / bulbCount;
+      if (t < 0.25) {
+        bulb.style.left = `${2 + (t / 0.25) * 96}%`;
+        bulb.style.top = '0%';
+      } else if (t < 0.5) {
+        bulb.style.left = '100%';
+        bulb.style.top = `${2 + ((t - 0.25) / 0.25) * 96}%`;
+      } else if (t < 0.75) {
+        bulb.style.left = `${98 - ((t - 0.5) / 0.25) * 96}%`;
+        bulb.style.top = '100%';
+      } else {
+        bulb.style.left = '0%';
+        bulb.style.top = `${98 - ((t - 0.75) / 0.25) * 96}%`;
+      }
+      bulb.style.setProperty('--bulb-i', String(i));
+      bulb.style.setProperty('--bulb-count', String(bulbCount));
+      bulb.style.setProperty('--bulb-color', colors[i % colors.length]);
+      bulb.style.animationDuration = `${theme.chase || 2}s`;
+      container.appendChild(bulb);
+    }
+  }
+
+  function spawnDefeatFx(layer) {
+    if (!layer) return;
+    const symbols = ['♠', '♥', '♦', '♣', '3', '2', '🎴', '✨'];
+    for (let i = 0; i < 10; i += 1) {
+      const bit = document.createElement('span');
+      bit.className = 'defeat-float-bit';
+      bit.textContent = symbols[i % symbols.length];
+      bit.style.setProperty('--fx-x', `${8 + Math.random() * 84}%`);
+      bit.style.setProperty('--fx-delay', `${Math.random() * 2.4}s`);
+      bit.style.setProperty('--fx-drift', `${(Math.random() - 0.5) * 80}px`);
+      bit.style.setProperty('--fx-duration', `${3.2 + Math.random() * 2.4}s`);
+      layer.appendChild(bit);
+    }
+  }
+
   function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0, levelUp = null) {
     const existing = document.querySelector('#victory-overlay');
     if (existing) existing.remove();
-    const overlay = document.createElement('div');
-    overlay.id = 'victory-overlay';
-    overlay.className = 'victory-overlay';
-
-    const card = document.createElement('div');
-    card.className = 'victory-card';
-
     const isLiveRoom = Boolean(state.liveRoom?.code && state.liveRoom?.playerId);
     const isRoomHost = Boolean(isLiveRoom && state.liveRoom.hostId === state.liveRoom.playerId);
     const rivalCopy = !isLiveRoom ? window.Big2GoAICharacters?.getRivalVictoryCopy?.(winner, state) : null;
+    const isDefeat = Boolean(rivalCopy && !winner.isHuman);
+    const isWin = Boolean(winner.isHuman);
+    const defeatTheme = isDefeat ? getDefeatRivalTheme(rivalCopy?.character?.id) : null;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'victory-overlay';
+    overlay.className = `victory-overlay${isDefeat ? ' victory-overlay--defeat is-revealing' : ''}${isWin ? ' victory-overlay--win is-revealing' : ''}`;
+    if (isDefeat && rivalCopy?.character?.id) overlay.dataset.rival = rivalCopy.character.id;
+    if (defeatTheme) {
+      overlay.style.setProperty('--defeat-accent', defeatTheme.accent);
+      overlay.style.setProperty('--defeat-secondary', defeatTheme.secondary);
+      overlay.style.setProperty('--defeat-tertiary', defeatTheme.tertiary || defeatTheme.secondary);
+      overlay.style.setProperty('--neon-chase-speed', `${defeatTheme.chase}s`);
+    }
+
+    const bg = document.createElement('div');
+    bg.className = 'victory-bg';
+    bg.setAttribute('aria-hidden', 'true');
+    bg.innerHTML = '<div class="victory-bg-glow"></div><div class="victory-bg-rays"></div>';
+
+    const fxLayer = document.createElement('div');
+    fxLayer.className = 'victory-fx-layer';
+    fxLayer.setAttribute('aria-hidden', 'true');
+    if (isDefeat) spawnDefeatFx(fxLayer);
+
+    const stage = document.createElement('div');
+    stage.className = 'victory-stage';
+
+    const neonFrame = document.createElement('div');
+    neonFrame.className = 'victory-neon-frame';
+
+    const neonChase = document.createElement('div');
+    neonChase.className = 'victory-neon-chase';
+    neonChase.setAttribute('aria-hidden', 'true');
+    if (isDefeat && defeatTheme) buildVictoryNeonChase(neonChase, defeatTheme, 24 + (state.round % 4) * 2);
+    else if (isWin) buildVictoryNeonChase(neonChase, { accent: '#ffd24a', secondary: '#ff8a00', tertiary: '#ff2d95', chase: 2.2 }, 22);
+
+    const neonGlow = document.createElement('div');
+    neonGlow.className = 'victory-neon-frame__glow';
+    neonGlow.setAttribute('aria-hidden', 'true');
+
+    const card = document.createElement('div');
+    card.className = `victory-card${isDefeat ? ' victory-card--defeat' : ''}${isWin ? ' victory-card--win' : ''}`;
 
     const badge = document.createElement('div');
-    badge.className = 'victory-badge';
+    badge.className = `victory-badge${isDefeat ? ' victory-badge--defeat' : ''}${isWin ? ' victory-badge--win' : ''}`;
     badge.textContent = rivalCopy
-      ? (winner.isHuman ? 'Victory' : 'Defeat')
+      ? (winner.isHuman ? t('victory.badgeWin') : t('victory.badgeDefeat'))
       : (winner.isHuman ? 'Big2Go Champion' : 'Big2Go Match Over');
 
     const title = document.createElement('h2');
@@ -2964,10 +3066,25 @@
         : `${winner.name} emptied their hand first. Tap New Game to try again.`;
     }
 
+    let comeback = null;
+    if (isDefeat) {
+      comeback = document.createElement('p');
+      comeback.className = 'victory-comeback';
+      comeback.textContent = t('defeat.comeback');
+    }
+
     let rivalPanel = null;
     if (rivalCopy) {
       rivalPanel = document.createElement('div');
-      rivalPanel.className = `victory-rival victory-rival--${rivalCopy.character.id}`;
+      rivalPanel.className = `victory-rival victory-rival--${rivalCopy.character.id}${isDefeat ? ' victory-rival--defeat' : ''}`;
+
+      if (isDefeat && defeatTheme?.emoji) {
+        const moodIcon = document.createElement('span');
+        moodIcon.className = 'victory-rival-mood';
+        moodIcon.textContent = defeatTheme.emoji;
+        moodIcon.setAttribute('aria-hidden', 'true');
+        rivalPanel.appendChild(moodIcon);
+      }
 
       const rivalHead = document.createElement('div');
       rivalHead.className = 'victory-rival-head';
@@ -2997,24 +3114,50 @@
 
     const stats = document.createElement('div');
     stats.className = 'victory-stats';
-    stats.innerHTML = `<span>+${coinIcon()} ${coinPrize}</span><span>${state.sparks} sparks</span><span>${state.players.length} players</span>`;
+    if (isDefeat) {
+      stats.innerHTML = `
+        <div class="victory-stat">
+          <small>${t('defeat.coinsSpent')}</small>
+          <strong>${coinIcon()} ${ENTRY_FEE_COINS}</strong>
+        </div>
+        <div class="victory-stat">
+          <small>${t('defeat.sparks')}</small>
+          <strong>${state.sparks}</strong>
+        </div>
+        <div class="victory-stat">
+          <small>${t('defeat.table')}</small>
+          <strong>${state.players.length} ${t('defeat.players')}</strong>
+        </div>`;
+    } else {
+      stats.innerHTML = `
+        <div class="victory-stat">
+          <small>${t('victory.reward')}</small>
+          <strong>${coinIcon()} +${coinPrize}</strong>
+        </div>
+        <div class="victory-stat">
+          <small>${t('defeat.sparks')}</small>
+          <strong>${state.sparks}</strong>
+        </div>
+        <div class="victory-stat">
+          <small>${t('defeat.table')}</small>
+          <strong>${state.players.length} ${t('defeat.players')}</strong>
+        </div>`;
+    }
 
     const rewards = document.createElement('div');
     rewards.className = 'victory-rewards';
     rewards.innerHTML = winner.isHuman
-      ? `<div class="reward-line">${coinIcon()} +${coinPrize} virtual gold coins</div><div class="reward-line">✨ Arcade tokens only — no cash value</div>`
-      : `<div class="reward-line">Good Game! -${coinIcon()} ${ENTRY_FEE_COINS}</div><div class="reward-line">These are entertainment coins only — rematch anytime</div>`;
-
-    let levelUpPanel = null;
+      ? `<div class="reward-line">${coinIcon()} +${coinPrize} ${t('victory.virtualCoins')}</div><div class="reward-line reward-line--note">✨ ${t('victory.arcadeNote')}</div>`
+      : `<div class="reward-line reward-line--defeat">${t('defeat.goodGame')} ${coinIcon()} ${ENTRY_FEE_COINS}</div><div class="reward-line reward-line--note">${t('defeat.coinsNote')}</div>`;
 
     const actions = document.createElement('div');
-    actions.className = 'victory-actions';
+    actions.className = 'victory-actions victory-actions--quad';
 
     const newButton = document.createElement('button');
-    newButton.className = 'primary';
+    newButton.className = `primary${isDefeat ? ' victory-rematch-btn' : ''}`;
     newButton.textContent = isLiveRoom
       ? (isRoomHost ? 'Start Room Rematch' : 'Waiting for Host')
-      : (rivalCopy?.rematchLabel || 'New Game');
+      : (isDefeat ? t('defeat.rematchNow') : (rivalCopy?.rematchLabel || 'New Game'));
     newButton.disabled = Boolean(isLiveRoom && !isRoomHost);
     newButton.addEventListener('click', async () => {
       if (isLiveRoom) {
@@ -3030,7 +3173,7 @@
 
     const shareButton = document.createElement('button');
     shareButton.className = 'secondary';
-    shareButton.textContent = winner.isHuman ? 'Share Win' : 'Back to Menu';
+    shareButton.textContent = winner.isHuman ? t('victory.shareWin') : t('defeat.backMenu');
     shareButton.addEventListener('click', () => {
       if (winner.isHuman) {
         shareGame();
@@ -3042,31 +3185,40 @@
     const endButton = document.createElement('button');
     endButton.type = 'button';
     endButton.className = 'secondary';
-    endButton.textContent = '🏠 Back to Home';
+    endButton.textContent = t('defeat.backHome');
     endButton.addEventListener('click', () => goBackToHomeFromVictory());
 
     const exitButton = document.createElement('button');
     exitButton.type = 'button';
     exitButton.className = 'secondary';
-    exitButton.textContent = '🚪 Exit Game';
+    exitButton.textContent = t('defeat.exitGame');
     exitButton.addEventListener('click', () => showGameResultStoryFromVictory());
 
-    actions.classList.add('victory-actions--quad');
     actions.appendChild(newButton);
     actions.appendChild(shareButton);
     actions.appendChild(endButton);
     actions.appendChild(exitButton);
+
     card.appendChild(badge);
     card.appendChild(title);
+    if (comeback) card.appendChild(comeback);
     if (!rivalCopy) card.appendChild(message);
     if (rivalPanel) card.appendChild(rivalPanel);
     card.appendChild(stats);
     card.appendChild(rewards);
-    if (levelUpPanel) card.appendChild(levelUpPanel);
     card.appendChild(actions);
-    overlay.appendChild(card);
+
+    neonFrame.appendChild(neonChase);
+    neonFrame.appendChild(neonGlow);
+    neonFrame.appendChild(card);
+    stage.appendChild(neonFrame);
+    overlay.appendChild(bg);
+    overlay.appendChild(fxLayer);
+    overlay.appendChild(stage);
     document.body.appendChild(overlay);
-    if (winner?.isHuman && !state.liveRoom?.code) playVictoryCelebrationMusic();
+
+    if (isDefeat) playUiSound('defeat');
+    else if (winner?.isHuman && !state.liveRoom?.code) playVictoryCelebrationMusic();
   }
 
   function announceVictory(winner) {
