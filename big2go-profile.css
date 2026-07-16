@@ -1,0 +1,475 @@
+/* Big2Go — Player profile (single-page, no scroll) */
+.profile-screen {
+  --profile-accent: #ffd24a;
+  --profile-secondary: #ff2d95;
+  --profile-tertiary: #00e5ff;
+  --profile-glow: rgba(255, 210, 74, 0.45);
+  position: fixed;
+  inset: 0;
+  z-index: 235;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  padding: max(8px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom));
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% -8%, color-mix(in srgb, var(--profile-accent) 22%, transparent), transparent 42%),
+    radial-gradient(circle at 8% 92%, color-mix(in srgb, var(--profile-tertiary) 14%, transparent), transparent 34%),
+    radial-gradient(circle at 92% 84%, color-mix(in srgb, var(--profile-secondary) 12%, transparent), transparent 36%),
+    linear-gradient(180deg, #14062e 0%, #07021a 100%);
+}
+
+.profile-screen.hidden {
+  display: none !important;
+}
+
+body.profile-active {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  background: #050112 !important;
+}
+
+body.profile-active::before,
+body.profile-active::after {
+  display: none !important;
+  content: none !important;
+}
+
+body.profile-active .app-shell {
+  width: min(100%, 430px) !important;
+  min-height: 100dvh !important;
+  padding: 0 !important;
+  gap: 0 !important;
+}
+
+.profile-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.profile-bg-glow {
+  position: absolute;
+  inset: -12%;
+  background:
+    radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--profile-accent) 16%, transparent), transparent 44%),
+    radial-gradient(circle at 18% 72%, color-mix(in srgb, var(--profile-tertiary) 10%, transparent), transparent 34%);
+  animation: profileGlowPulse 4.5s ease-in-out infinite;
+}
+
+@keyframes profileGlowPulse {
+  0%, 100% { opacity: 0.72; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+.profile-bg-rays {
+  position: absolute;
+  inset: -18%;
+  opacity: 0.55;
+  background: conic-gradient(
+    from 0deg at 50% 36%,
+    transparent 0deg,
+    color-mix(in srgb, var(--profile-accent) 10%, transparent) 18deg,
+    transparent 36deg,
+    color-mix(in srgb, var(--profile-secondary) 8%, transparent) 54deg,
+    transparent 72deg
+  );
+  animation: profileRaysSpin 28s linear infinite;
+}
+
+@keyframes profileRaysSpin {
+  to { transform: rotate(360deg); }
+}
+
+.profile-stage {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 390px);
+  height: 100%;
+  max-height: calc(100dvh - max(8px, env(safe-area-inset-top)) - max(10px, env(safe-area-inset-bottom)));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  overflow: hidden;
+}
+
+.profile-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.profile-topbar h2 {
+  margin: 0;
+  font-size: clamp(1.05rem, 4.6vw, 1.28rem);
+  font-weight: 1000;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.profile-close {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.profile-neon-frame {
+  position: relative;
+  min-height: 0;
+  height: 100%;
+  padding: 2px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, var(--profile-accent), var(--profile-secondary), var(--profile-tertiary), var(--profile-accent));
+  background-size: 300% 300%;
+  animation: profileNeonChase 3.2s linear infinite;
+  box-shadow:
+    0 0 24px var(--profile-glow),
+    0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes profileNeonChase {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+.profile-card {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: clamp(6px, 1.4vh, 10px);
+  padding: clamp(10px, 2vh, 14px);
+  border-radius: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 24% 0%, color-mix(in srgb, var(--profile-accent) 14%, transparent), transparent 38%),
+    linear-gradient(180deg, rgba(48, 17, 129, 0.96) 0%, rgba(16, 5, 55, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.profile-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.profile-hero-avatar,
+.profile-hero .player-profile-avatar {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--profile-accent) 70%, white);
+  box-shadow:
+    0 0 16px var(--profile-glow),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  animation: profileAvatarPulse 3s ease-in-out infinite;
+}
+
+@keyframes profileAvatarPulse {
+  0%, 100% { box-shadow: 0 0 12px var(--profile-glow), inset 0 0 0 1px rgba(255, 255, 255, 0.18); }
+  50% { box-shadow: 0 0 22px var(--profile-glow), inset 0 0 0 1px rgba(255, 255, 255, 0.28); }
+}
+
+.profile-hero-avatar .player-profile-avatar-img,
+.profile-hero .player-profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-hero-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: clamp(0.98rem, 4.2vw, 1.12rem);
+  font-weight: 1000;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-tier {
+  margin: 0;
+  font-size: clamp(0.68rem, 2.8vw, 0.76rem);
+  font-weight: 800;
+  color: color-mix(in srgb, var(--profile-accent) 88%, white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-tier span {
+  color: #ffe68f;
+}
+
+.profile-gender-toggle {
+  display: grid;
+  gap: 4px;
+}
+
+.profile-gender-btn {
+  min-width: 42px;
+  min-height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(7, 9, 29, 0.55);
+  color: rgba(255, 255, 255, 0.82);
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.profile-gender-btn.is-active {
+  color: #2a0838;
+  border-color: color-mix(in srgb, var(--profile-accent) 80%, white);
+  background: linear-gradient(180deg, var(--profile-accent), color-mix(in srgb, var(--profile-accent) 72%, #ff8a00));
+  box-shadow: 0 0 12px var(--profile-glow);
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: 0.82fr 1.18fr;
+  gap: 8px;
+}
+
+.profile-stat {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.profile-stat small {
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 236, 170, 0.72);
+}
+
+.profile-stat strong {
+  font-size: clamp(0.92rem, 3.8vw, 1.02rem);
+  font-weight: 1000;
+  color: #ffe68f;
+}
+
+.profile-xp-bar {
+  height: 5px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.profile-xp-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--profile-secondary), var(--profile-accent));
+  box-shadow: 0 0 10px var(--profile-glow);
+  transition: width 0.6s ease;
+}
+
+.profile-rank-path {
+  min-height: 0;
+}
+
+.profile-rank-path .level-up-rank-path {
+  gap: 6px;
+}
+
+.profile-rank-path .level-up-rank-stop {
+  padding: 4px 2px 2px;
+}
+
+.profile-rank-path .level-up-rank-stop strong {
+  font-size: 0.54rem;
+}
+
+.profile-rank-path .level-up-rank-stop small {
+  font-size: 0.5rem;
+}
+
+.profile-rank-path .level-up-rank-node {
+  width: 24px;
+  height: 24px;
+  font-size: 0.72rem;
+}
+
+.profile-rivals {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 6px;
+  overflow: hidden;
+}
+
+.profile-rivals-title {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 236, 170, 0.78);
+}
+
+.profile-rivals-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  overflow: hidden;
+}
+
+.profile-rival-card {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 6px 7px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+  overflow: hidden;
+}
+
+.profile-rival-avatar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 200, 61, 0.35);
+  background: rgba(7, 9, 29, 0.55);
+}
+
+.profile-rival-avatar-img-wrap,
+.profile-rival-avatar .profile-rival-avatar-img-wrap {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.profile-rival-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-rival-copy {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.profile-rival-copy strong {
+  font-size: 0.64rem;
+  font-weight: 1000;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-rival-copy span {
+  font-size: 0.56rem;
+  font-weight: 800;
+  color: rgba(255, 230, 143, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-rival-copy small {
+  font-size: 0.52rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.62);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-screen--rookie {
+  --profile-accent: #cd7f32;
+  --profile-secondary: #ff8a00;
+  --profile-tertiary: #ffd24a;
+  --profile-glow: rgba(205, 127, 50, 0.42);
+}
+
+.profile-screen--strategist {
+  --profile-accent: #c0c0c0;
+  --profile-secondary: #00e5ff;
+  --profile-tertiary: #b347ff;
+  --profile-glow: rgba(192, 192, 192, 0.42);
+}
+
+.profile-screen--master {
+  --profile-accent: #ffd24a;
+  --profile-secondary: #ff8a00;
+  --profile-tertiary: #ff2d95;
+  --profile-glow: rgba(255, 210, 74, 0.48);
+}
+
+.profile-screen--legend {
+  --profile-accent: #ffd700;
+  --profile-secondary: #ff2d95;
+  --profile-tertiary: #fff4b0;
+  --profile-glow: rgba(255, 215, 0, 0.52);
+}
+
+@media (max-width: 360px), (max-height: 700px) {
+  .profile-stage { gap: 6px; }
+  .profile-card { gap: 5px; padding: 8px; }
+  .profile-hero { gap: 8px; padding: 6px 8px; }
+  .profile-hero-avatar,
+  .profile-hero .player-profile-avatar { width: 50px; height: 50px; }
+  .profile-gender-btn { min-width: 38px; min-height: 24px; font-size: 0.58rem; }
+  .profile-stat { padding: 6px 8px; }
+  .profile-rivals-grid { gap: 5px; }
+  .profile-rival-card { padding: 5px 6px; gap: 5px; }
+  .profile-rival-avatar { width: 28px; height: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-bg-glow,
+  .profile-bg-rays,
+  .profile-neon-frame,
+  .profile-hero-avatar {
+    animation: none !important;
+  }
+}

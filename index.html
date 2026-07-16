@@ -39,6 +39,7 @@
   <link rel="stylesheet" href="big2go-session-complete.css?v=1" />
   <link rel="stylesheet" href="big2go-result-story.css?v=3" />
   <link rel="stylesheet" href="big2go-level-up.css?v=8" />
+  <link rel="stylesheet" href="big2go-profile.css?v=1" />
   <link rel="stylesheet" href="big2go-landing-v3.css?v=33" />
   <link rel="stylesheet" href="big2go-play-demo.css?v=3" />
   <link rel="stylesheet" href="big2go-gameplay-premium.css?v=30" />
@@ -398,6 +399,30 @@
       </div>
     </section>
 
+    <section class="panel profile-screen hidden" id="profile-screen" aria-label="Player profile">
+      <div class="profile-bg" aria-hidden="true">
+        <div class="profile-bg-glow"></div>
+        <div class="profile-bg-rays"></div>
+      </div>
+      <div class="profile-stage">
+        <header class="profile-topbar">
+          <h2 id="profile-title" data-i18n="profile.title">Player Profile</h2>
+          <button type="button" class="profile-close" id="profile-close" aria-label="Close profile">✕</button>
+        </header>
+        <div class="profile-neon-frame">
+          <div class="profile-card">
+            <div class="profile-hero" id="profile-hero"></div>
+            <div class="profile-stats" id="profile-stats"></div>
+            <div class="profile-rank-path" id="profile-rank-path"></div>
+            <div class="profile-rivals">
+              <h3 class="profile-rivals-title" id="profile-rivals-title" data-i18n="profile.rivalsTitle">Rival Levels</h3>
+              <div class="profile-rivals-grid" id="profile-rivals-grid"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="panel level-up-screen hidden" id="level-up-screen" aria-label="Level up congratulations">
       <div class="level-up-fx-layer" id="level-up-fx-layer" aria-hidden="true"></div>
       <div class="level-up-bg" aria-hidden="true">
@@ -506,11 +531,11 @@
   </main>
   <div id="coin-fx-layer" class="coin-fx-layer" aria-hidden="true"></div>
 
-  <script src="i18n.js?v=9" defer></script>
+  <script src="i18n.js?v=10" defer></script>
   <script src="playDemoScenes.js?v=1" defer></script>
   <script src="aiDialogue.js?v=1" defer></script>
   <script src="aiCharacters.js?v=13" defer></script>
   <script src="aiReactions.js?v=6" defer></script>
-  <script src="game.js?v=130" defer></script>
+  <script src="game.js?v=131" defer></script>
 </body>
 </html>

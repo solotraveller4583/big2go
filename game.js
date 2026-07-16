@@ -300,6 +300,14 @@
     levelUpFxLayer: document.querySelector('#level-up-fx-layer'),
     levelUpMarqueeTrack: document.querySelector('#level-up-marquee-track'),
     levelUpContinue: document.querySelector('#level-up-continue'),
+    profileScreen: document.querySelector('#profile-screen'),
+    profileTitle: document.querySelector('#profile-title'),
+    profileClose: document.querySelector('#profile-close'),
+    profileHero: document.querySelector('#profile-hero'),
+    profileStats: document.querySelector('#profile-stats'),
+    profileRankPath: document.querySelector('#profile-rank-path'),
+    profileRivalsTitle: document.querySelector('#profile-rivals-title'),
+    profileRivalsGrid: document.querySelector('#profile-rivals-grid'),
     exitConfirmDialog: document.querySelector('#exit-confirm-dialog'),
     playerCount: document.querySelector('#player-count'),
     start: document.querySelector('#start-button'),
@@ -688,7 +696,8 @@
     els.resultStory?.classList.add('hidden');
     els.resultStory?.classList.remove('is-revealing');
     els.levelUp?.classList.add('hidden');
-    document.body.classList.remove('live-room-active', 'result-story-active', 'session-complete-active', 'level-up-active');
+    els.profileScreen?.classList.add('hidden');
+    document.body.classList.remove('live-room-active', 'result-story-active', 'session-complete-active', 'level-up-active', 'profile-active');
     els.voicePanel?.classList.add('hidden');
   }
 
@@ -1618,63 +1627,149 @@
     });
   }
 
-  function buildPlayerProfileHtml() {
+  function renderProfileRankPath(profile) {
+    const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(profile?.level) || STARTING_LEVEL));
+    const tier = getLevelTier(level);
+    const fill = getRankJourneyFill(level);
+    const tierSpan = tier.max - tier.min + 1;
+    const tierStep = Math.max(1, level - tier.min + 1);
+    const stops = LEVEL_TIERS.map(entry => {
+      const stopState = getTierStopState(entry, level, false, level);
+      const pathStyle = LEVEL_TIER_PATH[entry.skill] || LEVEL_TIER_PATH.rookie;
+      const shortLabel = t(`levelUp.tierStop.${entry.skill}`);
+      return `<div class="level-up-rank-stop level-up-rank-stop--${stopState}" data-tier="${entry.skill}" style="--tier-color:${pathStyle.color};--tier-glow:${pathStyle.glow}">
+        <span class="level-up-rank-node" aria-hidden="true">${entry.emoji}</span>
+        <strong>${shortLabel}</strong>
+        <small>Lv ${entry.min}${entry.max === entry.min ? '' : `–${entry.max}`}</small>
+      </div>`;
+    }).join('');
+    return `
+      <div class="level-up-rank-path" aria-label="${t('levelUp.journeyPath')}">
+        <div class="level-up-rank-path-head">
+          <p class="level-up-rank-path-label">${t('levelUp.journeyPath')}</p>
+          <span class="level-up-rank-path-step">${t('levelUp.tierProgress', { current: level, step: tierStep, steps: tierSpan })}</span>
+        </div>
+        <div class="level-up-rank-rail" aria-hidden="true">
+          <span class="level-up-rank-fill" style="width:${fill}%"></span>
+          <span class="level-up-rank-pin" style="left:${fill}%">Lv ${level}</span>
+        </div>
+        <div class="level-up-rank-stops">${stops}</div>
+      </div>`;
+  }
+
+  function applyProfileTheme(tier) {
+    if (!els.profileScreen) return;
+    const pathStyle = LEVEL_TIER_PATH[tier.skill] || LEVEL_TIER_PATH.rookie;
+    els.profileScreen.style.setProperty('--profile-accent', pathStyle.color);
+    els.profileScreen.style.setProperty('--profile-glow', pathStyle.glow);
+    els.profileScreen.dataset.tier = tier.skill;
+    els.profileScreen.classList.remove('profile-screen--rookie', 'profile-screen--strategist', 'profile-screen--master', 'profile-screen--legend');
+    els.profileScreen.classList.add(`profile-screen--${tier.skill}`);
+  }
+
+  function bindProfileGenderToggle() {
+    document.querySelectorAll('#profile-screen .profile-gender-btn[data-profile-gender]').forEach(button => {
+      button.addEventListener('click', () => {
+        const gender = button.dataset.profileGender || 'male';
+        setPlayerGender(gender);
+        renderProfileScreen();
+      });
+    });
+  }
+
+  function renderProfileScreen() {
     const profile = loadPlayerProfile();
     const meta = getPlayerProfileMeta(profile);
     const progress = getProfileProgress(profile.totalWins);
     const tier = getLevelTier(profile.level);
-    const rivals = (window.Big2GoAICharacters?.pool || []).map(character => {
-      const rivalProfile = loadAiProfile(character.id);
-      const rivalProgress = getProfileProgress(rivalProfile.totalWins);
-      const rivalTier = getLevelTier(rivalProfile.level);
-      return `
-        <div class="modal-row profile-rival-row">
-          <strong>${character.name}</strong>
-          <span>Lv ${rivalTier.level} ${rivalTier.emoji} · ${rivalTier.title} · ${rivalProfile.totalWins} wins · ${rivalProgress.maxed ? 'MAX' : `${rivalProgress.current}/${rivalProgress.target}`}</span>
-        </div>`;
-    }).join('');
-    return `
-      <div class="profile-modal">
-        <div class="profile-logo-panel">
-          <div class="profile-logo-preview player-profile-avatar player-profile-avatar--${meta.gender}" id="profile-logo-preview">
-            <img class="player-profile-avatar-img" src="${meta.src}" alt="${meta.alt}" loading="lazy" decoding="async" />
-          </div>
-          <div class="profile-gender-picker" role="group" aria-label="Choose player logo">
-            <button type="button" class="profile-gender-option${meta.gender === 'male' ? ' selected' : ''}" data-profile-gender="male">Spade</button>
-            <button type="button" class="profile-gender-option${meta.gender === 'female' ? ' selected' : ''}" data-profile-gender="female">Heart</button>
-          </div>
+    applyProfileTheme(tier);
+
+    if (els.profileTitle) els.profileTitle.textContent = t('profile.title');
+    if (els.profileRivalsTitle) els.profileRivalsTitle.textContent = t('profile.rivalsTitle');
+
+    if (els.profileHero) {
+      els.profileHero.innerHTML = `
+        <div class="profile-hero-avatar" id="profile-screen-avatar"></div>
+        <div class="profile-hero-copy">
+          <h1 class="profile-name">${getResolvedPlayerName(profile)}</h1>
+          <p class="profile-tier"><span>Lv ${tier.level}</span> ${tier.emoji} ${tier.title}</p>
         </div>
-        <div class="modal-row"><strong>${getResolvedPlayerName(profile)}</strong><span>Lv ${tier.level} ${tier.emoji} ${tier.title}</span></div>
-        <div class="modal-row"><strong>Total Wins</strong><span>${profile.totalWins}</span></div>
-        <div class="modal-row"><strong>Next Level</strong><span>${progress.maxed ? 'Legend Mode — MAX' : `${progress.current} / ${progress.target} wins`}</span></div>
-        <p class="profile-note">Rank tiers: Lv 1–10 Rookie, Lv 11–20 Strategist (~150 wins), Lv 21–29 Master, Lv 30 Legend (300 total wins). Each level needs more wins as you climb.</p>
-        ${rivals ? `<div class="profile-rivals"><h3>Rival Levels</h3>${rivals}</div>` : ''}
-      </div>`;
+        <div class="profile-gender-toggle" role="group" aria-label="${t('profile.chooseIcon')}">
+          <button type="button" class="profile-gender-btn${meta.gender === 'male' ? ' is-active' : ''}" data-profile-gender="male">${t('landing.spade')}</button>
+          <button type="button" class="profile-gender-btn${meta.gender === 'female' ? ' is-active' : ''}" data-profile-gender="female">${t('landing.heart')}</button>
+        </div>`;
+      const avatarEl = document.querySelector('#profile-screen-avatar');
+      if (avatarEl) renderPlayerProfileAvatar(avatarEl, { extraClass: 'profile-hero-avatar' });
+    }
+
+    if (els.profileStats) {
+      const nextLabel = progress.maxed
+        ? t('levelUp.legendMax')
+        : t('profile.winsProgress', { current: progress.current, target: progress.target });
+      const progressPct = progress.maxed ? 100 : Math.round((progress.current / Math.max(1, progress.target)) * 100);
+      els.profileStats.innerHTML = `
+        <div class="profile-stat">
+          <small>${t('profile.totalWins')}</small>
+          <strong>${profile.totalWins}</strong>
+        </div>
+        <div class="profile-stat profile-stat--progress">
+          <small>${t('profile.nextLevel')}</small>
+          <strong>${nextLabel}</strong>
+          <div class="profile-xp-bar" aria-hidden="true"><span style="width:${progressPct}%"></span></div>
+        </div>`;
+    }
+
+    if (els.profileRankPath) {
+      els.profileRankPath.innerHTML = renderProfileRankPath(profile);
+    }
+
+    if (els.profileRivalsGrid) {
+      els.profileRivalsGrid.innerHTML = '';
+      (window.Big2GoAICharacters?.pool || []).forEach(character => {
+        const rivalProfile = loadAiProfile(character.id);
+        const rivalTier = getLevelTier(rivalProfile.level);
+        const rivalProgress = getProfileProgress(rivalProfile.totalWins);
+        const progressLabel = rivalProgress.maxed
+          ? t('profile.rivalMax')
+          : t('profile.rivalProgress', { wins: rivalProfile.totalWins, current: rivalProgress.current, target: rivalProgress.target });
+        const card = document.createElement('article');
+        card.className = 'profile-rival-card';
+        card.innerHTML = `
+          <div class="profile-rival-avatar"></div>
+          <div class="profile-rival-copy">
+            <strong>${character.name}</strong>
+            <span>Lv ${rivalTier.level} ${rivalTier.emoji}</span>
+            <small>${progressLabel}</small>
+          </div>`;
+        els.profileRivalsGrid.appendChild(card);
+        const avatarContainer = card.querySelector('.profile-rival-avatar');
+        window.Big2GoAICharacters?.renderAvatar?.(avatarContainer, character, {
+          className: 'profile-rival-avatar-img-wrap',
+          imgClassName: 'profile-rival-avatar-img'
+        });
+      });
+    }
+
+    bindProfileGenderToggle();
+  }
+
+  function showProfileScreen() {
+    playUiSound('click');
+    renderProfileScreen();
+    hideAllScreens();
+    els.profileScreen?.classList.remove('hidden');
+    document.body.classList.add('profile-active');
+    window.scrollTo(0, 0);
+  }
+
+  function hideProfileScreen() {
+    els.profileScreen?.classList.add('hidden');
+    document.body.classList.remove('profile-active');
+    showLandingScreen();
   }
 
   function showPlayerProfilePanel() {
-    showHelp('Player Profile', buildPlayerProfileHtml());
-    setTimeout(() => {
-      document.querySelectorAll('[data-profile-gender]').forEach(button => {
-        button.addEventListener('click', () => {
-          const gender = button.dataset.profileGender || 'male';
-          setPlayerGender(gender);
-          document.querySelectorAll('.profile-gender-option[data-profile-gender]').forEach(item => {
-            item.classList.toggle('selected', item.dataset.profileGender === gender);
-          });
-          const preview = document.querySelector('#profile-logo-preview');
-          const meta = getPlayerProfileMeta();
-          if (preview) {
-            preview.className = `profile-logo-preview player-profile-avatar player-profile-avatar--${meta.gender}`;
-            const img = preview.querySelector('img');
-            if (img) {
-              img.src = meta.src;
-              img.alt = meta.alt;
-            }
-          }
-        });
-      });
-    }, 0);
+    showProfileScreen();
   }
 
   function shuffleCharacters(list) {
@@ -6318,6 +6413,7 @@
       });
     });
     document.querySelector('#profile-button')?.addEventListener('click', showPlayerProfilePanel);
+    els.profileClose?.addEventListener('click', hideProfileScreen);
     document.querySelectorAll('[data-home-tab]').forEach(button => {
       button.addEventListener('click', () => {
         document.querySelectorAll('[data-home-tab]').forEach(tab => tab.classList.toggle('active', tab === button));

@@ -196,7 +196,15 @@
       'tier.rookie': 'Rookie Challenger',
       'tier.strategist': 'Battle Strategist',
       'tier.master': 'Big2Go Master',
-      'tier.legend': 'Legend Mode'
+      'tier.legend': 'Legend Mode',
+      'profile.title': 'Player Profile',
+      'profile.totalWins': 'Total Wins',
+      'profile.nextLevel': 'Next Level',
+      'profile.winsProgress': '{current} / {target} wins',
+      'profile.rivalsTitle': 'Rival Levels',
+      'profile.chooseIcon': 'Choose profile icon',
+      'profile.rivalProgress': '{wins} wins · {current}/{target}',
+      'profile.rivalMax': 'Legend · MAX'
     },
     th: {
       'language.welcome': 'ยินดีต้อนรับสู่ Big2Go',
@@ -379,7 +387,15 @@
       'tier.rookie': 'นักท้าทายมือใหม่',
       'tier.strategist': 'นักยุทธศาสตร์',
       'tier.master': 'มาสเตอร์ Big2Go',
-      'tier.legend': 'โหมดตำนาน'
+      'tier.legend': 'โหมดตำนาน',
+      'profile.title': 'โปรไฟล์ผู้เล่น',
+      'profile.totalWins': 'ชนะรวม',
+      'profile.nextLevel': 'เลเวลถัดไป',
+      'profile.winsProgress': '{current} / {target} ชนะ',
+      'profile.rivalsTitle': 'เลเวลคู่แข่ง',
+      'profile.chooseIcon': 'เลือกไอคอนโปรไฟล์',
+      'profile.rivalProgress': '{wins} ชนะ · {current}/{target}',
+      'profile.rivalMax': 'ตำนาน · MAX'
     },
     zh: {
       'language.welcome': '欢迎来到 Big2Go',
@@ -562,7 +578,15 @@
       'tier.rookie': '新秀挑战者',
       'tier.strategist': '战术大师',
       'tier.master': 'Big2Go 大师',
-      'tier.legend': '传奇模式'
+      'tier.legend': '传奇模式',
+      'profile.title': '玩家资料',
+      'profile.totalWins': '总胜场',
+      'profile.nextLevel': '下一级',
+      'profile.winsProgress': '{current} / {target} 胜',
+      'profile.rivalsTitle': '对手等级',
+      'profile.chooseIcon': '选择头像',
+      'profile.rivalProgress': '{wins} 胜 · {current}/{target}',
+      'profile.rivalMax': '传奇 · 满级'
     },
     ja: {
       'language.welcome': 'Big2Goへようこそ',
@@ -745,7 +769,15 @@
       'tier.rookie': 'ルーキーチャレンジャー',
       'tier.strategist': 'バトルストラテジスト',
       'tier.master': 'Big2Goマスター',
-      'tier.legend': 'レジェンドモード'
+      'tier.legend': 'レジェンドモード',
+      'profile.title': 'プレイヤープロフィール',
+      'profile.totalWins': '総勝利',
+      'profile.nextLevel': '次のレベル',
+      'profile.winsProgress': '{current} / {target} 勝',
+      'profile.rivalsTitle': 'ライバルレベル',
+      'profile.chooseIcon': 'アイコンを選ぶ',
+      'profile.rivalProgress': '{wins} 勝 · {current}/{target}',
+      'profile.rivalMax': 'レジェンド · MAX'
     },
     ko: {
       'language.welcome': 'Big2Go에 오신 것을 환영합니다',
@@ -928,7 +960,15 @@
       'tier.rookie': '루키 챌린저',
       'tier.strategist': '배틀 전략가',
       'tier.master': 'Big2Go 마스터',
-      'tier.legend': '레전드 모드'
+      'tier.legend': '레전드 모드',
+      'profile.title': '플레이어 프로필',
+      'profile.totalWins': '총 승리',
+      'profile.nextLevel': '다음 레벨',
+      'profile.winsProgress': '{current} / {target} 승',
+      'profile.rivalsTitle': '라이벌 레벨',
+      'profile.chooseIcon': '프로필 아이콘 선택',
+      'profile.rivalProgress': '{wins}승 · {current}/{target}',
+      'profile.rivalMax': '레전드 · MAX'
     }
   };
 
