@@ -795,20 +795,26 @@ dialog::backdrop { background: rgba(3, 2, 17, .72); backdrop-filter: blur(10px);
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 0;
-  width: min(92vw, 400px);
-  padding: 20px 20px 18px;
+  width: min(92vw, 380px);
+  padding: 22px 20px 18px;
+  border: 1px solid rgba(255, 216, 74, 0.28);
   background:
-    radial-gradient(circle at 30% 0%, rgba(255, 216, 74, .3), transparent 34%),
-    linear-gradient(180deg, #4a2cb8, #16084a 78%);
+    radial-gradient(circle at 18% 0%, rgba(255, 216, 74, 0.22), transparent 38%),
+    radial-gradient(circle at 88% 12%, rgba(120, 196, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, #3f249f 0%, #18084a 82%);
+  box-shadow:
+    0 24px 48px rgba(8, 0, 32, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 #help-dialog.help-dialog--hint .dialog-card h2,
 #help-dialog.help-dialog--hint #help-title {
-  margin: 0 0 14px;
+  margin: 0 0 12px;
   padding: 0;
-  font-size: clamp(1.35rem, 5.4vw, 1.75rem);
+  font-size: clamp(1.28rem, 5vw, 1.62rem);
   line-height: 1.2;
   font-weight: 1000;
+  letter-spacing: 0.01em;
   color: #fff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
@@ -818,116 +824,104 @@ dialog::backdrop { background: rgba(3, 2, 17, .72); backdrop-filter: blur(10px);
   gap: 0;
   margin: 0;
   padding: 0;
-  font-size: clamp(.98rem, 4vw, 1.08rem);
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.98);
+  font-size: clamp(.96rem, 3.8vw, 1.04rem);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.96);
 }
 
 .oracle-hint-card {
   display: grid;
-  gap: 12px;
-  padding: 16px 18px;
+  gap: 14px;
+  padding: 16px 16px 14px;
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px);
 }
 
 .oracle-hint-card--pass {
-  border-color: rgba(255, 159, 120, 0.45);
-  background: linear-gradient(180deg, rgba(255, 120, 61, 0.16), rgba(255, 120, 61, 0.08));
+  border-color: rgba(255, 159, 120, 0.42);
+  background: linear-gradient(180deg, rgba(255, 120, 61, 0.14), rgba(255, 120, 61, 0.06));
 }
 
 .oracle-hint-card--play {
-  border-color: rgba(255, 200, 61, 0.5);
-  background: linear-gradient(180deg, rgba(255, 200, 61, 0.16), rgba(255, 200, 61, 0.08));
+  border-color: rgba(255, 216, 74, 0.38);
+  background: linear-gradient(180deg, rgba(255, 216, 74, 0.12), rgba(255, 216, 74, 0.04));
 }
 
-.oracle-hint-lead {
+.oracle-hint-kicker {
   margin: 0;
-  font-size: clamp(1.02rem, 4.4vw, 1.14rem);
-  font-weight: 900;
-  line-height: 1.45;
-  color: #fff;
-}
-
-.oracle-hint-play {
-  margin: 0;
-  padding: 12px 14px;
-  border-radius: 14px;
-  font-size: clamp(1.15rem, 5vw, 1.35rem);
-  font-weight: 1000;
+  font-size: clamp(.82rem, 3.2vw, .92rem);
+  font-weight: 800;
   line-height: 1.35;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 230, 143, 0.92);
+}
+
+.oracle-hint-suggestion {
+  display: grid;
+  place-items: center;
+  min-height: 58px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 216, 74, 0.55);
+  background: linear-gradient(180deg, #fff8dc 0%, #ffd95a 100%);
+  box-shadow:
+    0 10px 22px rgba(255, 200, 61, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.oracle-hint-suggestion-text {
+  font-size: clamp(1.18rem, 5.2vw, 1.42rem);
+  font-weight: 1000;
+  line-height: 1.25;
   text-align: center;
-  color: #2a1200;
-  background: linear-gradient(180deg, #fff0b8, #ffc83d);
-  box-shadow: 0 8px 18px rgba(255, 200, 61, 0.28);
+  color: #1a0f00;
   word-break: break-word;
 }
 
-.oracle-hint-steps {
-  list-style: none;
-  counter-reset: hint-step;
-  margin: 2px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-
-.oracle-hint-steps li {
-  counter-increment: hint-step;
-  display: grid;
-  grid-template-columns: 1.7rem 1fr;
-  gap: 10px;
-  align-items: start;
+.oracle-hint-note {
   margin: 0;
-  padding: 0;
-  font-size: clamp(.95rem, 4vw, 1.05rem);
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.96);
-}
-
-.oracle-hint-steps li::before {
-  content: counter(hint-step);
-  display: grid;
-  place-items: center;
-  width: 1.7rem;
-  height: 1.7rem;
-  border-radius: 999px;
-  font-size: .8rem;
-  font-weight: 1000;
-  line-height: 1;
-  color: #2a1200;
-  background: linear-gradient(180deg, #fff0b8, #ffc83d);
-  box-shadow: 0 2px 8px rgba(255, 200, 61, 0.24);
-}
-
-.oracle-hint-steps strong,
-.oracle-hint-action {
-  color: #ffe68f;
-  font-weight: 900;
-}
-
-.oracle-hint-action {
-  display: inline-block;
-  padding: 1px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 230, 143, 0.42);
-  background: rgba(255, 230, 143, 0.14);
+  font-size: clamp(.92rem, 3.6vw, 1rem);
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
 }
 
 #help-dialog.help-dialog--hint .dialog-card menu {
   display: grid;
   grid-template-columns: 1fr;
   justify-items: stretch;
+  gap: 10px;
   margin: 16px 0 0;
   padding: 0;
+}
+
+#help-dialog.help-dialog--hint .dialog-card menu.help-dialog-actions--hint {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.35fr);
 }
 
 #help-dialog.help-dialog--hint .dialog-card menu button {
   width: 100%;
   min-height: 52px;
-  font-size: 1.02rem;
+  font-size: 1rem;
   font-weight: 1000;
+}
+
+#help-dialog.help-dialog--hint #help-dismiss-button {
+  min-height: 48px;
+  font-size: .96rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.88);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#help-dialog.help-dialog--hint #help-confirm-button {
+  box-shadow:
+    0 10px 22px rgba(255, 145, 45, 0.28),
+    0 0 0 2px rgba(120, 220, 255, 0.42);
 }
 
 #help-dialog .dialog-card h2,
@@ -939,6 +933,11 @@ dialog::backdrop { background: rgba(3, 2, 17, .72); backdrop-filter: blur(10px);
 #help-dialog .help-copy p,
 #help-dialog .help-copy li {
   color: rgba(255, 255, 255, 0.96) !important;
+}
+
+#help-dialog.help-dialog--hint .oracle-hint-suggestion,
+#help-dialog.help-dialog--hint .oracle-hint-suggestion-text {
+  color: #1a0f00 !important;
 }
 
 #help-dialog .help-copy strong {

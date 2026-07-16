@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="big2go-casino-landscape.css" />
   <link rel="stylesheet" href="big2go-premium.css" />
   <link rel="stylesheet" href="big2go-final-mobile.css" />
-  <link rel="stylesheet" href="big2go-app-redesign.css?v=3" />
+  <link rel="stylesheet" href="big2go-app-redesign.css?v=4" />
   <link rel="stylesheet" href="big2go-cascade-guard.css" />
   <link rel="stylesheet" href="big2go-polish-guard.css" />
   <link rel="stylesheet" href="big2go-hand-guard.css" />
@@ -498,19 +498,20 @@
       <form method="dialog" class="dialog-card">
         <h2 id="help-title" data-i18n="help.title">How to Play</h2>
         <div id="help-text" class="help-copy"></div>
-        <menu>
-          <button class="primary" value="ok" data-i18n="help.gotIt">Got it</button>
+        <menu id="help-dialog-menu">
+          <button type="submit" class="secondary hidden" id="help-dismiss-button" value="cancel" data-i18n="hint.notNow">Not now</button>
+          <button type="submit" class="primary" id="help-confirm-button" value="ok" data-i18n="help.gotIt">Got it</button>
         </menu>
       </form>
     </dialog>
   </main>
   <div id="coin-fx-layer" class="coin-fx-layer" aria-hidden="true"></div>
 
-  <script src="i18n.js?v=3" defer></script>
+  <script src="i18n.js?v=4" defer></script>
   <script src="playDemoScenes.js?v=1" defer></script>
   <script src="aiDialogue.js?v=1" defer></script>
   <script src="aiCharacters.js?v=13" defer></script>
   <script src="aiReactions.js?v=6" defer></script>
-  <script src="game.js?v=121" defer></script>
+  <script src="game.js?v=122" defer></script>
 </body>
 </html>

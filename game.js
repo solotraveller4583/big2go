@@ -146,6 +146,7 @@
     },
     lastMatchStory: null,
     pendingVictoryReveal: null,
+    hintPendingAction: null,
     levelUpFxTimers: [],
     voice: {
       enabled: false,
@@ -317,6 +318,9 @@
     helpDialog: document.querySelector('#help-dialog'),
     helpTitle: document.querySelector('#help-title'),
     helpText: document.querySelector('#help-text'),
+    helpMenu: document.querySelector('#help-dialog-menu'),
+    helpConfirm: document.querySelector('#help-confirm-button'),
+    helpDismiss: document.querySelector('#help-dismiss-button'),
     heatText: document.querySelector('#heat-text'),
     heatValue: document.querySelector('#heat-value'),
     heatFill: document.querySelector('#heat-fill'),
@@ -3002,7 +3006,39 @@
     render();
   }
 
+  function resetHelpDialogChrome() {
+    state.hintPendingAction = null;
+    els.helpDismiss?.classList.add('hidden');
+    els.helpMenu?.classList.remove('help-dialog-actions--hint');
+    if (els.helpConfirm) {
+      els.helpConfirm.textContent = t('help.gotIt');
+      els.helpConfirm.dataset.i18n = 'help.gotIt';
+    }
+  }
+
+  function configureHintDialog(action) {
+    state.hintPendingAction = action;
+    els.helpDismiss?.classList.remove('hidden');
+    els.helpMenu?.classList.add('help-dialog-actions--hint');
+    if (els.helpConfirm) {
+      els.helpConfirm.textContent = action === 'pass' ? t('hint.passConfirm') : t('hint.playConfirm');
+      els.helpConfirm.dataset.i18n = action === 'pass' ? 'hint.passConfirm' : 'hint.playConfirm';
+    }
+  }
+
+  function executeHintAction(action) {
+    if (!action || !canHumanAct()) return;
+    if (action === 'pass') {
+      humanPass();
+      return;
+    }
+    if (action === 'play') {
+      humanPlay();
+    }
+  }
+
   function showHelp(title, text, options = {}) {
+    resetHelpDialogChrome();
     els.helpTitle.textContent = title;
     const html = String(text || '');
     els.helpText.innerHTML = /<\/?[a-z][\s\S]*>/i.test(html) ? html : `<p>${html}</p>`;
@@ -3014,6 +3050,7 @@
     els.helpDialog.classList.remove('help-dialog--hint', 'help-dialog--settings');
     if (options.variant === 'hint') els.helpDialog.classList.add('help-dialog--hint');
     if (options.variant === 'settings') els.helpDialog.classList.add('help-dialog--settings');
+    if (options.variant === 'hint' && options.hintAction) configureHintDialog(options.hintAction);
     els.helpDialog.showModal();
   }
 
@@ -4687,28 +4724,24 @@
     const hand = getHumanPlayer().hand;
     const chosen = pickAIMove(hand);
     if (!chosen) {
-      showOracle('No move available', `
+      clearSelection();
+      showOracle(t('hint.titlePass'), `
         <div class="oracle-hint-card oracle-hint-card--pass">
-          <p class="oracle-hint-lead">Your hand cannot beat the cards on the table right now.</p>
-          <ol class="oracle-hint-steps">
-            <li>Tap <strong class="oracle-hint-action">Pass</strong> to skip your turn.</li>
-            <li>Other players will play or pass in turn.</li>
-            <li>When everyone passes, the trick clears and a new round starts.</li>
-          </ol>
-        </div>`, { variant: 'hint' });
+          <p class="oracle-hint-kicker">${t('hint.passKicker')}</p>
+          <p class="oracle-hint-note">${t('hint.passNote')}</p>
+        </div>`, { variant: 'hint', hintAction: 'pass' });
       return;
     }
     state.selected = new Set(chosen.cards.map(card => card.id));
     render();
-    showOracle('Hint', `
+    showOracle(t('hint.titlePlay'), `
       <div class="oracle-hint-card oracle-hint-card--play">
-        <p class="oracle-hint-lead">Try this hand:</p>
-        <p class="oracle-hint-play">${describePlay(chosen)}</p>
-        <ol class="oracle-hint-steps">
-          <li>Tap the highlighted cards in your hand.</li>
-          <li>Then tap <strong class="oracle-hint-action">Play</strong> to put them on the table.</li>
-        </ol>
-      </div>`, { variant: 'hint' });
+        <p class="oracle-hint-kicker">${t('hint.playKicker')}</p>
+        <div class="oracle-hint-suggestion" aria-label="${describePlay(chosen)}">
+          <span class="oracle-hint-suggestion-text">${describePlay(chosen)}</span>
+        </div>
+        <p class="oracle-hint-note">${t('hint.playNote')}</p>
+      </div>`, { variant: 'hint', hintAction: 'play' });
   }
 
   function scheduleAiTurn() {
@@ -5734,6 +5767,14 @@
     els.play.addEventListener('click', playSelectedCards);
     els.pass.addEventListener('click', humanPass);
     els.hint.addEventListener('click', chooseHint);
+    els.helpDialog?.addEventListener('close', () => {
+      const confirmed = els.helpDialog.returnValue === 'ok';
+      const action = state.hintPendingAction;
+      resetHelpDialogChrome();
+      if (confirmed && action) {
+        requestAnimationFrame(() => executeHintAction(action));
+      }
+    });
     els.sort.addEventListener('click', sortHumanHand);
     els.restart.addEventListener('click', () => {
       if (state.liveRoom?.code) {
