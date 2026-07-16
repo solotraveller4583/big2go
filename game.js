@@ -242,13 +242,13 @@
   const CARNIVAL_CELEBRATION_HUES = [42, 320, 280, 15, 195, 330];
 
   const DEFEAT_RIVAL_THEMES = {
-    bruno: { accent: '#ff8a00', secondary: '#ff2d95', tertiary: '#ffd24a', emoji: '🔥', chase: 1.9 },
-    luna: { accent: '#ff47d4', secondary: '#b347ff', tertiary: '#00e5ff', emoji: '🌙', chase: 2.2 },
-    kiro: { accent: '#00e5ff', secondary: '#4d9fff', tertiary: '#b347ff', emoji: '📊', chase: 1.7 },
-    pico: { accent: '#ffd24a', secondary: '#00e5ff', tertiary: '#ff4757', emoji: '⚡', chase: 1.5 },
-    bao: { accent: '#ffb347', secondary: '#ff4757', tertiary: '#ffd24a', emoji: '🥟', chase: 2.0 },
-    tora: { accent: '#7dd3fc', secondary: '#b347ff', tertiary: '#ffd24a', emoji: '☁️', chase: 2.4 },
-    default: { accent: '#00e5ff', secondary: '#ff2d95', tertiary: '#ffd24a', emoji: '🎭', chase: 2.0 }
+    bruno: { accent: '#ff8a00', secondary: '#ff2d95', tertiary: '#ffd24a', emoji: '🔥', chase: 1.9, frame: 'flare', vibe: '🔥' },
+    luna: { accent: '#ff47d4', secondary: '#b347ff', tertiary: '#00e5ff', emoji: '🌙', chase: 2.2, frame: 'moon', vibe: '✨' },
+    kiro: { accent: '#00e5ff', secondary: '#4d9fff', tertiary: '#b347ff', emoji: '📊', chase: 1.7, frame: 'pulse', vibe: '🧠' },
+    pico: { accent: '#ffd24a', secondary: '#00e5ff', tertiary: '#ff4757', emoji: '⚡', chase: 1.5, frame: 'bolt', vibe: '⚡' },
+    bao: { accent: '#ffb347', secondary: '#ff4757', tertiary: '#ffd24a', emoji: '🥟', chase: 2.0, frame: 'steam', vibe: '🥟' },
+    tora: { accent: '#7dd3fc', secondary: '#b347ff', tertiary: '#ffd24a', emoji: '☁️', chase: 2.4, frame: 'cloud', vibe: '☁️' },
+    default: { accent: '#00e5ff', secondary: '#ff2d95', tertiary: '#ffd24a', emoji: '🎭', chase: 2.0, frame: 'pulse', vibe: '🎭' }
   };
 
   const LEVEL_JOURNEY_THEMES = [
@@ -1725,7 +1725,7 @@
 
     if (els.profileRivalsGrid) {
       els.profileRivalsGrid.innerHTML = '';
-      (window.Big2GoAICharacters?.pool || []).forEach(character => {
+      (window.Big2GoAICharacters?.pool || []).forEach((character, index) => {
         const rivalProfile = loadAiProfile(character.id);
         const rivalTier = getLevelTier(rivalProfile.level);
         const rivalProgress = getProfileProgress(rivalProfile.totalWins);
@@ -1738,28 +1738,39 @@
           ? t('profile.rivalMax')
           : t('profile.rivalShort', { current: rivalProgress.current, target: rivalProgress.target });
         const card = document.createElement('article');
-        card.className = `profile-rival-card profile-rival-card--${character.id}`;
+        card.className = `profile-rival-card profile-rival-card--${character.id} profile-rival-card--${rivalTheme.frame}`;
+        card.dataset.tier = rivalTier.skill;
         card.style.setProperty('--rival-accent', rivalTheme.accent);
         card.style.setProperty('--rival-secondary', rivalTheme.secondary);
+        card.style.setProperty('--rival-tertiary', rivalTheme.tertiary);
         card.style.setProperty('--rival-tier-color', tierStyle.color);
+        card.style.setProperty('--rival-xp', String(progressPct));
+        card.style.setProperty('--rival-float-delay', `${index * 0.35}s`);
         card.innerHTML = `
-          <div class="profile-rival-frame">
-            <div class="profile-rival-lv" aria-label="${t('profile.rivalLevel', { level: rivalTier.level })}">
-              <span class="profile-rival-lv-tag">Lv</span>
-              <strong class="profile-rival-lv-num">${rivalTier.level}</strong>
-              <span class="profile-rival-tier-icon" aria-hidden="true">${rivalTier.emoji}</span>
+          <div class="profile-rival-collectible">
+            <span class="profile-rival-spark profile-rival-spark--a" aria-hidden="true">${rivalTheme.vibe}</span>
+            <span class="profile-rival-spark profile-rival-spark--b" aria-hidden="true">${rivalTheme.emoji}</span>
+            <div class="profile-rival-xp-ring" aria-hidden="true"></div>
+            <div class="profile-rival-portrait">
+              <div class="profile-rival-avatar-shell"></div>
+              <div class="profile-rival-lv-plaque" aria-label="${t('profile.rivalLevel', { level: rivalTier.level })}">
+                <span class="profile-rival-lv-plaque__tag">LV</span>
+                <strong class="profile-rival-lv-plaque__num">${rivalTier.level}</strong>
+                <span class="profile-rival-lv-plaque__tier" aria-hidden="true">${rivalTier.emoji}</span>
+              </div>
             </div>
-            <div class="profile-rival-avatar"></div>
-            <span class="profile-rival-glow" aria-hidden="true"></span>
           </div>
-          <strong class="profile-rival-name">${character.name}</strong>
-          <div class="profile-rival-xp" aria-hidden="true"><span style="width:${progressPct}%"></span></div>
-          <small class="profile-rival-meta">${metaLabel}</small>`;
+          <div class="profile-rival-foot">
+            <strong class="profile-rival-name">${character.name}</strong>
+            <span class="profile-rival-tier-label">${rivalTier.emoji} ${t(`levelUp.tierStop.${rivalTier.skill}`)}</span>
+            <div class="profile-rival-xp" aria-hidden="true"><span style="width:${progressPct}%"></span></div>
+            <small class="profile-rival-meta">${metaLabel}</small>
+          </div>`;
         els.profileRivalsGrid.appendChild(card);
-        const avatarContainer = card.querySelector('.profile-rival-avatar');
-        window.Big2GoAICharacters?.renderAvatar?.(avatarContainer, character, {
-          className: 'character-avatar',
-          imgClassName: 'character-avatar-img'
+        const avatarShell = card.querySelector('.profile-rival-avatar-shell');
+        window.Big2GoAICharacters?.renderAvatar?.(avatarShell, character, {
+          className: 'profile-rival-avatar',
+          imgClassName: 'profile-rival-avatar-img'
         });
       });
     }

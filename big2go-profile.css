@@ -349,30 +349,67 @@ body.profile-active .app-shell {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 7px;
+  gap: 8px;
   overflow: hidden;
 }
 
+/* ── Rival collectible cards ── */
 .profile-rival-card {
+  --rival-xp: 0;
   min-height: 0;
   min-width: 0;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto auto auto;
-  gap: 3px;
-  padding: 5px 4px 4px;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--rival-accent, #ffd24a) 32%, transparent);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 18px;
+  animation-delay: var(--rival-float-delay, 0s);
+  border: 1px solid color-mix(in srgb, var(--rival-accent, #ffd24a) 38%, transparent);
   background:
-    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--rival-accent, #ffd24a) 16%, transparent), transparent 58%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--rival-accent, #ffd24a) 22%, transparent), transparent 55%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 48%, rgba(0, 0, 0, 0.12) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 6px 14px rgba(0, 0, 0, 0.22);
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 8px 18px rgba(0, 0, 0, 0.28);
   overflow: hidden;
   text-align: center;
+  animation: profileRivalFloat 4.8s ease-in-out infinite;
 }
 
-.profile-rival-frame {
+@keyframes profileRivalFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.profile-rival-card[data-tier="rookie"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 0 1px color-mix(in srgb, #cd7f32 28%, transparent),
+    0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.profile-rival-card[data-tier="strategist"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 0 1px color-mix(in srgb, #c0c0c0 32%, transparent),
+    0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.profile-rival-card[data-tier="master"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 12px color-mix(in srgb, #ffd24a 22%, transparent),
+    0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.profile-rival-card[data-tier="legend"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 16px color-mix(in srgb, #ff2d95 28%, transparent),
+    0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.profile-rival-collectible {
   position: relative;
   min-height: 0;
   width: 100%;
@@ -381,84 +418,129 @@ body.profile-active .app-shell {
   margin: 0 auto;
 }
 
-.profile-rival-lv {
+.profile-rival-spark {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px 5px 2px 4px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: linear-gradient(180deg, rgba(12, 8, 36, 0.94), rgba(6, 4, 22, 0.88));
-  box-shadow:
-    0 0 10px color-mix(in srgb, var(--rival-accent, #ffd24a) 45%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-}
-
-.profile-rival-lv-tag {
-  font-size: 0.48rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(255, 236, 170, 0.82);
-}
-
-.profile-rival-lv-num {
+  z-index: 4;
   font-size: 0.72rem;
-  font-weight: 1000;
   line-height: 1;
-  color: #ffe68f;
-  text-shadow: 0 0 8px color-mix(in srgb, var(--rival-accent, #ffd24a) 40%, transparent);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--rival-accent) 55%, transparent));
+  pointer-events: none;
+  animation: profileRivalSpark 2.8s ease-in-out infinite;
+  animation-delay: var(--rival-float-delay, 0s);
 }
 
-.profile-rival-tier-icon {
-  font-size: 0.62rem;
-  line-height: 1;
+.profile-rival-spark--a { top: 2px; left: 4px; }
+.profile-rival-spark--b { top: 2px; right: 4px; animation-delay: calc(var(--rival-float-delay, 0s) + 0.6s); }
+
+@keyframes profileRivalSpark {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; }
+  50% { transform: scale(1.15) rotate(8deg); opacity: 1; }
 }
 
-.profile-rival-avatar,
-.profile-rival-frame .character-avatar {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  border-radius: 14px;
+.profile-rival-xp-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 3px;
+  background: conic-gradient(
+    from -90deg,
+    var(--rival-accent) 0deg,
+    var(--rival-secondary) calc(var(--rival-xp) * 3.6deg),
+    rgba(255, 255, 255, 0.1) calc(var(--rival-xp) * 3.6deg),
+    rgba(255, 255, 255, 0.1) 360deg
+  );
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--rival-accent) 35%, transparent),
+    inset 0 0 8px rgba(0, 0, 0, 0.25);
+  animation: profileRivalRingPulse 3.6s ease-in-out infinite;
+  animation-delay: var(--rival-float-delay, 0s);
+}
+
+@keyframes profileRivalRingPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.12); }
+}
+
+.profile-rival-portrait {
+  position: absolute;
+  inset: 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: visible;
+  background:
+    radial-gradient(circle at 50% 22%, color-mix(in srgb, var(--rival-secondary) 28%, transparent), transparent 58%),
+    radial-gradient(circle at 50% 88%, color-mix(in srgb, var(--rival-accent) 18%, transparent), transparent 52%),
+    linear-gradient(180deg, rgba(12, 8, 36, 0.92), rgba(6, 4, 22, 0.98));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.profile-rival-avatar-shell,
+.profile-rival-avatar-shell.profile-rival-avatar {
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
   overflow: hidden;
   display: grid;
   place-items: center;
-  border: 2px solid color-mix(in srgb, var(--rival-accent, #ffd24a) 72%, white);
-  background:
-    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--rival-secondary, #ff2d95) 22%, transparent), transparent 52%),
-    rgba(7, 9, 29, 0.72);
+  border: 2px solid color-mix(in srgb, var(--rival-accent) 65%, white);
+  background: rgba(7, 9, 29, 0.55);
   box-shadow:
-    0 0 14px color-mix(in srgb, var(--rival-accent, #ffd24a) 28%, transparent),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    0 6px 14px rgba(0, 0, 0, 0.35),
+    0 0 12px color-mix(in srgb, var(--rival-accent) 30%, transparent);
 }
 
-.profile-rival-avatar .character-avatar-img,
-.profile-rival-frame .character-avatar-img {
+.profile-rival-avatar-shell .profile-rival-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  transform: scale(1.06);
 }
 
-.profile-rival-glow {
+.profile-rival-lv-plaque {
   position: absolute;
-  inset: 8%;
-  z-index: 0;
-  border-radius: 18px;
-  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rival-accent, #ffd24a) 24%, transparent), transparent 68%);
-  pointer-events: none;
-  animation: profileRivalGlow 3.2s ease-in-out infinite;
+  left: 50%;
+  bottom: 5px;
+  z-index: 5;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: linear-gradient(180deg, #2a1848 0%, #12082a 100%);
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--rival-accent) 50%, transparent),
+    0 4px 10px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
-@keyframes profileRivalGlow {
-  0%, 100% { opacity: 0.55; transform: scale(0.98); }
-  50% { opacity: 1; transform: scale(1.02); }
+.profile-rival-lv-plaque__tag {
+  font-size: 0.46rem;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+  color: rgba(255, 236, 170, 0.82);
+}
+
+.profile-rival-lv-plaque__num {
+  font-size: 0.82rem;
+  font-weight: 1000;
+  line-height: 1;
+  color: #ffe68f;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--rival-accent) 55%, transparent);
+}
+
+.profile-rival-lv-plaque__tier {
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+.profile-rival-foot {
+  display: grid;
+  gap: 2px;
+  padding: 0 2px 2px;
 }
 
 .profile-rival-name {
@@ -471,8 +553,18 @@ body.profile-active .app-shell {
   text-overflow: ellipsis;
 }
 
+.profile-rival-tier-label {
+  font-size: 0.48rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: color-mix(in srgb, var(--rival-tier-color, #ffd24a) 88%, white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .profile-rival-xp {
-  height: 4px;
+  height: 3px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
@@ -482,18 +574,92 @@ body.profile-active .app-shell {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--rival-secondary, #ff2d95), var(--rival-accent, #ffd24a));
+  background: linear-gradient(90deg, var(--rival-secondary, #ff2d95), var(--rival-accent, #ffd24a), var(--rival-tertiary, #00e5ff));
   box-shadow: 0 0 8px color-mix(in srgb, var(--rival-accent, #ffd24a) 45%, transparent);
 }
 
 .profile-rival-meta {
-  font-size: 0.5rem;
+  font-size: 0.48rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.68);
+  color: rgba(255, 255, 255, 0.62);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Per-rival frame personalities */
+.profile-rival-card--flare .profile-rival-portrait {
+  clip-path: polygon(50% 0%, 92% 18%, 100% 56%, 78% 100%, 22% 100%, 0% 56%, 8% 18%);
+  border-radius: 0;
+}
+
+.profile-rival-card--moon .profile-rival-portrait {
+  border-radius: 42% 42% 48% 48%;
+}
+
+.profile-rival-card--moon .profile-rival-xp-ring {
+  border-radius: 44% 44% 50% 50%;
+}
+
+.profile-rival-card--pulse .profile-rival-portrait::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: inherit;
+  border: 1px dashed color-mix(in srgb, var(--rival-accent) 45%, transparent);
+  animation: profileRivalPulseGrid 2.4s linear infinite;
+}
+
+@keyframes profileRivalPulseGrid {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.03); }
+}
+
+.profile-rival-card--bolt .profile-rival-portrait {
+  clip-path: polygon(50% 0%, 68% 28%, 100% 32%, 72% 54%, 82% 100%, 50% 76%, 18% 100%, 28% 54%, 0% 32%, 32% 28%);
+  border-radius: 0;
+}
+
+.profile-rival-card--steam .profile-rival-portrait {
+  border-radius: 38% 38% 46% 46%;
+}
+
+.profile-rival-card--steam .profile-rival-spark--b {
+  animation: profileRivalSteam 2.2s ease-in-out infinite;
+}
+
+@keyframes profileRivalSteam {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+  50% { transform: translateY(-4px) scale(1.1); opacity: 1; }
+}
+
+.profile-rival-card--cloud .profile-rival-portrait {
+  border-radius: 48% 48% 42% 42%;
+}
+
+.profile-rival-card--bruno .profile-rival-collectible {
+  filter: drop-shadow(0 0 8px rgba(255, 138, 0, 0.25));
+}
+
+.profile-rival-card--luna .profile-rival-collectible {
+  filter: drop-shadow(0 0 8px rgba(255, 71, 212, 0.22));
+}
+
+.profile-rival-card--kiro .profile-rival-collectible {
+  filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.22));
+}
+
+.profile-rival-card--pico .profile-rival-collectible {
+  filter: drop-shadow(0 0 8px rgba(255, 210, 74, 0.28));
+}
+
+.profile-rival-card--bao .profile-rival-collectible {
+  filter: drop-shadow(0 0 8px rgba(255, 179, 71, 0.24));
+}
+
+.profile-rival-card--tora .profile-rival-collectible {
+  filter: drop-shadow(0 0 8px rgba(125, 211, 252, 0.24));
 }
 
 .profile-screen--rookie {
@@ -533,9 +699,10 @@ body.profile-active .app-shell {
   .profile-gender-btn { min-width: 38px; min-height: 24px; font-size: 0.58rem; }
   .profile-stat { padding: 6px 8px; }
   .profile-rivals-grid { gap: 5px; }
-  .profile-rival-card { padding: 4px 3px 3px; gap: 2px; }
-  .profile-rival-lv-num { font-size: 0.66rem; }
+  .profile-rival-card { padding: 3px; gap: 3px; }
+  .profile-rival-lv-plaque__num { font-size: 0.74rem; }
   .profile-rival-name { font-size: 0.56rem; }
+  .profile-rival-tier-label { font-size: 0.44rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -543,7 +710,10 @@ body.profile-active .app-shell {
   .profile-bg-rays,
   .profile-neon-frame,
   .profile-hero-avatar,
-  .profile-rival-glow {
+  .profile-rival-card,
+  .profile-rival-spark,
+  .profile-rival-xp-ring,
+  .profile-rival-portrait::before {
     animation: none !important;
   }
 }
