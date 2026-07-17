@@ -6186,14 +6186,22 @@
     renderRoomInvitePreview(hasCode ? room.code : '');
     if (playersEl) {
       playersEl.innerHTML = '';
-      room.players.forEach((player) => {
+      (room.players || []).forEach((player) => {
         const item = document.createElement('li');
-        const displayName = player.id === myPlayerId ? t('room.you') : player.name;
-        const hostMark = player.id === room.hostId ? ' ★' : '';
-        const offlineMark = player.connected === false ? ' · …' : '';
-        item.textContent = `${displayName}${hostMark}${offlineMark}`;
-        item.title = player.id === room.hostId ? t('room.host') : displayName;
+        item.className = 'room-player-chip';
+        const isYou = player.id === myPlayerId;
+        const isHostPlayer = player.id === room.hostId;
+        const displayName = isYou ? t('room.you') : (player.name || 'Player');
+        const initial = String(player.name || displayName).charAt(0).toUpperCase();
         if (player.connected === false) item.dataset.left = 'true';
+        item.innerHTML = `
+          <span class="room-player-chip__avatar" aria-hidden="true">${initial}</span>
+          <span class="room-player-chip__copy">
+            <strong>${displayName}</strong>
+            <small>${isHostPlayer ? t('room.host') : isYou ? t('room.youTag') : t('room.guest')}${player.connected === false ? ` · ${t('room.offline')}` : ''}</small>
+          </span>
+          ${isHostPlayer ? '<span class="room-player-chip__crown" aria-hidden="true">★</span>' : ''}`;
+        item.title = isHostPlayer ? `${displayName} (${t('room.host')})` : displayName;
         playersEl.appendChild(item);
       });
     }
@@ -6610,8 +6618,6 @@
 
   function setRoomLobbyTab(tab) {
     const mode = tab === 'join' ? 'join' : 'create';
-    document.querySelector('#room-panel-create')?.classList.toggle('hidden', mode !== 'create');
-    document.querySelector('#room-panel-join')?.classList.toggle('hidden', mode !== 'join');
     document.querySelector('#room-lobby-card')?.setAttribute('data-room-mode', mode);
     document.querySelectorAll('[data-room-tab]').forEach(button => {
       const active = button.dataset.roomTab === mode;
@@ -6632,12 +6638,16 @@
     const myPlayerId = state.liveRoom?.playerId;
     const isConnected = Boolean(hasCode && myPlayerId);
     const mode = card?.getAttribute('data-room-mode') || 'create';
+    const playerCount = room?.playerCount ?? (Number(document.querySelector('#room-player-count')?.textContent) || 0);
 
     card?.classList.toggle('room-lobby-card--live', isConnected);
+    card?.classList.toggle('room-lobby-card--has-guests', isConnected && playerCount >= 2);
     codeBlock?.classList.toggle('room-code-hero--empty', !hasCode);
     codeBlock?.classList.toggle('hidden', !hasCode);
     if (createButton) createButton.hidden = isConnected;
     if (invitePanel) invitePanel.hidden = !isConnected;
+    document.querySelector('#room-panel-create')?.classList.toggle('hidden', isConnected || mode !== 'create');
+    document.querySelector('#room-panel-join')?.classList.toggle('hidden', isConnected || mode !== 'join');
     livePanel?.classList.toggle('room-lobby-live--idle', !isConnected);
     if (isConnected) renderRoomInvitePreview(code);
   }
