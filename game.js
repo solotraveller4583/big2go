@@ -1417,6 +1417,26 @@
     return getLevelTier(level).skill;
   }
 
+  function getHumanProgressLevel() {
+    return loadPlayerProfile().level;
+  }
+
+  function getSkillMaturity(level) {
+    const lv = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(level) || STARTING_LEVEL));
+    return (lv - STARTING_LEVEL) / Math.max(1, MAX_LEVEL - STARTING_LEVEL);
+  }
+
+  function getTableSkillLevel(player) {
+    if (state.liveRoom?.code) return getProfileLevelForPlayer(player);
+    const humanLevel = getHumanProgressLevel();
+    const rivalLevel = player?.characterId ? loadAiProfile(player.characterId).level : STARTING_LEVEL;
+    return Math.min(MAX_LEVEL, Math.max(humanLevel, Math.round(humanLevel * 0.75 + rivalLevel * 0.25)));
+  }
+
+  function getTableSkillTier(player) {
+    return getAiSkillTier(getTableSkillLevel(player));
+  }
+
   function getProfileProgress(totalWins) {
     const wins = Math.max(0, Number(totalWins) || 0);
     const level = computeProfileLevel(wins);
@@ -5497,13 +5517,71 @@
     })[0];
   }
 
-  function pickSmallLead(candidates) {
+  function maxRankInPlay(play) {
+    return Math.max(...play.cards.map(card => card.rankIndex));
+  }
+
+  function leadSortWeight(play, { aggression = 0, handSize = 13 } = {}) {
+    const maxRank = maxRankInPlay(play);
+    const kindBonus = (FIVE_KIND_ORDER[play.kind] || 0) * 6;
+    const countBonus = play.cards.length * (handSize >= 8 ? 18 : handSize >= 5 ? 12 : 4);
+    let rankPenalty = 0;
+    if (maxRank >= 12) rankPenalty += 900;
+    else if (maxRank >= 11) rankPenalty += 420;
+    else if (maxRank >= 10) rankPenalty += 180;
+    else if (maxRank >= 9) rankPenalty += 70;
+    rankPenalty *= (1 - aggression);
+    return countBonus + kindBonus + play.score[1] + rankPenalty;
+  }
+
+  function pickSmartLead(candidates, handSize, skillTier, maturity = 0) {
+    if (!candidates.length) return null;
+    if (handSize <= 3) return pickStrongestMove(candidates);
+
+    const aggression = skillTier === 'legend'
+      ? 0.12 + maturity * 0.08
+      : skillTier === 'master'
+        ? 0.08 + maturity * 0.06
+        : skillTier === 'strategist'
+          ? 0.04 + maturity * 0.04
+          : 0.02 + maturity * 0.02;
+    const mistakeChance = skillTier === 'rookie'
+      ? Math.max(0.04, 0.16 - maturity * 0.1)
+      : skillTier === 'strategist'
+        ? Math.max(0.02, 0.07 - maturity * 0.04)
+        : skillTier === 'master'
+          ? 0.03
+          : 0;
+
+    if (Math.random() < mistakeChance) return pickBigLead(candidates);
+
     return candidates.slice().sort((a, b) => {
-      const aWeight = a.cards.length * 100 + (FIVE_KIND_ORDER[a.kind] || 0) * 10 + a.score[1];
-      const bWeight = b.cards.length * 100 + (FIVE_KIND_ORDER[b.kind] || 0) * 10 + b.score[1];
+      const aWeight = leadSortWeight(a, { aggression, handSize });
+      const bWeight = leadSortWeight(b, { aggression, handSize });
       if (aWeight !== bWeight) return aWeight - bWeight;
       return compareScores(a.score, b.score);
     })[0];
+  }
+
+  function pickMinimalBeat(candidates) {
+    if (!candidates.length) return null;
+    return candidates.slice().sort((a, b) => compareScores(a.score, b.score))[0];
+  }
+
+  function pickSmartBeat(candidates, handSize, skillTier, maturity = 0) {
+    if (!candidates.length) return null;
+    if (handSize <= 3) return pickStrongestMove(candidates);
+
+    const wasteChance = skillTier === 'rookie'
+      ? Math.max(0.08, 0.3 - maturity * 0.16)
+      : skillTier === 'strategist'
+        ? Math.max(0.03, 0.12 - maturity * 0.05)
+        : skillTier === 'master'
+          ? 0.05
+          : 0.02;
+
+    if (Math.random() < wasteChance) return pickStrongestMove(candidates);
+    return pickMinimalBeat(candidates);
   }
 
   function pickStrongestMove(candidates) {
@@ -5516,103 +5594,31 @@
   function pickHintMove(hand) {
     const candidates = legalCandidates(hand);
     if (!candidates.length) return null;
-    if (!state.trick.play) return pickBigLead(candidates);
-    return pickStrongestMove(candidates);
+    if (!state.trick.play) {
+      const human = getHumanPlayer();
+      const tier = getTableSkillTier(human);
+      const maturity = getSkillMaturity(getTableSkillLevel(human));
+      return pickSmartLead(candidates, hand.length, tier, maturity);
+    }
+    return pickMinimalBeat(candidates) || pickStrongestMove(candidates);
   }
 
-  function pickBeatMove(candidates, handSize, playingStyle) {
-    const sorted = candidates.slice().sort((a, b) => {
-      const aKind = FIVE_KIND_ORDER[a.kind] || a.cards.length;
-      const bKind = FIVE_KIND_ORDER[b.kind] || b.cards.length;
-      let aSizeBias;
-      let bSizeBias;
-
-      if (playingStyle === 'aggressive' || (playingStyle === 'funny' && Math.random() < 0.35)) {
-        aSizeBias = handSize <= 5 ? -a.cards.length * 4 : a.cards.length;
-        bSizeBias = handSize <= 5 ? -b.cards.length * 4 : b.cards.length;
-      } else if (playingStyle === 'smart' || playingStyle === 'friendly') {
-        aSizeBias = a.cards.length * 3 + aKind;
-        bSizeBias = b.cards.length * 3 + bKind;
-      } else {
-        aSizeBias = handSize <= 5 ? -a.cards.length * 3 : a.cards.length * 2;
-        bSizeBias = handSize <= 5 ? -b.cards.length * 3 : b.cards.length * 2;
-      }
-
-      const aScore = aKind * 100 + aSizeBias + a.score[1];
-      const bScore = bKind * 100 + bSizeBias + b.score[1];
-      if (aScore !== bScore) return aScore - bScore;
-      return compareScores(a.score, b.score);
-    });
-    return sorted[0];
-  }
-
-  function pickExpertBeatMove(candidates) {
-    return pickStrongestMove(candidates);
-  }
-
-  function pickStrategistLead(candidates, handSize) {
-    const bigThreshold = handSize <= 6 ? 0.42 : 0.7;
-    if (Math.random() > bigThreshold) return pickBigLead(candidates);
-    return pickSmallLead(candidates);
-  }
-
-  function pickMasterLead(candidates, handSize) {
-    if (handSize <= 5) return pickBigLead(candidates);
-    if (handSize >= 11) return pickSmallLead(candidates);
-    return Math.random() < 0.58 ? pickBigLead(candidates) : pickSmallLead(candidates);
-  }
-
-  function pickExpertLead(candidates, handSize) {
-    if (handSize <= 4) return pickBigLead(candidates);
-    if (handSize >= 9) return pickSmallLead(candidates);
-    const compact = candidates.filter(candidate => candidate.cards.length <= 3);
-    if (compact.length && handSize >= 7) return pickSmallLead(compact);
-    return pickSmallLead(candidates);
-  }
-
-  function pickAIMove(hand, playingStyle = 'smart', skillTier = 'rookie') {
+  function pickAIMove(hand, playingStyle = 'smart', skillTier = 'rookie', maturity = 0) {
     const candidates = legalCandidates(hand);
     if (!candidates.length) return null;
 
     const funnyChance = skillTier === 'legend' || skillTier === 'master'
       ? 0
       : skillTier === 'strategist'
-        ? 0.08
-        : (playingStyle === 'funny' ? 0.24 : 0);
+        ? Math.max(0.03, 0.1 - maturity * 0.05)
+        : (playingStyle === 'funny' ? Math.max(0.08, 0.22 - maturity * 0.1) : Math.max(0.02, 0.08 - maturity * 0.04));
     if (playingStyle === 'funny' && Math.random() < funnyChance) {
       return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
-    const leadMode = !state.trick.play;
     const handSize = hand.length;
-    const style = playingStyle || 'smart';
-
-    if (leadMode) {
-      if (skillTier === 'legend') return pickExpertLead(candidates, handSize);
-      if (skillTier === 'master') return pickMasterLead(candidates, handSize);
-      if (skillTier === 'strategist') return pickStrategistLead(candidates, handSize);
-
-      const moodRoll = Math.random();
-      const bigThreshold = style === 'aggressive'
-        ? 0.5
-        : style === 'friendly'
-          ? 0.9
-          : style === 'funny'
-            ? 0.7
-            : 0.78;
-      if (handSize <= 5 || moodRoll > bigThreshold) {
-        return pickBigLead(candidates);
-      }
-      return pickSmallLead(candidates);
-    }
-
-    if (skillTier === 'legend') return pickStrongestMove(candidates);
-    if (skillTier === 'master') return pickStrongestMove(candidates);
-    if (skillTier === 'strategist') {
-      if (state.trick.play?.count === 5 || Math.random() < 0.82) return pickStrongestMove(candidates);
-      return pickBeatMove(candidates, handSize, 'smart');
-    }
-    return pickStrongestMove(candidates);
+    if (!state.trick.play) return pickSmartLead(candidates, handSize, skillTier, maturity);
+    return pickSmartBeat(candidates, handSize, skillTier, maturity);
   }
 
   function getHintsRemaining() {
@@ -5669,7 +5675,8 @@
   }
 
   function getAiThinkDelay(player) {
-    const skillTier = getAiSkillTier(getProfileLevelForPlayer(player));
+    const skillLevel = getTableSkillLevel(player);
+    const skillTier = getAiSkillTier(skillLevel);
     if (skillTier === 'legend') return 320 + Math.random() * 180;
     if (skillTier === 'master') return 380 + Math.random() * 220;
     if (skillTier === 'strategist') return 440 + Math.random() * 260;
@@ -5680,8 +5687,10 @@
     if (state.gameOver || state.busy || state.currentPlayer === state.humanIndex) return;
     const index = state.currentPlayer;
     const player = state.players[index];
-    const skillTier = getAiSkillTier(getProfileLevelForPlayer(player));
-    const move = pickAIMove(player.hand, player.playingStyle, skillTier);
+    const skillLevel = getTableSkillLevel(player);
+    const skillTier = getAiSkillTier(skillLevel);
+    const maturity = getSkillMaturity(skillLevel);
+    const move = pickAIMove(player.hand, player.playingStyle, skillTier, maturity);
     state.busy = true;
     render();
     setTimeout(() => {
