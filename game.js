@@ -759,14 +759,103 @@
     window.scrollTo(0, 0);
   }
 
-  function buildResultStoryNeonChase(container, humanWon) {
+  function createResultStoryFxRoll(story = {}) {
+    const rivalSum = (story.players || []).reduce((sum, player) => sum + String(player.name || '').split('').reduce((inner, char) => inner + char.charCodeAt(0), 0), 0);
+    const nonce = (Date.now() ^ Math.floor(performance.now() * 1000) ^ (Math.random() * 0x7fffffff)) >>> 0;
+    const seed = (nonce * 2654435761 + rivalSum * 131709 + (story.sparks || 0) * 9973 + (story.round || 1) * 7919) >>> 0;
+    return { seed, nonce };
+  }
+
+  function applyResultStoryFxTheme(screen, roll, humanWon) {
+    if (!screen || !roll) return;
+    const rng = mulberry32(roll.seed);
+    const accent = hslFromSeed(roll.seed, humanWon ? 8 : 24, humanWon ? 78 : 72, humanWon ? 62 : 56);
+    const secondary = hslFromSeed(roll.seed, humanWon ? 96 : 120, humanWon ? 82 : 70, humanWon ? 58 : 52);
+    const tertiary = hslFromSeed(roll.seed, humanWon ? 180 : 200, humanWon ? 76 : 68, humanWon ? 60 : 54);
+    screen.style.setProperty('--result-accent', accent);
+    screen.style.setProperty('--result-secondary', secondary);
+    screen.style.setProperty('--result-tertiary', tertiary);
+    screen.style.setProperty('--result-rays-speed', `${(12 + rng() * 18).toFixed(2)}s`);
+    screen.style.setProperty('--result-glow-speed', `${(2.8 + rng() * 3.4).toFixed(2)}s`);
+    screen.style.setProperty('--result-frame-speed', `${(3.6 + rng() * 4.8).toFixed(2)}s`);
+    screen.dataset.resultFxSeed = String(roll.seed);
+  }
+
+  function spawnResultStoryProceduralFx(layer, roll, humanWon) {
+    if (!layer || !roll) return;
+    layer.innerHTML = '';
+    const rng = mulberry32(roll.seed ^ 0x85ebca6b);
+    const symbolPool = humanWon
+      ? ['🎉', '✨', '★', '🪙', '♦', '2', '👑', '💫', '🔥', '⚡', '🎴', 'A', '🌟', '♠', '♥', 'K']
+      : ['☁️', '💨', '♠', '♥', '♦', '♣', '🌧', '💫', '⚡', '…', '—', '↯', '💥', '🌙', '✧', '✦'];
+    const palette = [
+      hslFromSeed(roll.seed, 0),
+      hslFromSeed(roll.seed, 40),
+      hslFromSeed(roll.seed, 80),
+      hslFromSeed(roll.seed, 120)
+    ];
+    const count = Math.floor(9 + rng() * 11);
+
+    for (let i = 0; i < count; i += 1) {
+      const rollKind = rng();
+      const color = palette[Math.floor(rng() * palette.length)];
+      if (rollKind < 0.62) {
+        const bit = document.createElement('span');
+        bit.className = rollKind < 0.18 ? 'vfx-bit vfx-bit--spark' : 'vfx-bit';
+        if (rollKind >= 0.18) bit.textContent = symbolPool[Math.floor(rng() * symbolPool.length)];
+        bit.style.setProperty('--fx-x', `${2 + rng() * 96}%`);
+        bit.style.setProperty('--fx-delay', `${(rng() * 2.6).toFixed(2)}s`);
+        bit.style.setProperty('--fx-drift', `${((rng() - 0.5) * (70 + rng() * 90)).toFixed(1)}px`);
+        bit.style.setProperty('--fx-duration', `${(2.2 + rng() * 2.8).toFixed(2)}s`);
+        bit.style.setProperty('--fx-color', color);
+        bit.style.setProperty('--fx-scale', `${(0.75 + rng() * 0.85).toFixed(2)}`);
+        layer.appendChild(bit);
+        continue;
+      }
+      if (rollKind < 0.86) {
+        const streak = document.createElement('span');
+        streak.className = 'vfx-streak';
+        streak.style.setProperty('--fx-x', `${rng() * 100}%`);
+        streak.style.setProperty('--fx-y', `${rng() * 100}%`);
+        streak.style.setProperty('--fx-rotate', `${Math.floor(rng() * 360)}deg`);
+        streak.style.setProperty('--fx-delay', `${(rng() * 2.2).toFixed(2)}s`);
+        streak.style.setProperty('--fx-duration', `${(1.4 + rng() * 2.2).toFixed(2)}s`);
+        streak.style.setProperty('--fx-color', color);
+        streak.style.setProperty('--fx-length', `${(28 + rng() * 72).toFixed(0)}px`);
+        layer.appendChild(streak);
+        continue;
+      }
+      const orb = document.createElement('span');
+      orb.className = 'vfx-orb';
+      orb.style.setProperty('--fx-x', `${10 + rng() * 80}%`);
+      orb.style.setProperty('--fx-y', `${8 + rng() * 72}%`);
+      orb.style.setProperty('--fx-delay', `${(rng() * 1.8).toFixed(2)}s`);
+      orb.style.setProperty('--fx-duration', `${(2.6 + rng() * 2.4).toFixed(2)}s`);
+      orb.style.setProperty('--fx-color', color);
+      orb.style.setProperty('--fx-size', `${(10 + rng() * 26).toFixed(0)}px`);
+      layer.appendChild(orb);
+    }
+
+    const burstCount = 1 + Math.floor(rng() * 3);
+    for (let i = 0; i < burstCount; i += 1) {
+      const burst = document.createElement('span');
+      burst.className = humanWon ? 'vfx-burst vfx-burst--win' : 'vfx-burst vfx-burst--defeat';
+      burst.style.setProperty('--burst-x', `${20 + rng() * 60}%`);
+      burst.style.setProperty('--burst-y', `${24 + rng() * 42}%`);
+      burst.style.setProperty('--burst-delay', `${(i * 0.28 + rng() * 0.4).toFixed(2)}s`);
+      burst.style.setProperty('--burst-color', palette[Math.floor(rng() * palette.length)]);
+      burst.style.setProperty('--burst-scale', `${(6 + rng() * 8).toFixed(2)}`);
+      layer.appendChild(burst);
+    }
+  }
+
+  function buildResultStoryNeonChase(container, humanWon, bulbCount = 24) {
     if (!container) return;
     container.innerHTML = '';
     const theme = humanWon
-      ? { accent: '#ffd24a', secondary: '#ff8a00', tertiary: '#ff2d95', chase: 2.1 }
-      : { accent: '#7dd3fc', secondary: '#b347ff', tertiary: '#00e5ff', chase: 2.4 };
+      ? { accent: 'var(--result-accent)', secondary: 'var(--result-secondary)', tertiary: 'var(--result-tertiary)', chase: 1.8 }
+      : { accent: 'var(--result-accent)', secondary: 'var(--result-secondary)', tertiary: 'var(--result-tertiary)', chase: 2.1 };
     const colors = [theme.accent, theme.secondary, theme.tertiary];
-    const bulbCount = 28;
     for (let i = 0; i < bulbCount; i += 1) {
       const bulb = document.createElement('span');
       bulb.className = 'result-story-neon-bulb';
@@ -787,64 +876,59 @@
       bulb.style.setProperty('--bulb-i', String(i));
       bulb.style.setProperty('--bulb-count', String(bulbCount));
       bulb.style.setProperty('--bulb-color', colors[i % colors.length]);
-      bulb.style.animationDuration = `${theme.chase}s`;
+      bulb.style.animationDuration = `${theme.chase + (i % 5) * 0.04}s`;
       container.appendChild(bulb);
     }
   }
 
-  function spawnResultStoryFx(layer, humanWon) {
-    if (!layer) return;
-    layer.innerHTML = '';
-    const symbols = ['♠', '♥', '♦', '♣', '★', '✨'];
-    for (let i = 0; i < 8; i += 1) {
-      const bit = document.createElement('span');
-      bit.className = 'result-story-float-bit';
-      bit.textContent = symbols[i % symbols.length];
-      bit.style.setProperty('--fx-x', `${6 + Math.random() * 88}%`);
-      bit.style.setProperty('--fx-delay', `${Math.random() * 2.2}s`);
-      bit.style.setProperty('--fx-drift', `${(Math.random() - 0.5) * 70}px`);
-      bit.style.setProperty('--fx-duration', `${3 + Math.random() * 2}s`);
-      layer.appendChild(bit);
-    }
-    const wave = document.createElement('div');
-    wave.className = 'result-story-shockwave';
-    layer.appendChild(wave);
-    setTimeout(() => wave.remove(), 1200);
-  }
-
-  function renderResultStoryHero(winner) {
+  function renderResultStoryWinnerStrip(winner) {
     if (!els.resultStoryHero || !winner) return;
-    els.resultStoryHero.innerHTML = '';
-    const rings = document.createElement('div');
-    rings.className = 'result-story-hero-rings';
-    rings.setAttribute('aria-hidden', 'true');
-    rings.innerHTML = '<span></span><span></span>';
-
-    const avatar = document.createElement('div');
-    avatar.className = 'result-story-hero-avatar';
+    els.resultStoryHero.innerHTML = `
+      <div class="result-story-winner-strip">
+        <div class="result-story-winner-strip__avatar-wrap">
+          <div class="result-story-winner-strip__avatar"></div>
+          <span class="result-story-winner-strip__crown" aria-hidden="true">🏆</span>
+        </div>
+        <div class="result-story-winner-strip__copy">
+          <strong>${winner.name}</strong>
+          <span class="result-story-winner-strip__badge">${t('result.winner')}</span>
+        </div>
+      </div>`;
+    const avatarNode = els.resultStoryHero.querySelector('.result-story-winner-strip__avatar');
+    if (!avatarNode) return;
     if (winner.isHuman) {
-      renderPlayerProfileAvatar(avatar, { extraClass: 'result-story-hero-avatar' });
+      renderPlayerProfileAvatar(avatarNode, { extraClass: 'result-story-winner-strip__avatar' });
     } else {
-      window.Big2GoAICharacters?.renderAvatar(avatar, { characterId: winner.characterId, name: winner.name }, {
+      window.Big2GoAICharacters?.renderAvatar(avatarNode, { characterId: winner.characterId, name: winner.name }, {
         className: 'character-avatar',
         imgClassName: 'character-avatar-img'
       });
     }
+  }
 
-    const crown = document.createElement('span');
-    crown.className = 'result-story-hero-crown';
-    crown.textContent = '🏆';
-    crown.setAttribute('aria-hidden', 'true');
+  function buildResultStoryRewards(story) {
+    const humanProfile = loadPlayerProfile();
+    const humanTier = getLevelTier(humanProfile.level);
+    const bonusVars = {
+      amount: story.brainBonus,
+      full: BRAIN_BONUS_ZERO_HINTS,
+      partial: BRAIN_BONUS_ONE_HINT_LEFT,
+      limit: HINT_LIMIT
+    };
+    const prizeParts = [];
+    if (story.humanWon && story.coinPrize > 0) prizeParts.push(`${coinIcon()} +${story.coinPrize}`);
+    if (story.brainBonus > 0) prizeParts.push(`🧠 +${story.brainBonus}`);
 
-    const label = document.createElement('p');
-    label.className = 'result-story-hero-name';
-    label.textContent = winner.name;
-
-    const badge = document.createElement('span');
-    badge.className = 'result-story-hero-badge';
-    badge.textContent = t('result.winner');
-
-    els.resultStoryHero.append(rings, avatar, crown, label, badge);
+    return `
+      ${prizeParts.length ? `<div class="result-story-rewards__prize">${prizeParts.join('<span class="result-story-rewards__dot">·</span>')}</div>` : ''}
+      <div class="result-story-rewards__chips">
+        <span class="result-story-chip"><span class="result-story-chip__icon" aria-hidden="true">🪙</span><span class="result-story-chip__label">${t('result.yourCoins')}</span><strong>${story.coinsBalance}</strong></span>
+        <span class="result-story-chip"><span class="result-story-chip__icon" aria-hidden="true">${humanTier.emoji}</span><span class="result-story-chip__label">${t('result.yourRank')}</span><strong>Lv ${humanTier.level}</strong></span>
+        <span class="result-story-chip"><span class="result-story-chip__icon" aria-hidden="true">✨</span><span class="result-story-chip__label">${t('result.sparks')}</span><strong>${story.sparks}</strong></span>
+      </div>
+      ${story.brainBonus > 0
+        ? `<p class="result-story-rewards__note">${t(story.brainBonusMessageKey || 'brainBonus.full', bonusVars)}</p>`
+        : ''}`;
   }
 
   function renderGameResultStory(story) {
@@ -853,60 +937,36 @@
     els.resultStory?.classList.toggle('result-story-screen--win', humanWon);
     els.resultStory?.classList.toggle('result-story-screen--loss', !humanWon);
 
-    buildResultStoryNeonChase(els.resultStoryNeonChase, humanWon);
-    spawnResultStoryFx(els.resultStoryFxLayer, humanWon);
+    const fxRoll = createResultStoryFxRoll(story);
+    applyResultStoryFxTheme(els.resultStory, fxRoll, humanWon);
+    buildResultStoryNeonChase(els.resultStoryNeonChase, humanWon, 20 + (fxRoll.seed % 12));
+    spawnResultStoryProceduralFx(els.resultStoryFxLayer, fxRoll, humanWon);
 
     const winner = story.players.find(player => player.won) || story.players[0];
     if (els.resultStoryHeadline) {
-      els.resultStoryHeadline.innerHTML = humanWon
-        ? `${t('result.youWon')} +${coinIcon()} ${story.coinPrize}${story.brainBonus > 0 ? ` · +${coinIcon()} ${story.brainBonus} ${t('brainBonus.title')}` : ''}`
-        : story.brainBonus > 0
-          ? `${t('result.theyWon', { name: story.winnerName })} · +${coinIcon()} ${story.brainBonus} ${t('brainBonus.title')}`
-          : t('result.theyWon', { name: story.winnerName });
+      els.resultStoryHeadline.textContent = humanWon
+        ? t('result.youWon')
+        : t('result.theyWon', { name: story.winnerName });
     }
 
-    renderResultStoryHero(winner);
+    renderResultStoryWinnerStrip(winner);
 
     if (els.resultStoryStats) {
-      const humanProfile = loadPlayerProfile();
-      const humanTier = getLevelTier(humanProfile.level);
-      els.resultStoryStats.innerHTML = `
-        <div class="result-story-chip">
-          <span class="result-story-chip-icon" aria-hidden="true">🪙</span>
-          <small>${t('result.yourCoins')}</small>
-          <strong>${story.coinsBalance}</strong>
-        </div>
-        <div class="result-story-chip">
-          <span class="result-story-chip-icon" aria-hidden="true">${humanTier.emoji}</span>
-          <small>${t('result.yourRank')}</small>
-          <strong>Lv ${humanTier.level}</strong>
-        </div>
-        <div class="result-story-chip">
-          <span class="result-story-chip-icon" aria-hidden="true">✨</span>
-          <small>${t('result.sparks')}</small>
-          <strong>${story.sparks}</strong>
-        </div>
-        ${story.brainBonus > 0 ? `
-        <div class="result-story-chip result-story-chip--brain">
-          <span class="result-story-chip-icon" aria-hidden="true">🧠</span>
-          <small>${t('brainBonus.title')}</small>
-          <strong>+${story.brainBonus}</strong>
-        </div>
-        <p class="result-story-brain-note">${t(story.brainBonusMessageKey || 'brainBonus.full', { amount: story.brainBonus, full: BRAIN_BONUS_ZERO_HINTS, partial: BRAIN_BONUS_ONE_HINT_LEFT, limit: HINT_LIMIT })}</p>` : ''}`;
+      els.resultStoryStats.innerHTML = buildResultStoryRewards(story);
     }
 
     if (els.resultStoryPlayers) {
       const others = story.players.filter(player => !player.won);
       els.resultStoryPlayers.innerHTML = others.length
-        ? `<p class="result-story-table-label">${t('result.table')}</p>
-           <div class="result-story-table-row">
+        ? `<span class="result-story-opponents__label">${t('result.table')}</span>
+           <div class="result-story-opponents__row">
              ${others.map(player => {
                const tier = getLevelTier(player.level || STARTING_LEVEL);
                const status = player.finished || player.cardsLeft === 0
                  ? t('result.out')
                  : t('result.cardsLeft', { count: player.cardsLeft });
-               return `<div class="result-story-mini${player.isHuman ? ' human' : ''}">
-                 <div class="result-story-mini-avatar" data-player="${player.name}"></div>
+               return `<div class="result-story-opponent${player.isHuman ? ' result-story-opponent--human' : ''}">
+                 <div class="result-story-opponent__avatar" data-player="${player.name}"></div>
                  <strong>${player.name}</strong>
                  <span>${status}</span>
                  <small>${tier.emoji} Lv ${player.level || STARTING_LEVEL}</small>
@@ -914,11 +974,11 @@
              }).join('')}
            </div>`
         : '';
-      els.resultStoryPlayers.querySelectorAll('.result-story-mini-avatar').forEach(node => {
+      els.resultStoryPlayers.querySelectorAll('.result-story-opponent__avatar').forEach(node => {
         const player = others.find(entry => entry.name === node.dataset.player);
         if (!player) return;
         if (player.isHuman) {
-          renderPlayerProfileAvatar(node, { extraClass: 'result-story-mini-avatar' });
+          renderPlayerProfileAvatar(node, { extraClass: 'result-story-opponent__avatar' });
         } else {
           window.Big2GoAICharacters?.renderAvatar(node, { characterId: player.characterId, name: player.name }, {
             className: 'character-avatar',
@@ -939,14 +999,14 @@
       const name = highlight.character?.name || highlight.player?.name || 'Rival';
       const message = highlight.message || g('victory.goodGame');
       els.resultStoryFarewells.innerHTML = `
-        <div class="result-story-quote-bubble">
-          <div class="result-story-quote-avatar"></div>
-          <div class="result-story-quote-copy">
+        <div class="result-story-quote-strip">
+          <div class="result-story-quote-strip__avatar"></div>
+          <div class="result-story-quote-strip__copy">
             <strong>${t('result.tableSays', { name })}</strong>
             <p>"${message}"</p>
           </div>
         </div>`;
-      const avatarNode = els.resultStoryFarewells.querySelector('.result-story-quote-avatar');
+      const avatarNode = els.resultStoryFarewells.querySelector('.result-story-quote-strip__avatar');
       if (avatarNode) {
         window.Big2GoAICharacters?.renderAvatar(avatarNode, highlight.character || highlight.player, {
           className: 'character-avatar',

@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="big2go-mobile-redesign.css?v=9" />
   <link rel="stylesheet" href="big2go-voice-mobile-override.css?v=3" />
   <link rel="stylesheet" href="big2go-session-complete.css?v=1" />
-  <link rel="stylesheet" href="big2go-result-story.css?v=4" />
+  <link rel="stylesheet" href="big2go-result-story.css?v=5" />
   <link rel="stylesheet" href="big2go-level-up.css?v=8" />
   <link rel="stylesheet" href="big2go-profile.css?v=3" />
   <link rel="stylesheet" href="big2go-landing-v3.css?v=33" />
@@ -383,15 +383,15 @@
         <div class="result-story-neon-frame">
           <div class="result-story-neon-chase" id="result-story-neon-chase" aria-hidden="true"></div>
           <div class="result-story-neon-glow" aria-hidden="true"></div>
-          <div class="result-story-card">
+          <div class="result-story-card result-story-card--compact">
             <div class="result-story-card-shimmer" aria-hidden="true"></div>
-            <p class="result-story-eyebrow result-story-stagger-1" data-i18n="result.eyebrow">Round Complete</p>
+            <span class="result-story-badge result-story-stagger-1" id="result-story-badge" data-i18n="result.eyebrow">Round Complete</span>
             <h1 class="result-story-headline result-story-stagger-2" id="result-story-headline" data-i18n="result.headline">Match complete</h1>
-            <div class="result-story-hero result-story-stagger-3" id="result-story-hero"></div>
-            <div class="result-story-highlights result-story-stagger-4" id="result-story-stats"></div>
-            <div class="result-story-table result-story-stagger-4" id="result-story-players"></div>
+            <div class="result-story-winner result-story-stagger-3" id="result-story-hero"></div>
+            <div class="result-story-rewards result-story-stagger-4" id="result-story-stats"></div>
+            <div class="result-story-opponents result-story-stagger-4" id="result-story-players"></div>
             <div class="result-story-quote result-story-stagger-5" id="result-story-farewells" aria-live="polite"></div>
-            <div class="result-story-actions result-story-stagger-5">
+            <div class="result-story-actions result-story-actions--compact result-story-stagger-5">
               <button type="button" class="primary result-story-play-btn" id="result-story-play-again" data-i18n="result.playAgain">Play Again</button>
               <button type="button" class="secondary" id="result-story-home" data-i18n="result.home">🏠 Back to Home</button>
             </div>
@@ -586,6 +586,6 @@
   <script src="aiDialogue.js?v=1" defer></script>
   <script src="aiCharacters.js?v=13" defer></script>
   <script src="aiReactions.js?v=6" defer></script>
-  <script src="game.js?v=140" defer></script>
+  <script src="game.js?v=141" defer></script>
 </body>
 </html>
