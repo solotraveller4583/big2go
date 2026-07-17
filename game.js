@@ -3468,71 +3468,116 @@
     }
   }
 
-  function getVictoryFxSeed(rivalId = '') {
+  function createVictoryFxRoll(rivalId = '') {
     const rivalSum = String(rivalId).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-    return ((state.round || 1) * 7919 + (state.sparks || 0) * 997 + rivalSum * 131) % 100000;
+    const nonce = (Date.now() ^ Math.floor(performance.now() * 1000) ^ (Math.random() * 0x7fffffff)) >>> 0;
+    const seed = (nonce * 2654435761 + rivalSum * 131709 + (state.sparks || 0) * 9973 + (state.round || 1) * 7919) >>> 0;
+    return { seed, nonce };
   }
 
-  const WIN_FX_VARIANTS = [
-    { symbols: ['🎉', '✨', '★', '🪙', '♦', '2'], count: 14, drift: 84 },
-    { symbols: ['👑', '💫', '🔥', '⚡', '🎴', 'A'], count: 12, drift: 118 },
-    { symbols: ['🌟', '♠', '♥', '♣', '✨', 'K'], count: 16, drift: 62 },
-    { symbols: ['🎊', '💎', '🃏', '7', 'J', 'Q'], count: 13, drift: 96 }
-  ];
+  function mulberry32(seed) {
+    let value = seed >>> 0;
+    return () => {
+      value = (value + 0x6D2B79F5) >>> 0;
+      let t = Math.imul(value ^ (value >>> 15), 1 | value);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
 
-  const DEFEAT_FX_VARIANTS = [
-    { symbols: ['☁️', '💨', '♠', '♥', '···', '—'], count: 13, drift: 72 },
-    { symbols: ['🎭', '✦', '♦', '♣', '🌧', '💫'], count: 15, drift: 88 },
-    { symbols: ['⚡', '2', '★', '🎴', '…', '↯'], count: 12, drift: 104 },
-    { symbols: ['💥', '♠', '♦', '🌙', '·', '✧'], count: 14, drift: 78 }
-  ];
+  function hslFromSeed(seed, offset = 0, saturation = 68, lightness = 58) {
+    const hue = ((seed + offset) * 137.508) % 360;
+    return `hsl(${hue.toFixed(1)} ${saturation}% ${lightness}%)`;
+  }
 
-  function spawnWinFx(layer, rivalId) {
-    if (!layer) return;
-    const seed = getVictoryFxSeed(rivalId);
-    const variant = WIN_FX_VARIANTS[seed % WIN_FX_VARIANTS.length];
-    const hues = ['#ffd24a', '#ff8a00', '#ff2d95', '#fff4b0'];
-    for (let i = 0; i < variant.count; i += 1) {
-      const bit = document.createElement('span');
-      bit.className = i % 4 === 0 ? 'win-float-bit win-float-bit--spark' : 'win-float-bit';
-      bit.textContent = variant.symbols[i % variant.symbols.length];
-      bit.style.setProperty('--fx-x', `${4 + Math.random() * 92}%`);
-      bit.style.setProperty('--fx-delay', `${Math.random() * 2.4}s`);
-      bit.style.setProperty('--fx-drift', `${(Math.random() - 0.5) * variant.drift}px`);
-      bit.style.setProperty('--fx-duration', `${2.4 + Math.random() * 2.4}s`);
-      bit.style.setProperty('--fx-color', hues[(seed + i) % hues.length]);
-      layer.appendChild(bit);
+  function applyVictoryFxTheme(overlay, roll, { isWin, theme }) {
+    if (!overlay || !roll) return;
+    const rng = mulberry32(roll.seed);
+    const accent = isWin ? hslFromSeed(roll.seed, 8, 78, 62) : (theme?.accent || hslFromSeed(roll.seed, 24, 72, 56));
+    const secondary = isWin ? hslFromSeed(roll.seed, 96, 82, 58) : (theme?.secondary || hslFromSeed(roll.seed, 120, 70, 52));
+    const tertiary = isWin ? hslFromSeed(roll.seed, 180, 76, 60) : (theme?.tertiary || hslFromSeed(roll.seed, 200, 68, 54));
+    overlay.style.setProperty('--vfx-accent', accent);
+    overlay.style.setProperty('--vfx-secondary', secondary);
+    overlay.style.setProperty('--vfx-tertiary', tertiary);
+    overlay.style.setProperty('--vfx-rays-speed', `${(12 + rng() * 18).toFixed(2)}s`);
+    overlay.style.setProperty('--vfx-glow-speed', `${(2.8 + rng() * 3.4).toFixed(2)}s`);
+    overlay.style.setProperty('--vfx-frame-speed', `${(3.6 + rng() * 4.8).toFixed(2)}s`);
+    overlay.style.setProperty('--vfx-shimmer-angle', `${Math.floor(rng() * 360)}deg`);
+    overlay.dataset.vfxSeed = String(roll.seed);
+  }
+
+  function spawnProceduralFx(layer, roll, { isWin, theme }) {
+    if (!layer || !roll) return;
+    const rng = mulberry32(roll.seed ^ 0x9e3779b9);
+    const symbolPool = isWin
+      ? ['🎉', '✨', '★', '🪙', '♦', '2', '👑', '💫', '🔥', '⚡', '🎴', 'A', '🌟', '♠', '♥', 'K', 'Q', 'J', '7', '10']
+      : ['☁️', '💨', '♠', '♥', '♦', '♣', '🌧', '💫', '⚡', '…', '—', '↯', '💥', '🌙', '✧', '🎭', '✦', '·', '2', 'A'];
+    const palette = isWin
+      ? [hslFromSeed(roll.seed, 0), hslFromSeed(roll.seed, 40), hslFromSeed(roll.seed, 80), hslFromSeed(roll.seed, 120)]
+      : [theme?.accent || hslFromSeed(roll.seed, 0), theme?.secondary || hslFromSeed(roll.seed, 60), theme?.tertiary || hslFromSeed(roll.seed, 120), hslFromSeed(roll.seed, 180)];
+    const count = Math.floor(11 + rng() * 13);
+
+    for (let i = 0; i < count; i += 1) {
+      const rollKind = rng();
+      const color = palette[Math.floor(rng() * palette.length)];
+      if (rollKind < 0.62) {
+        const bit = document.createElement('span');
+        bit.className = rollKind < 0.18 ? 'vfx-bit vfx-bit--spark' : 'vfx-bit';
+        if (rollKind >= 0.18) bit.textContent = symbolPool[Math.floor(rng() * symbolPool.length)];
+        bit.style.setProperty('--fx-x', `${2 + rng() * 96}%`);
+        bit.style.setProperty('--fx-delay', `${(rng() * 2.6).toFixed(2)}s`);
+        bit.style.setProperty('--fx-drift', `${((rng() - 0.5) * (70 + rng() * 90)).toFixed(1)}px`);
+        bit.style.setProperty('--fx-duration', `${(2.2 + rng() * 2.8).toFixed(2)}s`);
+        bit.style.setProperty('--fx-color', color);
+        bit.style.setProperty('--fx-scale', `${(0.75 + rng() * 0.85).toFixed(2)}`);
+        layer.appendChild(bit);
+        continue;
+      }
+      if (rollKind < 0.86) {
+        const streak = document.createElement('span');
+        streak.className = 'vfx-streak';
+        streak.style.setProperty('--fx-x', `${rng() * 100}%`);
+        streak.style.setProperty('--fx-y', `${rng() * 100}%`);
+        streak.style.setProperty('--fx-rotate', `${Math.floor(rng() * 360)}deg`);
+        streak.style.setProperty('--fx-delay', `${(rng() * 2.2).toFixed(2)}s`);
+        streak.style.setProperty('--fx-duration', `${(1.4 + rng() * 2.2).toFixed(2)}s`);
+        streak.style.setProperty('--fx-color', color);
+        streak.style.setProperty('--fx-length', `${(28 + rng() * 72).toFixed(0)}px`);
+        layer.appendChild(streak);
+        continue;
+      }
+      const orb = document.createElement('span');
+      orb.className = 'vfx-orb';
+      orb.style.setProperty('--fx-x', `${10 + rng() * 80}%`);
+      orb.style.setProperty('--fx-y', `${8 + rng() * 72}%`);
+      orb.style.setProperty('--fx-delay', `${(rng() * 1.8).toFixed(2)}s`);
+      orb.style.setProperty('--fx-duration', `${(2.6 + rng() * 2.4).toFixed(2)}s`);
+      orb.style.setProperty('--fx-color', color);
+      orb.style.setProperty('--fx-size', `${(10 + rng() * 26).toFixed(0)}px`);
+      layer.appendChild(orb);
     }
-    for (let i = 0; i < 2; i += 1) {
+
+    const burstCount = 1 + Math.floor(rng() * 3);
+    for (let i = 0; i < burstCount; i += 1) {
       const burst = document.createElement('span');
-      burst.className = 'win-burst-ring';
-      burst.style.setProperty('--burst-delay', `${i * 0.35}s`);
-      burst.style.setProperty('--burst-color', hues[(seed + i) % hues.length]);
+      burst.className = isWin ? 'vfx-burst vfx-burst--win' : 'vfx-burst vfx-burst--defeat';
+      burst.style.setProperty('--burst-x', `${20 + rng() * 60}%`);
+      burst.style.setProperty('--burst-y', `${24 + rng() * 42}%`);
+      burst.style.setProperty('--burst-delay', `${(i * 0.28 + rng() * 0.4).toFixed(2)}s`);
+      burst.style.setProperty('--burst-color', palette[Math.floor(rng() * palette.length)]);
+      burst.style.setProperty('--burst-scale', `${(6 + rng() * 8).toFixed(2)}`);
       layer.appendChild(burst);
     }
-  }
 
-  function spawnDefeatFx(layer, theme, rivalId) {
-    if (!layer) return;
-    const seed = getVictoryFxSeed(rivalId);
-    const variant = DEFEAT_FX_VARIANTS[seed % DEFEAT_FX_VARIANTS.length];
-    for (let i = 0; i < variant.count; i += 1) {
-      const bit = document.createElement('span');
-      bit.className = i % 3 === 0 ? 'defeat-float-bit defeat-float-bit--spark' : 'defeat-float-bit';
-      bit.textContent = variant.symbols[i % variant.symbols.length];
-      bit.style.setProperty('--fx-x', `${4 + Math.random() * 92}%`);
-      bit.style.setProperty('--fx-delay', `${Math.random() * 2.8}s`);
-      bit.style.setProperty('--fx-drift', `${(Math.random() - 0.5) * variant.drift}px`);
-      bit.style.setProperty('--fx-duration', `${2.8 + Math.random() * 2.8}s`);
-      if (theme?.accent) bit.style.setProperty('--fx-color', theme.accent);
-      layer.appendChild(bit);
-    }
-    for (let i = 0; i < 2 + (seed % 2); i += 1) {
-      const spot = document.createElement('span');
-      spot.className = 'defeat-spotlight';
-      spot.style.setProperty('--spot-x', `${18 + i * 32}%`);
-      spot.style.setProperty('--spot-delay', `${i * 0.55}s`);
-      layer.appendChild(spot);
+    if (!isWin) {
+      const spotCount = 1 + Math.floor(rng() * 3);
+      for (let i = 0; i < spotCount; i += 1) {
+        const spot = document.createElement('span');
+        spot.className = 'defeat-spotlight';
+        spot.style.setProperty('--spot-x', `${12 + rng() * 76}%`);
+        spot.style.setProperty('--spot-delay', `${(i * 0.45 + rng() * 0.35).toFixed(2)}s`);
+        layer.appendChild(spot);
+      }
     }
   }
 
@@ -3671,20 +3716,16 @@
     bg.innerHTML = isDefeat
       ? `<div class="victory-bg-vignette"></div>
          <div class="victory-bg-glow"></div>
-         <div class="victory-bg-rays"></div>
-         <div class="victory-marquee" aria-hidden="true">
-           <div class="victory-marquee__track">
-             <span>${t('defeat.marquee')}</span><span>${t('defeat.marquee')}</span>
-           </div>
-         </div>`
+         <div class="victory-bg-rays"></div>`
       : '<div class="victory-bg-glow"></div><div class="victory-bg-rays"></div>';
 
     const fxLayer = document.createElement('div');
     fxLayer.className = 'victory-fx-layer';
     fxLayer.setAttribute('aria-hidden', 'true');
     const rivalId = rivalCopy?.character?.id || '';
-    if (isDefeat) spawnDefeatFx(fxLayer, defeatTheme, rivalId);
-    else if (isWin) spawnWinFx(fxLayer, rivalId);
+    const fxRoll = createVictoryFxRoll(rivalId);
+    applyVictoryFxTheme(overlay, fxRoll, { isWin, theme: defeatTheme });
+    spawnProceduralFx(fxLayer, fxRoll, { isWin, theme: defeatTheme });
 
     const stage = document.createElement('div');
     stage.className = 'victory-stage';
@@ -3695,8 +3736,8 @@
     const neonChase = document.createElement('div');
     neonChase.className = 'victory-neon-chase';
     neonChase.setAttribute('aria-hidden', 'true');
-    if (isDefeat && defeatTheme) buildVictoryNeonChase(neonChase, defeatTheme, 32 + (state.round % 3) * 4);
-    else if (isWin) buildVictoryNeonChase(neonChase, { accent: '#ffd24a', secondary: '#ff8a00', tertiary: '#ff2d95', chase: 2.2 }, 22);
+    if (isDefeat && defeatTheme) buildVictoryNeonChase(neonChase, defeatTheme, 24 + (fxRoll.seed % 14));
+    else if (isWin) buildVictoryNeonChase(neonChase, { accent: '#ffd24a', secondary: '#ff8a00', tertiary: '#ff2d95', chase: 1.8 + (fxRoll.seed % 10) / 10 }, 18 + (fxRoll.seed % 12));
 
     const neonGlow = document.createElement('div');
     neonGlow.className = 'victory-neon-frame__glow';
