@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="big2go-hand-guard.css" />
   <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=34" />
   <link rel="stylesheet" href="big2go-room.css?v=10" />
-  <link rel="stylesheet" href="big2go-room-lobby.css?v=3" />
+  <link rel="stylesheet" href="big2go-room-lobby.css?v=4" />
   <link rel="stylesheet" href="big2go-voice.css?v=4" />
   <link rel="stylesheet" href="big2go-rejoin.css?v=3" />
   <link rel="stylesheet" href="big2go-coins.css?v=12" />
@@ -428,13 +428,19 @@
               <span class="room-role-pill" id="room-role" data-i18n="room.roleDefault">Create or join</span>
             </div>
 
+            <div class="room-invite-panel" id="room-invite-panel" hidden>
+              <p class="room-invite-panel__hint" data-i18n="room.inviteHint">Send this link in any chat app. Friends tap it to open your room instantly.</p>
+              <div class="room-invite-panel__url" id="room-invite-link-preview" aria-live="polite"></div>
+              <button type="button" class="primary room-invite-share-btn" id="room-invite-share-btn" data-i18n="room.shareInvite">Share Invite Link</button>
+              <div class="room-mini-actions" id="room-share-actions">
+                <button type="button" class="secondary" id="room-copy-button" disabled data-i18n="room.copyCode">Copy Code</button>
+                <button type="button" class="secondary" id="room-copy-link-button" disabled data-i18n="room.copyLink">Copy Link</button>
+              </div>
+            </div>
+
             <div class="room-lobby-main">
               <div class="room-panel room-panel--create" id="room-panel-create">
                 <button type="button" class="primary room-create-btn" id="room-create-button" data-i18n="room.createRoom">Create Room</button>
-                <div class="room-mini-actions" id="room-share-actions">
-                  <button type="button" class="secondary" id="room-copy-button" disabled data-i18n="room.copyCode">Copy Code</button>
-                  <button type="button" class="secondary" id="room-share-button" disabled data-i18n="room.shareLink">Share Link</button>
-                </div>
               </div>
 
               <div class="room-panel room-panel--join hidden" id="room-panel-join">
@@ -595,11 +601,11 @@
   </main>
   <div id="coin-fx-layer" class="coin-fx-layer" aria-hidden="true"></div>
 
-  <script src="i18n.js?v=13" defer></script>
+  <script src="i18n.js?v=14" defer></script>
   <script src="playDemoScenes.js?v=1" defer></script>
   <script src="aiDialogue.js?v=1" defer></script>
   <script src="aiCharacters.js?v=13" defer></script>
   <script src="aiReactions.js?v=6" defer></script>
-  <script src="game.js?v=142" defer></script>
+  <script src="game.js?v=143" defer></script>
 </body>
 </html>

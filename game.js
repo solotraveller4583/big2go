@@ -6163,7 +6163,8 @@
     const playersEl = document.querySelector('#room-player-list');
     const startEl = document.querySelector('#room-start-button');
     const copyEl = document.querySelector('#room-copy-button');
-    const shareEl = document.querySelector('#room-share-button');
+    const copyLinkEl = document.querySelector('#room-copy-link-button');
+    const inviteShareEl = document.querySelector('#room-invite-share-btn');
     const myPlayerId = state.liveRoom?.playerId;
     if (room?.rules?.straightRule) state.settings.straightRule = room.rules.straightRule;
     if (state.liveRoom && room.hostId) state.liveRoom.hostId = room.hostId;
@@ -6180,7 +6181,9 @@
           : t('room.roleDefault');
     }
     if (copyEl) copyEl.disabled = !hasCode;
-    if (shareEl) shareEl.disabled = !hasCode;
+    if (copyLinkEl) copyLinkEl.disabled = !hasCode;
+    if (inviteShareEl) inviteShareEl.disabled = !hasCode;
+    renderRoomInvitePreview(hasCode ? room.code : '');
     if (playersEl) {
       playersEl.innerHTML = '';
       room.players.forEach((player) => {
@@ -6335,8 +6338,6 @@
     connectRoomSocket(room.code, playerId);
     startRoomPolling();
     controls.input?.removeAttribute('readonly');
-    const shareButton = document.querySelector('#room-share-button');
-    if (shareButton) shareButton.disabled = false;
     playUiSound('start');
     restoreVoiceInRoom();
   }
@@ -6376,6 +6377,67 @@
     return url.toString();
   }
 
+  async function shareRoomInvite(code) {
+    const normalized = normalizeRoomCode(code);
+    if (!isValidRoomCode(normalized)) return false;
+    const inviteUrl = buildRoomInviteUrl(normalized);
+    const text = `${t('room.shareText', { code: normalized, url: inviteUrl })}\n${inviteUrl}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: t('room.shareTitle'), text: t('room.shareText', { code: normalized, url: inviteUrl }), url: inviteUrl });
+      } else {
+        await navigator.clipboard.writeText(text);
+      }
+      setRoomStatus(t('room.statusLinkShared'), 'ready');
+      return true;
+    } catch (error) {
+      if (error?.name === 'AbortError') return false;
+      try {
+        await navigator.clipboard.writeText(inviteUrl);
+        setRoomStatus(t('room.statusLinkCopied'), 'ready');
+        return true;
+      } catch (_) {
+        setRoomStatus(t('room.statusShareFallback', { url: inviteUrl }), 'ready');
+        return false;
+      }
+    }
+  }
+
+  async function copyRoomInviteLink(code) {
+    const normalized = normalizeRoomCode(code);
+    if (!isValidRoomCode(normalized)) return false;
+    const inviteUrl = buildRoomInviteUrl(normalized);
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setRoomStatus(t('room.statusLinkCopied'), 'ready');
+      return true;
+    } catch (_) {
+      setRoomStatus(t('room.statusShareFallback', { url: inviteUrl }), 'ready');
+      return false;
+    }
+  }
+
+  function renderRoomInvitePreview(code) {
+    const preview = document.querySelector('#room-invite-link-preview');
+    if (!preview) return;
+    preview.textContent = isValidRoomCode(code) ? buildRoomInviteUrl(code) : '';
+  }
+
+  async function attemptInviteAutoJoin(code) {
+    if (!isValidRoomCode(code) || state.liveRoom?.code) return false;
+    const nameInput = document.querySelector('#room-name-input');
+    const joinButton = document.querySelector('#room-join-button');
+    const codeInput = document.querySelector('#room-code-input');
+    const name = String(nameInput?.value || getPlayerDisplayName() || '').trim().slice(0, 18);
+    if (!name) {
+      nameInput?.focus();
+      return false;
+    }
+    if (nameInput && !nameInput.value.trim()) nameInput.value = name;
+    setRoomStatus(t('room.statusInviteJoining'), 'waiting');
+    return joinRoomFromModal(code, name, { joinButton, input: codeInput });
+  }
+
   function parseRoomInviteFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const code = normalizeRoomCode(params.get('room') || params.get('join') || '');
@@ -6405,6 +6467,13 @@
     if (!code) return;
     state.pendingRoomInvite = code;
     showPrivateRoom(code);
+    queueMicrotask(() => {
+      attemptInviteAutoJoin(code).then((joined) => {
+        if (!joined && !state.liveRoom?.code) {
+          document.querySelector('#room-name-input')?.focus();
+        }
+      });
+    });
   }
 
   async function joinRoomFromModal(code, name, controls = {}) {
@@ -6446,7 +6515,8 @@
     const createButton = document.querySelector('#room-create-button');
     const joinButton = document.querySelector('#room-join-button');
     const copyButton = document.querySelector('#room-copy-button');
-    const shareButton = document.querySelector('#room-share-button');
+    const copyLinkButton = document.querySelector('#room-copy-link-button');
+    const inviteShareButton = document.querySelector('#room-invite-share-btn');
     const startButton = document.querySelector('#room-start-button');
     const input = document.querySelector('#room-code-input');
     const nameInput = document.querySelector('#room-name-input');
@@ -6462,8 +6532,7 @@
     } else if (inviteCode && input) {
       input.value = inviteCode;
       input.setAttribute('readonly', 'readonly');
-      setRoomStatus(`You were invited to room ${inviteCode}. Enter your name and tap Join.`, 'ready');
-      nameInput?.focus();
+      setRoomStatus(t('room.statusInvite'), 'ready');
     }
 
     nameInput?.addEventListener('keydown', (event) => {
@@ -6488,9 +6557,9 @@
         state.liveRoom = { code: payload.room.code, playerId: payload.playerId, playerIndex: 0, hostId: payload.room.hostId };
         saveRoomSession(payload.room, payload.game, payload.session);
         renderRoomState(payload.room);
+        syncRoomLobbyLayout(payload.room);
         connectRoomSocket(payload.room.code, payload.playerId);
         startRoomPolling();
-        if (shareButton) shareButton.disabled = false;
         playUiSound('start');
       } catch (error) {
         createButton.disabled = false;
@@ -6522,27 +6591,21 @@
       }
     };
 
-    shareButton.onclick = async () => {
-      const code = document.querySelector('#room-code-display')?.textContent?.trim();
-      if (!code || code === '-----') return;
-      const inviteUrl = buildRoomInviteUrl(code);
-      const text = `Join my Big2Go private room (${code}). Tap the link, enter your name, and tap Join.`;
-      try {
-        if (navigator.share) {
-          await navigator.share({ title: 'Join my Big2Go room', text, url: inviteUrl });
-        } else {
-          await navigator.clipboard.writeText(`${text}\n${inviteUrl}`);
-        }
-        setRoomStatus('Invite link shared. Friends can tap it to join automatically.', 'ready');
-      } catch (_) {
-        try {
-          await navigator.clipboard.writeText(inviteUrl);
-          setRoomStatus('Invite link copied. Send it to your friend.', 'ready');
-        } catch (copyError) {
-          setRoomStatus(`Share this link: ${inviteUrl}`, 'ready');
-        }
-      }
-    };
+    if (inviteShareButton) {
+      inviteShareButton.onclick = async () => {
+        const code = document.querySelector('#room-code-display')?.textContent?.trim();
+        if (!code || code === '-----') return;
+        await shareRoomInvite(code);
+      };
+    }
+
+    if (copyLinkButton) {
+      copyLinkButton.onclick = async () => {
+        const code = document.querySelector('#room-code-display')?.textContent?.trim();
+        if (!code || code === '-----') return;
+        await copyRoomInviteLink(code);
+      };
+    }
   }
 
   function setRoomLobbyTab(tab) {
@@ -6562,7 +6625,7 @@
     const card = document.querySelector('#room-lobby-card');
     const codeBlock = document.querySelector('#room-code-block');
     const createButton = document.querySelector('#room-create-button');
-    const shareActions = document.querySelector('#room-share-actions');
+    const invitePanel = document.querySelector('#room-invite-panel');
     const livePanel = document.querySelector('#room-lobby-live');
     const code = room?.code || document.querySelector('#room-code-display')?.textContent?.trim() || '';
     const hasCode = Boolean(code && code !== '-----');
@@ -6574,8 +6637,9 @@
     codeBlock?.classList.toggle('room-code-hero--empty', !hasCode);
     codeBlock?.classList.toggle('hidden', !hasCode);
     if (createButton) createButton.hidden = isConnected;
-    if (shareActions) shareActions.hidden = !hasCode;
+    if (invitePanel) invitePanel.hidden = !isConnected;
     livePanel?.classList.toggle('room-lobby-live--idle', !isConnected);
+    if (isConnected) renderRoomInvitePreview(code);
   }
 
   function hideRoomScreen() {
@@ -6599,7 +6663,8 @@
     const joinButton = document.querySelector('#room-join-button');
     const startButton = document.querySelector('#room-start-button');
     const copyButton = document.querySelector('#room-copy-button');
-    const shareButton = document.querySelector('#room-share-button');
+    const copyLinkButton = document.querySelector('#room-copy-link-button');
+    const inviteShareButton = document.querySelector('#room-invite-share-btn');
     const playersEl = document.querySelector('#room-player-list');
     const countEl = document.querySelector('#room-player-count');
 
@@ -6635,7 +6700,8 @@
       startButton.textContent = t('room.startGame');
     }
     if (copyButton) copyButton.disabled = !state.liveRoom?.code;
-    if (shareButton) shareButton.disabled = !state.liveRoom?.code;
+    if (copyLinkButton) copyLinkButton.disabled = !state.liveRoom?.code;
+    if (inviteShareButton) inviteShareButton.disabled = !state.liveRoom?.code;
 
     setRoomLobbyTab(invited || reconnectMode ? 'join' : 'create');
     syncRoomLobbyLayout(state.liveRoom?.code ? { code: state.liveRoom.code, hostId: state.liveRoom.hostId, playerCount: 0, players: [] } : null);
