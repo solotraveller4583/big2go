@@ -1,4 +1,4 @@
-/* Big2Go — Private room lobby (single-page, no scroll) */
+/* Big2Go — Private room lobby (single-page, readable, keyboard-safe) */
 .room-screen {
   --room-accent: #ffd24a;
   --room-secondary: #00e5ff;
@@ -99,19 +99,20 @@ body.room-lobby-active .app-shell {
   justify-content: space-between;
   gap: 10px;
   min-height: 40px;
+  flex-shrink: 0;
 }
 
 .room-lobby-topbar h2 {
   margin: 0;
-  font-size: clamp(1.05rem, 4.6vw, 1.28rem);
+  font-size: clamp(1.12rem, 4.8vw, 1.32rem);
   font-weight: 1000;
   color: #fff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 .room-lobby-close {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.08);
@@ -119,6 +120,7 @@ body.room-lobby-active .app-shell {
   font-size: 1.1rem;
   font-weight: 900;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .room-lobby-neon {
@@ -141,9 +143,9 @@ body.room-lobby-active .app-shell {
   height: 100%;
   min-height: 0;
   display: grid;
-  grid-template-rows: auto auto auto auto minmax(0, auto) auto auto auto auto;
-  gap: clamp(5px, 1.2vh, 8px);
-  padding: clamp(10px, 2vh, 14px);
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 12px;
   border-radius: 22px;
   overflow: hidden;
   background:
@@ -152,6 +154,7 @@ body.room-lobby-active .app-shell {
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+/* Tabs */
 .room-mode-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -160,18 +163,19 @@ body.room-lobby-active .app-shell {
   border-radius: 14px;
   background: rgba(0, 0, 0, 0.22);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
 }
 
 .room-mode-tab {
-  min-height: 36px;
+  min-height: 42px;
   border: 0;
   border-radius: 11px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.78);
   font: inherit;
-  font-size: 0.72rem;
+  font-size: clamp(0.82rem, 3.4vw, 0.92rem);
   font-weight: 1000;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -182,68 +186,32 @@ body.room-lobby-active .app-shell {
   box-shadow: 0 0 12px var(--room-glow);
 }
 
-.room-code-hero {
+/* Name field */
+.room-name-field {
   display: grid;
-  justify-items: center;
   gap: 4px;
-  padding: 10px 12px 8px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.room-code-hero__label {
-  font-size: 0.58rem;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 236, 170, 0.78);
-}
-
-.room-code-hero__code,
-#room-code-display {
-  color: #ffe15f;
-  font-size: clamp(1.65rem, 7.5vw, 2.15rem);
-  font-weight: 1000;
-  letter-spacing: 0.18em;
-  line-height: 1;
-  text-shadow: 0 0 18px rgba(255, 225, 95, 0.34);
-}
-
-.room-role-pill {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(68, 236, 160, 0.14);
-  border: 1px solid rgba(68, 236, 160, 0.24);
-  color: #b7ffd9;
-  font-size: 0.58rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .room-field-label {
-  font-size: 0.58rem;
+  font-size: clamp(0.72rem, 3vw, 0.82rem);
   font-weight: 900;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 236, 170, 0.72);
+  color: rgba(255, 236, 170, 0.86);
 }
 
 .room-name-input,
 .room-join-row input {
   width: 100%;
   min-width: 0;
-  min-height: 42px;
+  min-height: 44px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 14px;
   padding: 0 12px;
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
-  font-size: 0.92rem;
+  font-size: clamp(0.92rem, 3.8vw, 1rem);
   font-weight: 800;
   outline: none;
 }
@@ -251,7 +219,7 @@ body.room-lobby-active .app-shell {
 .room-join-row input {
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-size: 1rem;
+  font-size: clamp(1rem, 4.2vw, 1.08rem);
   font-weight: 1000;
   text-align: center;
 }
@@ -261,6 +229,75 @@ body.room-lobby-active .app-shell {
   color: rgba(255, 255, 255, 0.38);
 }
 
+.room-name-input:focus,
+.room-join-row input:focus {
+  border-color: color-mix(in srgb, var(--room-accent) 55%, white);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--room-accent) 22%, transparent);
+}
+
+/* Room code (shown once connected) */
+.room-code-hero {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 12px 8px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.room-code-hero.hidden {
+  display: none !important;
+}
+
+.room-code-hero__label {
+  font-size: clamp(0.72rem, 3vw, 0.82rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 236, 170, 0.86);
+}
+
+.room-code-hero__code,
+#room-code-display {
+  color: #ffe15f;
+  font-size: clamp(1.75rem, 8vw, 2.2rem);
+  font-weight: 1000;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-shadow: 0 0 18px rgba(255, 225, 95, 0.34);
+}
+
+.room-role-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(68, 236, 160, 0.14);
+  border: 1px solid rgba(68, 236, 160, 0.24);
+  color: #b7ffd9;
+  font-size: clamp(0.68rem, 2.8vw, 0.76rem);
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Scrollable middle — inputs stay above footer */
+.room-lobby-main {
+  min-height: 0;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  overflow: hidden;
+}
+
+.room-panel {
+  display: grid;
+  gap: 8px;
+}
+
 .room-panel.hidden {
   display: none !important;
 }
@@ -268,36 +305,59 @@ body.room-lobby-active .app-shell {
 .room-create-btn,
 .room-start {
   width: 100%;
-  min-height: 46px;
+  min-height: 48px;
   border-radius: 16px;
-  font-size: 0.92rem;
+  font-size: clamp(0.92rem, 3.8vw, 1rem);
   font-weight: 1000;
 }
 
 .room-mini-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 8px;
+}
+
+.room-mini-actions[hidden],
+.room-mini-actions.hidden {
+  display: none !important;
 }
 
 .room-mini-actions button {
-  min-height: 40px;
+  min-height: 42px;
   border-radius: 14px;
-  font-size: 0.72rem;
+  font-size: clamp(0.78rem, 3.2vw, 0.86rem);
   font-weight: 900;
 }
 
 .room-join-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px;
+  gap: 8px;
 }
 
 .room-join-row button {
-  min-width: 72px;
-  min-height: 42px;
+  min-width: 84px;
+  min-height: 44px;
   border-radius: 14px;
+  font-size: clamp(0.86rem, 3.6vw, 0.94rem);
   font-weight: 1000;
+  padding-inline: 14px;
+}
+
+/* Live lobby panel */
+.room-lobby-live {
+  display: grid;
+  gap: 6px;
+  min-height: 0;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.room-lobby-live--idle .room-live-strip,
+.room-lobby-live--idle .room-player-list {
+  display: none;
 }
 
 .room-live-strip {
@@ -305,22 +365,21 @@ body.room-lobby-active .app-shell {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.16);
 }
 
 .room-live-strip span {
-  font-size: 0.58rem;
+  font-size: clamp(0.72rem, 3vw, 0.82rem);
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .room-live-strip strong {
-  font-size: 1rem;
+  font-size: clamp(1.05rem, 4.5vw, 1.2rem);
   font-weight: 1000;
   color: #ffe68f;
 }
@@ -328,7 +387,7 @@ body.room-lobby-active .app-shell {
 .room-screen .room-player-list {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 5px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -342,12 +401,12 @@ body.room-lobby-active .app-shell {
 
 .room-screen .room-player-list li {
   min-width: 0;
-  padding: 5px 4px;
+  padding: 6px 4px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.5rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(0.62rem, 2.6vw, 0.72rem);
   font-weight: 800;
   line-height: 1.2;
   text-align: center;
@@ -363,17 +422,17 @@ body.room-lobby-active .app-shell {
 
 .room-screen .room-status {
   margin: 0;
-  padding: 7px 10px;
+  padding: 8px 10px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.07);
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: clamp(0.78rem, 3.2vw, 0.88rem);
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.35;
   min-height: 0;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
@@ -392,6 +451,13 @@ body.room-lobby-active .app-shell {
   color: #ffc0d0;
 }
 
+/* Footer — Start Game stays clear of inputs / keyboard */
+.room-lobby-footer {
+  flex-shrink: 0;
+  padding-top: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .room-start:disabled,
 .room-create-btn:disabled,
 .room-mini-actions button:disabled,
@@ -404,16 +470,26 @@ body.room-lobby-active .app-shell {
   display: none !important;
 }
 
+.room-create-btn[hidden] {
+  display: none !important;
+}
+
 @media (max-width: 360px), (max-height: 700px) {
   .room-lobby-stage { gap: 6px; }
-  .room-lobby-card { gap: 4px; padding: 8px; }
-  .room-code-hero { padding: 8px 10px 6px; }
-  .room-code-hero__code,
-  #room-code-display { font-size: 1.5rem; }
-  .room-create-btn,
-  .room-start { min-height: 42px; font-size: 0.86rem; }
+  .room-lobby-card { gap: 6px; padding: 10px; }
+  .room-mode-tab { min-height: 40px; }
   .room-name-input,
-  .room-join-row input { min-height: 38px; }
+  .room-join-row input { min-height: 42px; }
+  .room-create-btn,
+  .room-start { min-height: 44px; }
+  .room-code-hero__code,
+  #room-code-display { font-size: 1.55rem; }
+}
+
+@media (max-height: 640px) {
+  .room-lobby-card { gap: 5px; padding: 8px; }
+  .room-code-hero { padding: 8px 10px 6px; }
+  .room-lobby-live { padding: 8px; gap: 5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

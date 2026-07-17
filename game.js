@@ -6057,6 +6057,7 @@
       if (!response.ok) throw new Error(payload.error || 'Room action failed');
       if (payload.room) {
         renderRoomState(payload.room);
+        syncRoomLobbyLayout(payload.room);
         saveRoomSession(payload.room, payload.game, payload.session);
       }
       if (payload.game) applyLiveGame(payload.game, payload.room);
@@ -6218,6 +6219,7 @@
         ? isHost ? 'Ready — you can start now.' : 'Ready — waiting for host to start.'
         : isHost ? 'Share the code. Start unlocks when 1 friend joins.' : 'Enter a room code from your friend.';
     setRoomStatus(status, room.playerCount >= 2 ? 'ready' : 'waiting');
+    syncRoomLobbyLayout(room);
     if (state.liveRoom?.code) syncVoiceConnections().catch(() => {});
     if (room.status === 'playing' && state.liveRoom?.code && state.liveRoom?.playerId && els.game?.classList.contains('hidden')) {
       fetchLiveRoomState()
@@ -6547,11 +6549,33 @@
     const mode = tab === 'join' ? 'join' : 'create';
     document.querySelector('#room-panel-create')?.classList.toggle('hidden', mode !== 'create');
     document.querySelector('#room-panel-join')?.classList.toggle('hidden', mode !== 'join');
+    document.querySelector('#room-lobby-card')?.setAttribute('data-room-mode', mode);
     document.querySelectorAll('[data-room-tab]').forEach(button => {
       const active = button.dataset.roomTab === mode;
       button.classList.toggle('is-active', active);
       button.setAttribute('aria-selected', active ? 'true' : 'false');
     });
+    syncRoomLobbyLayout();
+  }
+
+  function syncRoomLobbyLayout(room = null) {
+    const card = document.querySelector('#room-lobby-card');
+    const codeBlock = document.querySelector('#room-code-block');
+    const createButton = document.querySelector('#room-create-button');
+    const shareActions = document.querySelector('#room-share-actions');
+    const livePanel = document.querySelector('#room-lobby-live');
+    const code = room?.code || document.querySelector('#room-code-display')?.textContent?.trim() || '';
+    const hasCode = Boolean(code && code !== '-----');
+    const myPlayerId = state.liveRoom?.playerId;
+    const isConnected = Boolean(hasCode && myPlayerId);
+    const mode = card?.getAttribute('data-room-mode') || 'create';
+
+    card?.classList.toggle('room-lobby-card--live', isConnected);
+    codeBlock?.classList.toggle('room-code-hero--empty', !hasCode);
+    codeBlock?.classList.toggle('hidden', !hasCode);
+    if (createButton) createButton.hidden = isConnected;
+    if (shareActions) shareActions.hidden = !hasCode;
+    livePanel?.classList.toggle('room-lobby-live--idle', !isConnected);
   }
 
   function hideRoomScreen() {
@@ -6614,6 +6638,7 @@
     if (shareButton) shareButton.disabled = !state.liveRoom?.code;
 
     setRoomLobbyTab(invited || reconnectMode ? 'join' : 'create');
+    syncRoomLobbyLayout(state.liveRoom?.code ? { code: state.liveRoom.code, hostId: state.liveRoom.hostId, playerCount: 0, players: [] } : null);
     setRoomStatus(
       reconnectMode
         ? t('room.statusRejoin')

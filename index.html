@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
   <meta name="theme-color" content="#08051f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="big2go-hand-guard.css" />
   <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=34" />
   <link rel="stylesheet" href="big2go-room.css?v=10" />
-  <link rel="stylesheet" href="big2go-room-lobby.css?v=2" />
+  <link rel="stylesheet" href="big2go-room-lobby.css?v=3" />
   <link rel="stylesheet" href="big2go-voice.css?v=4" />
   <link rel="stylesheet" href="big2go-rejoin.css?v=3" />
   <link rel="stylesheet" href="big2go-coins.css?v=12" />
@@ -411,39 +411,53 @@
           <button type="button" class="room-lobby-close" id="room-close" aria-label="Close room lobby">✕</button>
         </header>
         <div class="room-lobby-neon">
-          <div class="room-lobby-card">
+          <div class="room-lobby-card" id="room-lobby-card">
             <div class="room-mode-tabs" role="tablist" aria-label="Room mode">
               <button type="button" class="room-mode-tab is-active" data-room-tab="create" role="tab" aria-selected="true" data-i18n="room.createTab">Create</button>
               <button type="button" class="room-mode-tab" data-room-tab="join" role="tab" aria-selected="false" data-i18n="room.joinTab">Join</button>
             </div>
-            <div class="room-code-hero">
+
+            <div class="room-name-field">
+              <label class="room-field-label" for="room-name-input" data-i18n="room.yourName">Your name</label>
+              <input class="room-name-input" id="room-name-input" maxlength="18" autocomplete="nickname" placeholder="Your name" data-i18n-placeholder="landing.namePlaceholder" aria-label="Your player name" />
+            </div>
+
+            <div class="room-code-hero" id="room-code-block">
               <span class="room-code-hero__label" data-i18n="room.codeLabel">Room Code</span>
               <strong class="room-code-hero__code" id="room-code-display">-----</strong>
               <span class="room-role-pill" id="room-role" data-i18n="room.roleDefault">Create or join</span>
             </div>
-            <label class="room-field-label" for="room-name-input" data-i18n="room.yourName">Your name</label>
-            <input class="room-name-input" id="room-name-input" maxlength="18" autocomplete="nickname" placeholder="Your name" data-i18n-placeholder="landing.namePlaceholder" aria-label="Your player name" />
-            <div class="room-panel room-panel--create" id="room-panel-create">
-              <button type="button" class="primary room-create-btn" id="room-create-button" data-i18n="room.createRoom">Create Room</button>
-              <div class="room-mini-actions">
-                <button type="button" class="secondary" id="room-copy-button" disabled data-i18n="room.copyCode">Copy Code</button>
-                <button type="button" class="secondary" id="room-share-button" disabled data-i18n="room.shareLink">Share Link</button>
+
+            <div class="room-lobby-main">
+              <div class="room-panel room-panel--create" id="room-panel-create">
+                <button type="button" class="primary room-create-btn" id="room-create-button" data-i18n="room.createRoom">Create Room</button>
+                <div class="room-mini-actions" id="room-share-actions">
+                  <button type="button" class="secondary" id="room-copy-button" disabled data-i18n="room.copyCode">Copy Code</button>
+                  <button type="button" class="secondary" id="room-share-button" disabled data-i18n="room.shareLink">Share Link</button>
+                </div>
+              </div>
+
+              <div class="room-panel room-panel--join hidden" id="room-panel-join">
+                <label class="room-field-label" for="room-code-input" data-i18n="room.friendCode">Friend code</label>
+                <div class="room-join-row">
+                  <input id="room-code-input" maxlength="5" inputmode="text" autocomplete="off" placeholder="ABCDE" aria-label="Enter room code" />
+                  <button type="button" class="primary" id="room-join-button" data-i18n="room.join">Join</button>
+                </div>
+              </div>
+
+              <div class="room-lobby-live" id="room-lobby-live">
+                <div class="room-live-strip">
+                  <span data-i18n="room.playersJoined">Players joined</span>
+                  <strong id="room-player-count">0</strong>
+                </div>
+                <ul id="room-player-list" class="room-player-list" aria-label="Players in room"></ul>
+                <p id="room-status" class="room-status" data-tone="neutral" data-i18n="room.statusDefault">Create a room or enter your friend’s code.</p>
               </div>
             </div>
-            <div class="room-panel room-panel--join hidden" id="room-panel-join">
-              <label class="room-field-label" for="room-code-input" data-i18n="room.friendCode">Friend code</label>
-              <div class="room-join-row">
-                <input id="room-code-input" maxlength="5" inputmode="text" autocomplete="off" placeholder="ABCDE" aria-label="Enter room code" />
-                <button type="button" class="primary" id="room-join-button" data-i18n="room.join">Join</button>
-              </div>
+
+            <div class="room-lobby-footer">
+              <button type="button" class="primary room-start" id="room-start-button" disabled data-i18n="room.startGame">Start Game</button>
             </div>
-            <div class="room-live-strip">
-              <span data-i18n="room.playersJoined">Players joined</span>
-              <strong id="room-player-count">0</strong>
-            </div>
-            <ul id="room-player-list" class="room-player-list" aria-label="Players in room"></ul>
-            <p id="room-status" class="room-status" data-tone="neutral" data-i18n="room.statusDefault">Create a room or enter your friend’s code.</p>
-            <button type="button" class="primary room-start" id="room-start-button" disabled data-i18n="room.startGame">Start Game</button>
           </div>
         </div>
       </div>
@@ -586,6 +600,6 @@
   <script src="aiDialogue.js?v=1" defer></script>
   <script src="aiCharacters.js?v=13" defer></script>
   <script src="aiReactions.js?v=6" defer></script>
-  <script src="game.js?v=141" defer></script>
+  <script src="game.js?v=142" defer></script>
 </body>
 </html>
