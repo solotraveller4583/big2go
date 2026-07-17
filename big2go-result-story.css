@@ -442,6 +442,29 @@ body.result-story-active .app-shell {
   font-weight: 1000;
 }
 
+.result-story-chip--brain {
+  border-color: color-mix(in srgb, #ffd24a 35%, transparent);
+  background: linear-gradient(180deg, rgba(255, 210, 74, 0.14), rgba(255, 255, 255, 0.05));
+}
+
+.result-story-chip--brain strong {
+  color: #ffe68f;
+}
+
+.result-story-brain-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 210, 74, 0.1);
+  border: 1px solid rgba(255, 210, 74, 0.22);
+  color: rgba(255, 236, 170, 0.92);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
+
 .result-story-table-label {
   margin: 0 0 6px;
   font-size: 0.62rem;

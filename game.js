@@ -14,6 +14,8 @@
   const STARTING_LEVEL = 1;
   const MAX_LEVEL = 30;
   const HINT_LIMIT = 3;
+  const BRAIN_BONUS_ZERO_HINTS = 30;
+  const BRAIN_BONUS_ONE_HINT_LEFT = 10;
   const LEGEND_MODE_TOTAL_WINS = 300;
   // Wins required to advance from level N → N+1 (29 steps total).
   const LEVEL_UP_WINS = [
@@ -718,12 +720,17 @@
     startLandingMusic();
   }
 
-  function captureMatchStory(winner, coinPrize = 0) {
+  function captureMatchStory(winner, coinPrize = 0, brainBonus = null) {
+    const bonus = brainBonus || buildBrainBonusMeta();
     const winnerIndex = state.players.indexOf(winner);
     return {
       winnerName: winner?.isHuman ? getResolvedPlayerName() : (winner?.name || 'Player'),
       humanWon: Boolean(winner?.isHuman),
       coinPrize: Math.max(0, Number(coinPrize) || 0),
+      brainBonus: Math.max(0, Number(bonus.amount) || 0),
+      hintsUsed: bonus.hintsUsed,
+      hintsRemaining: bonus.hintsRemaining,
+      brainBonusMessageKey: bonus.messageKey,
       coinsBalance: state.liveRoom?.code ? getWalletDisplayBalance() : state.coins.balance,
       sparks: state.sparks,
       round: state.round,
@@ -852,8 +859,10 @@
     const winner = story.players.find(player => player.won) || story.players[0];
     if (els.resultStoryHeadline) {
       els.resultStoryHeadline.innerHTML = humanWon
-        ? `${t('result.youWon')} +${coinIcon()} ${story.coinPrize}`
-        : t('result.theyWon', { name: story.winnerName });
+        ? `${t('result.youWon')} +${coinIcon()} ${story.coinPrize}${story.brainBonus > 0 ? ` · +${coinIcon()} ${story.brainBonus} ${t('brainBonus.title')}` : ''}`
+        : story.brainBonus > 0
+          ? `${t('result.theyWon', { name: story.winnerName })} · +${coinIcon()} ${story.brainBonus} ${t('brainBonus.title')}`
+          : t('result.theyWon', { name: story.winnerName });
     }
 
     renderResultStoryHero(winner);
@@ -876,7 +885,14 @@
           <span class="result-story-chip-icon" aria-hidden="true">✨</span>
           <small>${t('result.sparks')}</small>
           <strong>${story.sparks}</strong>
-        </div>`;
+        </div>
+        ${story.brainBonus > 0 ? `
+        <div class="result-story-chip result-story-chip--brain">
+          <span class="result-story-chip-icon" aria-hidden="true">🧠</span>
+          <small>${t('brainBonus.title')}</small>
+          <strong>+${story.brainBonus}</strong>
+        </div>
+        <p class="result-story-brain-note">${t(story.brainBonusMessageKey || 'brainBonus.full', { amount: story.brainBonus, full: BRAIN_BONUS_ZERO_HINTS, partial: BRAIN_BONUS_ONE_HINT_LEFT, limit: HINT_LIMIT })}</p>` : ''}`;
     }
 
     if (els.resultStoryPlayers) {
@@ -1940,6 +1956,48 @@
     return prize;
   }
 
+  function getBrainBonusCoins(hintsUsed) {
+    const used = Math.max(0, Math.min(HINT_LIMIT, Number(hintsUsed) || 0));
+    if (used === 0) return BRAIN_BONUS_ZERO_HINTS;
+    if (used === HINT_LIMIT - 1) return BRAIN_BONUS_ONE_HINT_LEFT;
+    return 0;
+  }
+
+  function buildBrainBonusMeta(hintsUsed = state.hintsUsed) {
+    const used = Math.max(0, Math.min(HINT_LIMIT, Number(hintsUsed) || 0));
+    const remaining = Math.max(0, HINT_LIMIT - used);
+    const amount = getBrainBonusCoins(used);
+    let messageKey = 'brainBonus.missed';
+    if (amount === BRAIN_BONUS_ZERO_HINTS) messageKey = 'brainBonus.full';
+    else if (amount === BRAIN_BONUS_ONE_HINT_LEFT) messageKey = 'brainBonus.partial';
+    return { amount, hintsUsed: used, hintsRemaining: remaining, messageKey };
+  }
+
+  function awardBrainBonusCoins() {
+    if (state.liveRoom?.code) return buildBrainBonusMeta(0);
+    const meta = buildBrainBonusMeta();
+    if (meta.amount > 0) {
+      setCoinBalance(state.coins.balance + meta.amount);
+      animateCoins('win', meta.amount);
+      showCoinPop(`+{{coin}} ${meta.amount}`);
+      renderCoinHud();
+    }
+    return meta;
+  }
+
+  function buildBrainBonusRewardHtml(brainBonus, { showTeaserWhenEmpty = false } = {}) {
+    const amount = Math.max(0, Number(brainBonus?.amount) || 0);
+    const messageKey = brainBonus?.messageKey || 'brainBonus.missed';
+    const lines = [];
+    if (amount > 0) {
+      lines.push(`<div class="reward-line reward-line--brain">${coinIcon()} +${amount} ${t('brainBonus.title')}</div>`);
+      lines.push(`<div class="reward-line reward-line--note reward-line--brain-copy">${t(messageKey, { amount, full: BRAIN_BONUS_ZERO_HINTS, partial: BRAIN_BONUS_ONE_HINT_LEFT, limit: HINT_LIMIT })}</div>`);
+    } else if (showTeaserWhenEmpty) {
+      lines.push(`<div class="reward-line reward-line--note reward-line--brain-teaser">${t('brainBonus.teaser', { full: BRAIN_BONUS_ZERO_HINTS, partial: BRAIN_BONUS_ONE_HINT_LEFT, limit: HINT_LIMIT })}</div>`);
+    }
+    return lines.join('');
+  }
+
   function normalizeReactionEmoji(emoji) {
     const text = String(emoji || '').trim();
     return ALLOWED_REACTIONS.has(text) ? text : '';
@@ -2651,12 +2709,15 @@
     }
   }
 
-  function recordSessionMatchResult(winner, coinPrize = 0) {
+  function recordSessionMatchResult(winner, coinPrize = 0, brainBonus = 0) {
     state.playSession.gamesPlayed += 1;
     state.playSession.lastWinner = winner || null;
     if (winner?.isHuman) {
       state.playSession.wins += 1;
       state.playSession.coinsEarned += Math.max(0, Number(coinPrize) || 0);
+    }
+    if (brainBonus > 0) {
+      state.playSession.coinsEarned += Math.max(0, Number(brainBonus) || 0);
     }
     state.playSession.farewellSnapshot = window.Big2GoAICharacters?.getSessionFarewells?.(state, winner) || [];
   }
@@ -3349,7 +3410,7 @@
     if (!pending) return;
     showGameScreen();
     if (pending.winner?.isHuman) renderConfetti(56);
-    showVictoryCelebration(pending.winner, pending.coinPrize, null);
+    showVictoryCelebration(pending.winner, pending.coinPrize, null, pending.brainBonus || null);
     render();
     playUiSound('click');
   }
@@ -3462,9 +3523,10 @@
     return hero;
   }
 
-  function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0, levelUp = null) {
+  function showVictoryCelebration(winner, coinPrize = state.coins.prizePool || 0, levelUp = null, brainBonusMeta = null) {
     const existing = document.querySelector('#victory-overlay');
     if (existing) existing.remove();
+    const brainBonus = brainBonusMeta || buildBrainBonusMeta();
     const isLiveRoom = Boolean(state.liveRoom?.code && state.liveRoom?.playerId);
     const isRoomHost = Boolean(isLiveRoom && state.liveRoom.hostId === state.liveRoom.playerId);
     const rivalCopy = !isLiveRoom ? window.Big2GoAICharacters?.getRivalVictoryCopy?.(winner, state) : null;
@@ -3601,6 +3663,7 @@
 
     const stats = document.createElement('div');
     stats.className = `victory-stats${isDefeat ? ' victory-stats--defeat victory-stagger-4' : ''}`;
+    const brainAmount = !isLiveRoom ? Math.max(0, Number(brainBonus?.amount) || 0) : 0;
     if (isDefeat) {
       stats.innerHTML = `
         <div class="victory-stat victory-stat--coin">
@@ -3608,6 +3671,12 @@
           <small>${t('defeat.coinsSpent')}</small>
           <strong>${ENTRY_FEE_COINS}</strong>
         </div>
+        ${brainAmount > 0 ? `
+        <div class="victory-stat victory-stat--brain">
+          <span class="victory-stat-icon" aria-hidden="true">🧠</span>
+          <small>${t('brainBonus.title')}</small>
+          <strong>${coinIcon()} +${brainAmount}</strong>
+        </div>` : ''}
         <div class="victory-stat victory-stat--spark">
           <span class="victory-stat-icon" aria-hidden="true">✨</span>
           <small>${t('defeat.sparks')}</small>
@@ -3618,27 +3687,43 @@
           <small>${t('defeat.table')}</small>
           <strong>${state.players.length}</strong>
         </div>`;
+      if (brainAmount > 0) stats.classList.add('victory-stats--with-brain');
     } else {
       stats.innerHTML = `
-        <div class="victory-stat">
+        <div class="victory-stat victory-stat--coin">
+          <span class="victory-stat-icon" aria-hidden="true">🪙</span>
           <small>${t('victory.reward')}</small>
           <strong>${coinIcon()} +${coinPrize}</strong>
         </div>
-        <div class="victory-stat">
-          <small>${t('defeat.sparks')}</small>
-          <strong>${state.sparks}</strong>
-        </div>
+        ${brainAmount > 0 ? `
+        <div class="victory-stat victory-stat--brain">
+          <span class="victory-stat-icon" aria-hidden="true">🧠</span>
+          <small>${t('brainBonus.title')}</small>
+          <strong>${coinIcon()} +${brainAmount}</strong>
+        </div>` : `
         <div class="victory-stat">
           <small>${t('defeat.table')}</small>
           <strong>${state.players.length} ${t('defeat.players')}</strong>
+        </div>`}
+        <div class="victory-stat victory-stat--spark">
+          <span class="victory-stat-icon" aria-hidden="true">✨</span>
+          <small>${t('defeat.sparks')}</small>
+          <strong>${state.sparks}</strong>
         </div>`;
+      if (brainAmount > 0) stats.classList.add('victory-stats--with-brain');
     }
 
+    const brainRewardOptions = { showTeaserWhenEmpty: !isLiveRoom };
     const rewards = document.createElement('div');
     rewards.className = `victory-rewards${isDefeat ? ' victory-rewards--defeat victory-stagger-4' : ''}`;
-    rewards.innerHTML = winner.isHuman
-      ? `<div class="reward-line">${coinIcon()} +${coinPrize} ${t('victory.virtualCoins')}</div><div class="reward-line reward-line--note">✨ ${t('victory.arcadeNote')}</div>`
-      : `<div class="reward-line reward-line--note reward-line--solo">${t('defeat.coinsNote')}</div>`;
+    if (winner.isHuman) {
+      const brainLines = !isLiveRoom ? buildBrainBonusRewardHtml(brainBonus, brainRewardOptions) : '';
+      const totalCoins = coinPrize + brainAmount;
+      rewards.innerHTML = `${brainLines}<div class="reward-line">${coinIcon()} +${totalCoins} ${t('victory.virtualCoins')}</div><div class="reward-line reward-line--note">✨ ${t('victory.arcadeNote')}</div>`;
+    } else {
+      const brainLines = !isLiveRoom ? buildBrainBonusRewardHtml(brainBonus, brainRewardOptions) : '';
+      rewards.innerHTML = `${brainLines}<div class="reward-line reward-line--note reward-line--solo">${t('defeat.coinsNote')}</div>`;
+    }
 
     const actions = document.createElement('div');
     actions.className = `victory-actions victory-actions--quad${isDefeat ? ' victory-actions--defeat victory-stagger-5' : ''}`;
@@ -3727,20 +3812,21 @@
     clearSelection();
     clearSave();
     const coinPrize = state.liveRoom ? (state.coins.prizePool || 0) : paySinglePlayerPrize(winner);
-    recordSessionMatchResult(winner, coinPrize);
+    const brainBonus = awardBrainBonusCoins();
+    recordSessionMatchResult(winner, coinPrize, brainBonus.amount);
     const levelUp = recordProfileWin(winner);
-    state.lastMatchStory = captureMatchStory(winner, coinPrize);
+    state.lastMatchStory = captureMatchStory(winner, coinPrize, brainBonus);
     if (!state.liveRoom?.code) saveCoinBalance();
     if (!(winner.isHuman && !state.liveRoom?.code)) {
       playUiSound(winner.isHuman ? 'win' : 'pass');
     }
     window.Big2GoAIReactions?.onVictory(winner, state);
     if (levelUp) {
-      state.pendingVictoryReveal = { winner, coinPrize };
+      state.pendingVictoryReveal = { winner, coinPrize, brainBonus };
       showLevelUpScreen(levelUp);
     } else {
       renderConfetti(winner.isHuman ? 56 : 42);
-      showVictoryCelebration(winner, coinPrize, null);
+      showVictoryCelebration(winner, coinPrize, null, brainBonus);
     }
     render();
   }

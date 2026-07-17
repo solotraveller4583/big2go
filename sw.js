@@ -1,4 +1,4 @@
-const CACHE_NAME = 'big2go-v208';
+const CACHE_NAME = 'big2go-v210';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const ASSETS = [
   './big2go-premium.css',
   './big2go-final-mobile.css',
   './big2go-app-redesign.css?v=4',
-  './big2go-victory-screen.css?v=2',
+  './big2go-victory-screen.css?v=4',
   './big2go-cascade-guard.css',
   './big2go-polish-guard.css',
   './big2go-hand-guard.css',
@@ -24,7 +24,7 @@ const ASSETS = [
   './big2go-mobile-redesign.css?v=9',
   './big2go-voice-mobile-override.css?v=3',
   './big2go-session-complete.css?v=1',
-  './big2go-result-story.css?v=3',
+  './big2go-result-story.css?v=4',
   './big2go-level-up.css?v=8',
   './big2go-profile.css?v=3',
   './big2go-landing-v3.css?v=33',
@@ -32,7 +32,7 @@ const ASSETS = [
   './big2go-gameplay-premium.css?v=30',
   './big2go-language.css?v=3',
   './playDemoScenes.js?v=1',
-  './i18n.js?v=12',
+  './i18n.js?v=13',
   './aiDialogue.js?v=1',
   './aiCharacters.js?v=13',
   './aiReactions.js?v=6',
@@ -47,7 +47,7 @@ const ASSETS = [
   './assets/player/player-female.svg',
   './assets/player/bruno.svg',
   './assets/player/luna.svg',
-  './game.js?v=135',
+  './game.js?v=137',
   './manifest.webmanifest',
   './icon.svg',
   './privacy.html',

@@ -706,6 +706,14 @@
 }
 
 .victory-stat--coin strong { color: #ffd24a; }
+.victory-stat--brain strong { color: #ffe68f; }
+.victory-stat--brain {
+  border-color: color-mix(in srgb, #ffd24a 28%, transparent);
+  background: linear-gradient(180deg, rgba(255, 210, 74, 0.14), rgba(255, 255, 255, 0.05));
+}
+.victory-stats--with-brain {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
 .victory-stat--spark strong { color: color-mix(in srgb, var(--defeat-accent) 85%, white); }
 .victory-stat--table strong { color: #fff; }
 
@@ -741,6 +749,18 @@
 
 .reward-line--defeat {
   border: 1px solid color-mix(in srgb, var(--defeat-secondary) 28%, transparent);
+}
+
+.reward-line--brain {
+  border: 1px solid color-mix(in srgb, #ffd24a 42%, transparent);
+  background: linear-gradient(180deg, rgba(255, 210, 74, 0.18), rgba(255, 210, 74, 0.08));
+  color: #ffe68f;
+  font-weight: 1000;
+}
+
+.reward-line--brain-copy,
+.reward-line--brain-teaser {
+  color: rgba(255, 236, 170, 0.88);
 }
 
 .reward-line--note {
