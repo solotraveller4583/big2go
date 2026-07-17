@@ -3468,25 +3468,70 @@
     }
   }
 
-  function spawnDefeatFx(layer, theme) {
+  function getVictoryFxSeed(rivalId = '') {
+    const rivalSum = String(rivalId).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    return ((state.round || 1) * 7919 + (state.sparks || 0) * 997 + rivalSum * 131) % 100000;
+  }
+
+  const WIN_FX_VARIANTS = [
+    { symbols: ['🎉', '✨', '★', '🪙', '♦', '2'], count: 14, drift: 84 },
+    { symbols: ['👑', '💫', '🔥', '⚡', '🎴', 'A'], count: 12, drift: 118 },
+    { symbols: ['🌟', '♠', '♥', '♣', '✨', 'K'], count: 16, drift: 62 },
+    { symbols: ['🎊', '💎', '🃏', '7', 'J', 'Q'], count: 13, drift: 96 }
+  ];
+
+  const DEFEAT_FX_VARIANTS = [
+    { symbols: ['☁️', '💨', '♠', '♥', '···', '—'], count: 13, drift: 72 },
+    { symbols: ['🎭', '✦', '♦', '♣', '🌧', '💫'], count: 15, drift: 88 },
+    { symbols: ['⚡', '2', '★', '🎴', '…', '↯'], count: 12, drift: 104 },
+    { symbols: ['💥', '♠', '♦', '🌙', '·', '✧'], count: 14, drift: 78 }
+  ];
+
+  function spawnWinFx(layer, rivalId) {
     if (!layer) return;
-    const symbols = ['♠', '♥', '♦', '♣', '3', '2', '🎴', '✨', '★', '☁️'];
-    for (let i = 0; i < 16; i += 1) {
+    const seed = getVictoryFxSeed(rivalId);
+    const variant = WIN_FX_VARIANTS[seed % WIN_FX_VARIANTS.length];
+    const hues = ['#ffd24a', '#ff8a00', '#ff2d95', '#fff4b0'];
+    for (let i = 0; i < variant.count; i += 1) {
+      const bit = document.createElement('span');
+      bit.className = i % 4 === 0 ? 'win-float-bit win-float-bit--spark' : 'win-float-bit';
+      bit.textContent = variant.symbols[i % variant.symbols.length];
+      bit.style.setProperty('--fx-x', `${4 + Math.random() * 92}%`);
+      bit.style.setProperty('--fx-delay', `${Math.random() * 2.4}s`);
+      bit.style.setProperty('--fx-drift', `${(Math.random() - 0.5) * variant.drift}px`);
+      bit.style.setProperty('--fx-duration', `${2.4 + Math.random() * 2.4}s`);
+      bit.style.setProperty('--fx-color', hues[(seed + i) % hues.length]);
+      layer.appendChild(bit);
+    }
+    for (let i = 0; i < 2; i += 1) {
+      const burst = document.createElement('span');
+      burst.className = 'win-burst-ring';
+      burst.style.setProperty('--burst-delay', `${i * 0.35}s`);
+      burst.style.setProperty('--burst-color', hues[(seed + i) % hues.length]);
+      layer.appendChild(burst);
+    }
+  }
+
+  function spawnDefeatFx(layer, theme, rivalId) {
+    if (!layer) return;
+    const seed = getVictoryFxSeed(rivalId);
+    const variant = DEFEAT_FX_VARIANTS[seed % DEFEAT_FX_VARIANTS.length];
+    for (let i = 0; i < variant.count; i += 1) {
       const bit = document.createElement('span');
       bit.className = i % 3 === 0 ? 'defeat-float-bit defeat-float-bit--spark' : 'defeat-float-bit';
-      bit.textContent = symbols[i % symbols.length];
+      bit.textContent = variant.symbols[i % variant.symbols.length];
       bit.style.setProperty('--fx-x', `${4 + Math.random() * 92}%`);
       bit.style.setProperty('--fx-delay', `${Math.random() * 2.8}s`);
-      bit.style.setProperty('--fx-drift', `${(Math.random() - 0.5) * 100}px`);
+      bit.style.setProperty('--fx-drift', `${(Math.random() - 0.5) * variant.drift}px`);
       bit.style.setProperty('--fx-duration', `${2.8 + Math.random() * 2.8}s`);
       if (theme?.accent) bit.style.setProperty('--fx-color', theme.accent);
       layer.appendChild(bit);
     }
-    for (let i = 0; i < 3; i += 1) {
+    for (let i = 0; i < 2 + (seed % 2); i += 1) {
       const spot = document.createElement('span');
       spot.className = 'defeat-spotlight';
-      spot.style.setProperty('--spot-x', `${20 + i * 30}%`);
-      spot.style.setProperty('--spot-delay', `${i * 0.6}s`);
+      spot.style.setProperty('--spot-x', `${18 + i * 32}%`);
+      spot.style.setProperty('--spot-delay', `${i * 0.55}s`);
       layer.appendChild(spot);
     }
   }
@@ -3497,6 +3542,61 @@
     wave.className = 'defeat-shockwave';
     layer.appendChild(wave);
     setTimeout(() => wave.remove(), 1400);
+  }
+
+  function buildCompactRivalStrip(rivalCopy, isDefeat) {
+    const strip = document.createElement('div');
+    strip.className = `victory-rival-strip${isDefeat ? ' victory-rival-strip--defeat victory-stagger-3' : ' victory-rival-strip--win victory-stagger-3'}`;
+    strip.innerHTML = `
+      <div class="victory-rival-strip__avatar" aria-hidden="true"></div>
+      <div class="victory-rival-strip__copy">
+        <strong>${rivalCopy.speakerLabel}</strong>
+        <p>"${rivalCopy.quote}"</p>
+      </div>`;
+    const avatar = strip.querySelector('.victory-rival-strip__avatar');
+    window.Big2GoAICharacters?.renderAvatar(avatar, rivalCopy.character, {
+      className: 'character-avatar',
+      imgClassName: 'character-avatar-img'
+    });
+    return strip;
+  }
+
+  function buildVictorySummary({ isWin, coinPrize, brainBonus, sparks, isLiveRoom }) {
+    const wrap = document.createElement('div');
+    wrap.className = `victory-summary victory-stagger-4${isWin ? ' victory-summary--win' : ' victory-summary--defeat'}`;
+    const brainAmount = !isLiveRoom ? Math.max(0, Number(brainBonus?.amount) || 0) : 0;
+    const bonusVars = {
+      amount: brainAmount,
+      full: BRAIN_BONUS_ZERO_HINTS,
+      partial: BRAIN_BONUS_ONE_HINT_LEFT,
+      limit: HINT_LIMIT
+    };
+
+    if (isWin) {
+      const total = coinPrize + brainAmount;
+      wrap.innerHTML = `
+        <div class="victory-summary__total">${!isLiveRoom && total > 0 ? `${coinIcon()} +${total}` : `✨ ${sparks}`}</div>
+        ${!isLiveRoom && total > 0 ? `
+        <div class="victory-summary__chips">
+          ${coinPrize > 0 ? `<span class="victory-chip">${coinIcon()} +${coinPrize}</span>` : ''}
+          ${brainAmount > 0 ? `<span class="victory-chip victory-chip--brain">🧠 +${brainAmount}</span>` : ''}
+          <span class="victory-chip">✨ ${sparks}</span>
+        </div>` : `<div class="victory-summary__chips"><span class="victory-chip">✨ ${sparks}</span></div>`}
+        ${brainAmount > 0 ? `<p class="victory-summary__note">${t(brainBonus.messageKey || 'brainBonus.full', bonusVars)}</p>` : ''}`;
+      return wrap;
+    }
+
+    const chips = [`<span class="victory-chip">✨ ${sparks}</span>`];
+    if (!isLiveRoom) {
+      chips.unshift(`<span class="victory-chip">${coinIcon()} -${ENTRY_FEE_COINS}</span>`);
+      if (brainAmount > 0) chips.splice(1, 0, `<span class="victory-chip victory-chip--brain">🧠 +${brainAmount}</span>`);
+    }
+    wrap.innerHTML = `
+      <div class="victory-summary__chips">${chips.join('')}</div>
+      ${brainAmount > 0
+        ? `<p class="victory-summary__note">${t(brainBonus.messageKey || 'brainBonus.full', bonusVars)}</p>`
+        : (!isLiveRoom ? `<p class="victory-summary__note victory-summary__note--teaser">${t('brainBonus.teaser', bonusVars)}</p>` : '')}`;
+    return wrap;
   }
 
   function buildDefeatRivalHero(rivalCopy, defeatTheme) {
@@ -3582,7 +3682,9 @@
     const fxLayer = document.createElement('div');
     fxLayer.className = 'victory-fx-layer';
     fxLayer.setAttribute('aria-hidden', 'true');
-    if (isDefeat) spawnDefeatFx(fxLayer, defeatTheme);
+    const rivalId = rivalCopy?.character?.id || '';
+    if (isDefeat) spawnDefeatFx(fxLayer, defeatTheme, rivalId);
+    else if (isWin) spawnWinFx(fxLayer, rivalId);
 
     const stage = document.createElement('div');
     stage.className = 'victory-stage';
@@ -3601,7 +3703,7 @@
     neonGlow.setAttribute('aria-hidden', 'true');
 
     const card = document.createElement('div');
-    card.className = `victory-card${isDefeat ? ' victory-card--defeat' : ''}${isWin ? ' victory-card--win' : ''}`;
+    card.className = `victory-card victory-card--compact${isDefeat ? ' victory-card--defeat' : ''}${isWin ? ' victory-card--win' : ''}`;
 
     if (isDefeat) {
       const shimmer = document.createElement('div');
@@ -3632,121 +3734,16 @@
         : `${winner.name} emptied their hand first. Tap New Game to try again.`;
     }
 
-    let comeback = null;
-    if (isDefeat) {
-      comeback = document.createElement('p');
-      comeback.className = 'victory-comeback victory-stagger-2';
-      comeback.textContent = t('defeat.comeback');
-    }
-
-    let rivalPanel = null;
-    let defeatHero = null;
-    if (rivalCopy && isDefeat) {
-      defeatHero = buildDefeatRivalHero(rivalCopy, defeatTheme);
-    } else if (rivalCopy) {
-      rivalPanel = document.createElement('div');
-      rivalPanel.className = `victory-rival victory-rival--${rivalCopy.character.id}${isDefeat ? ' victory-rival--defeat' : ''}`;
-
-      if (isDefeat && defeatTheme?.emoji) {
-        const moodIcon = document.createElement('span');
-        moodIcon.className = 'victory-rival-mood';
-        moodIcon.textContent = defeatTheme.emoji;
-        moodIcon.setAttribute('aria-hidden', 'true');
-        rivalPanel.appendChild(moodIcon);
-      }
-
-      const rivalHead = document.createElement('div');
-      rivalHead.className = 'victory-rival-head';
-
-      const rivalAvatar = document.createElement('div');
-      rivalAvatar.className = 'victory-rival-avatar character-avatar';
-      rivalAvatar.setAttribute('aria-hidden', 'true');
-      window.Big2GoAICharacters?.renderAvatar(rivalAvatar, rivalCopy.character, {
-        className: 'character-avatar',
-        imgClassName: 'character-avatar-img'
-      });
-
-      const rivalSpeaker = document.createElement('strong');
-      rivalSpeaker.className = 'victory-rival-speaker';
-      rivalSpeaker.textContent = rivalCopy.speakerLabel;
-
-      rivalHead.appendChild(rivalAvatar);
-      rivalHead.appendChild(rivalSpeaker);
-
-      const rivalQuote = document.createElement('p');
-      rivalQuote.className = 'victory-rival-quote';
-      rivalQuote.textContent = `"${rivalCopy.quote}"`;
-
-      rivalPanel.appendChild(rivalHead);
-      rivalPanel.appendChild(rivalQuote);
-    }
-
-    const stats = document.createElement('div');
-    stats.className = `victory-stats${isDefeat ? ' victory-stats--defeat victory-stagger-4' : ''}`;
-    const brainAmount = !isLiveRoom ? Math.max(0, Number(brainBonus?.amount) || 0) : 0;
-    if (isDefeat) {
-      stats.innerHTML = `
-        <div class="victory-stat victory-stat--coin">
-          <span class="victory-stat-icon" aria-hidden="true">🪙</span>
-          <small>${t('defeat.coinsSpent')}</small>
-          <strong>${ENTRY_FEE_COINS}</strong>
-        </div>
-        ${brainAmount > 0 ? `
-        <div class="victory-stat victory-stat--brain">
-          <span class="victory-stat-icon" aria-hidden="true">🧠</span>
-          <small>${t('brainBonus.title')}</small>
-          <strong>${coinIcon()} +${brainAmount}</strong>
-        </div>` : ''}
-        <div class="victory-stat victory-stat--spark">
-          <span class="victory-stat-icon" aria-hidden="true">✨</span>
-          <small>${t('defeat.sparks')}</small>
-          <strong>${state.sparks}</strong>
-        </div>
-        <div class="victory-stat victory-stat--table">
-          <span class="victory-stat-icon" aria-hidden="true">🎴</span>
-          <small>${t('defeat.table')}</small>
-          <strong>${state.players.length}</strong>
-        </div>`;
-      if (brainAmount > 0) stats.classList.add('victory-stats--with-brain');
-    } else {
-      stats.innerHTML = `
-        <div class="victory-stat victory-stat--coin">
-          <span class="victory-stat-icon" aria-hidden="true">🪙</span>
-          <small>${t('victory.reward')}</small>
-          <strong>${coinIcon()} +${coinPrize}</strong>
-        </div>
-        ${brainAmount > 0 ? `
-        <div class="victory-stat victory-stat--brain">
-          <span class="victory-stat-icon" aria-hidden="true">🧠</span>
-          <small>${t('brainBonus.title')}</small>
-          <strong>${coinIcon()} +${brainAmount}</strong>
-        </div>` : `
-        <div class="victory-stat">
-          <small>${t('defeat.table')}</small>
-          <strong>${state.players.length} ${t('defeat.players')}</strong>
-        </div>`}
-        <div class="victory-stat victory-stat--spark">
-          <span class="victory-stat-icon" aria-hidden="true">✨</span>
-          <small>${t('defeat.sparks')}</small>
-          <strong>${state.sparks}</strong>
-        </div>`;
-      if (brainAmount > 0) stats.classList.add('victory-stats--with-brain');
-    }
-
-    const brainRewardOptions = { showTeaserWhenEmpty: !isLiveRoom };
-    const rewards = document.createElement('div');
-    rewards.className = `victory-rewards${isDefeat ? ' victory-rewards--defeat victory-stagger-4' : ''}`;
-    if (winner.isHuman) {
-      const brainLines = !isLiveRoom ? buildBrainBonusRewardHtml(brainBonus, brainRewardOptions) : '';
-      const totalCoins = coinPrize + brainAmount;
-      rewards.innerHTML = `${brainLines}<div class="reward-line">${coinIcon()} +${totalCoins} ${t('victory.virtualCoins')}</div><div class="reward-line reward-line--note">✨ ${t('victory.arcadeNote')}</div>`;
-    } else {
-      const brainLines = !isLiveRoom ? buildBrainBonusRewardHtml(brainBonus, brainRewardOptions) : '';
-      rewards.innerHTML = `${brainLines}<div class="reward-line reward-line--note reward-line--solo">${t('defeat.coinsNote')}</div>`;
-    }
+    const summary = buildVictorySummary({
+      isWin,
+      coinPrize,
+      brainBonus,
+      sparks: state.sparks,
+      isLiveRoom
+    });
 
     const actions = document.createElement('div');
-    actions.className = `victory-actions victory-actions--quad${isDefeat ? ' victory-actions--defeat victory-stagger-5' : ''}`;
+    actions.className = `victory-actions victory-actions--compact${isDefeat ? ' victory-actions--defeat victory-stagger-5' : ' victory-stagger-5'}`;
 
     const newButton = document.createElement('button');
     newButton.className = `primary${isDefeat ? ' victory-rematch-btn' : ''}`;
@@ -3801,12 +3798,9 @@
 
     card.appendChild(badge);
     card.appendChild(title);
-    if (comeback) card.appendChild(comeback);
     if (!rivalCopy) card.appendChild(message);
-    if (defeatHero) card.appendChild(defeatHero);
-    else if (rivalPanel) card.appendChild(rivalPanel);
-    card.appendChild(stats);
-    card.appendChild(rewards);
+    if (rivalCopy) card.appendChild(buildCompactRivalStrip(rivalCopy, isDefeat));
+    card.appendChild(summary);
     card.appendChild(actions);
 
     neonFrame.appendChild(neonChase);
