@@ -1,8 +1,10 @@
-/* Big2Go — Journey level-up screen (single-page, per-level neon themes) */
+/* Big2Go — Journey level-up screen (Rookie → Legend, tier-unique themes) */
 .level-up-screen {
   --journey-accent: #ffd24a;
   --journey-secondary: #ff2d95;
   --journey-tertiary: #00e5ff;
+  --journey-platinum: #f5f8ff;
+  --journey-premier: #dce8f8;
   --neon-chase-speed: 2s;
   position: fixed;
   inset: 0;
@@ -18,6 +20,48 @@
     radial-gradient(circle at 12% 88%, color-mix(in srgb, var(--journey-tertiary) 16%, transparent), transparent 34%),
     radial-gradient(circle at 88% 78%, color-mix(in srgb, var(--journey-secondary) 14%, transparent), transparent 36%),
     linear-gradient(180deg, #14062e 0%, #07021a 100%);
+}
+
+.level-up-screen[data-tier="rookie"],
+.level-up-screen--tier-rookie {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(205, 127, 50, 0.28), transparent 42%),
+    radial-gradient(circle at 18% 82%, rgba(255, 107, 53, 0.14), transparent 34%),
+    radial-gradient(circle at 82% 76%, rgba(255, 179, 71, 0.12), transparent 36%),
+    linear-gradient(180deg, #1a0a04 0%, #0a0408 100%);
+}
+
+.level-up-screen[data-tier="strategist"],
+.level-up-screen--tier-strategist {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(200, 212, 232, 0.22), transparent 42%),
+    radial-gradient(circle at 14% 84%, rgba(0, 229, 255, 0.14), transparent 34%),
+    radial-gradient(circle at 86% 78%, rgba(179, 71, 255, 0.12), transparent 36%),
+    linear-gradient(180deg, #0a1028 0%, #040818 100%);
+}
+
+.level-up-screen[data-tier="master"],
+.level-up-screen--tier-master {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 210, 74, 0.26), transparent 42%),
+    radial-gradient(circle at 16% 82%, rgba(255, 45, 149, 0.16), transparent 34%),
+    radial-gradient(circle at 84% 76%, rgba(179, 71, 255, 0.14), transparent 36%),
+    linear-gradient(180deg, #180828 0%, #080318 100%);
+}
+
+.level-up-screen[data-tier="legend"],
+.level-up-screen--tier-legend,
+.level-up-screen--legend {
+  --journey-accent: #e8eef8;
+  --journey-secondary: #b8c9dc;
+  --journey-tertiary: #ffd700;
+  --journey-platinum: #f5f8ff;
+  --journey-premier: #dce8f8;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(245, 248, 255, 0.24), transparent 42%),
+    radial-gradient(circle at 20% 80%, rgba(255, 215, 0, 0.1), transparent 34%),
+    radial-gradient(circle at 80% 74%, rgba(184, 201, 220, 0.16), transparent 36%),
+    linear-gradient(180deg, #0a1428 0%, #050810 100%);
 }
 
 .level-up-screen.hidden {
@@ -842,20 +886,79 @@ body.level-up-active .app-shell {
   animation-duration: calc(var(--neon-chase-speed, 2s) * 0.72);
 }
 
-.level-up-screen--tier-promo .level-up-journey-icon {
-  animation: levelUpIconSpin 3s ease-in-out infinite;
-}
-
 .level-up-screen--legend .level-up-card {
   background:
-    radial-gradient(circle at 50% 0%, rgba(255, 236, 120, 0.24), transparent 38%),
-    linear-gradient(180deg, rgba(56, 24, 0, 0.96), rgba(10, 3, 32, 0.99));
+    radial-gradient(circle at 50% 0%, rgba(245, 248, 255, 0.22), transparent 38%),
+    radial-gradient(circle at 50% 100%, rgba(255, 215, 0, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(18, 28, 48, 0.98), rgba(6, 10, 22, 0.99));
+  border-color: rgba(232, 238, 248, 0.22);
+}
+
+.level-up-screen--legend .level-up-title {
+  background: linear-gradient(180deg, #ffffff 0%, var(--journey-platinum) 40%, var(--journey-tertiary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(245, 248, 255, 0.45)) drop-shadow(0 0 32px rgba(255, 215, 0, 0.25));
+}
+
+.level-up-screen--legend .level-up-winner-ribbon {
+  color: #1a2030;
+  background: linear-gradient(180deg, var(--journey-platinum), var(--journey-premier) 55%, var(--journey-tertiary));
+  box-shadow: 0 8px 24px rgba(245, 248, 255, 0.35), 0 0 18px rgba(255, 215, 0, 0.2);
+}
+
+.level-up-screen--legend .level-up-to {
+  color: var(--journey-platinum);
+  text-shadow:
+    0 0 18px rgba(245, 248, 255, 0.65),
+    0 0 36px rgba(255, 215, 0, 0.35),
+    0 0 48px rgba(184, 201, 220, 0.25);
+}
+
+.level-up-screen--legend .level-up-neon-frame {
+  background: linear-gradient(
+    135deg,
+    var(--journey-platinum),
+    var(--journey-premier) 28%,
+    var(--journey-tertiary) 52%,
+    var(--journey-secondary) 76%,
+    var(--journey-platinum)
+  );
+  filter:
+    drop-shadow(0 0 18px rgba(245, 248, 255, 0.55))
+    drop-shadow(0 0 32px rgba(255, 215, 0, 0.28));
 }
 
 .level-up-screen--legend .level-up-neon-bulb {
   width: 11px;
   height: 11px;
   margin: -5px 0 0 -5px;
+}
+
+.level-up-screen--tier-rookie .level-up-card {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(205, 127, 50, 0.18), transparent 40%),
+    linear-gradient(180deg, rgba(42, 18, 8, 0.98), rgba(12, 5, 24, 0.99));
+}
+
+.level-up-screen--tier-strategist .level-up-card {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(200, 212, 232, 0.16), transparent 40%),
+    linear-gradient(180deg, rgba(14, 22, 48, 0.98), rgba(8, 6, 28, 0.99));
+}
+
+.level-up-screen--tier-master .level-up-card {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 210, 74, 0.2), transparent 40%),
+    linear-gradient(180deg, rgba(36, 12, 48, 0.98), rgba(10, 3, 32, 0.99));
+}
+
+.level-up-screen--tier-promo .level-up-journey-icon {
+  animation: levelUpIconSpin 3s ease-in-out infinite;
+}
+
+.level-up-screen--tier-promo .level-up-neon-frame {
+  animation-duration: 2.2s;
 }
 
 .level-up-motion-gallop .level-up-rays--carnival { animation-duration: 11s; }
@@ -871,7 +974,187 @@ body.level-up-active .app-shell {
 .level-up-screen[data-journey-theme="ruby-flame"] { --journey-accent: #ff4757; --journey-secondary: #ff8a00; --journey-tertiary: #ffd24a; }
 .level-up-screen[data-journey-theme="jade-luck"] { --journey-accent: #2ee59d; --journey-secondary: #00e5ff; --journey-tertiary: #ffd24a; }
 .level-up-screen[data-journey-theme="violet-crown"] { --journey-accent: #b347ff; --journey-secondary: #ff2d95; --journey-tertiary: #ffd24a; }
-.level-up-screen[data-journey-theme="legend-crown"] { --journey-accent: #ffd700; --journey-secondary: #fff4b0; --journey-tertiary: #ff2d95; }
+.level-up-screen[data-journey-theme="legend-crown"],
+.level-up-screen[data-journey-theme="platinum-premier"] {
+  --journey-accent: #e8eef8;
+  --journey-secondary: #b8c9dc;
+  --journey-tertiary: #ffd700;
+  --journey-platinum: #f5f8ff;
+  --journey-premier: #dce8f8;
+}
+
+/* ── Carnival light strands (top & bottom) ── */
+.level-up-carnival-strands {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.level-up-carnival-strand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 8px;
+  gap: 2px;
+}
+
+.level-up-carnival-strand::before {
+  content: '';
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.level-up-carnival-strand--top {
+  top: max(28px, calc(env(safe-area-inset-top) + 18px));
+}
+
+.level-up-carnival-strand--bottom {
+  bottom: max(18px, env(safe-area-inset-bottom));
+}
+
+.level-up-carnival-bulb {
+  position: relative;
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--carnival-color, var(--journey-accent));
+  box-shadow: 0 0 8px var(--carnival-color), 0 0 16px color-mix(in srgb, var(--carnival-color) 60%, white);
+  animation: levelUpCarnivalTwinkle var(--carnival-duration, 1.1s) ease-in-out infinite;
+  animation-delay: var(--carnival-delay, 0s);
+}
+
+@keyframes levelUpCarnivalTwinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.75); filter: brightness(0.8); }
+  50% { opacity: 1; transform: scale(1.25); filter: brightness(1.4); }
+}
+
+/* ── Running lights (horizontal chase bands) ── */
+.level-up-running-lights {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  display: grid;
+  align-content: space-between;
+  padding: max(52px, calc(env(safe-area-inset-top) + 42px)) 0 max(42px, env(safe-area-inset-bottom));
+}
+
+.level-up-running-track {
+  display: flex;
+  gap: 10px;
+  width: max-content;
+  padding: 4px 0;
+  animation: levelUpRunningScroll var(--run-speed, 3s) linear infinite;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.level-up-running-track--reverse {
+  animation-name: levelUpRunningScrollReverse;
+}
+
+.level-up-running-bulb {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--run-color, var(--journey-accent));
+  opacity: 0.25;
+  box-shadow: 0 0 6px var(--run-color);
+  animation: levelUpRunningBulbPulse calc(var(--run-speed, 3s) * 0.35) ease-in-out infinite;
+  animation-delay: calc(var(--run-i, 0) * 0.08s);
+}
+
+@keyframes levelUpRunningScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes levelUpRunningScrollReverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes levelUpRunningBulbPulse {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.35); box-shadow: 0 0 12px var(--run-color), 0 0 22px color-mix(in srgb, var(--run-color) 55%, white); }
+}
+
+/* ── Fireworks ── */
+.level-up-firework {
+  position: absolute;
+  left: var(--fw-x, 50%);
+  top: var(--fw-y, 40%);
+  width: 4px;
+  height: 4px;
+  pointer-events: none;
+  animation: levelUpFireworkLaunch 0.35s ease-out forwards;
+  animation-delay: var(--fw-delay, 0s);
+}
+
+.level-up-firework__particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--fw-color, var(--journey-accent));
+  box-shadow: 0 0 8px var(--fw-color);
+  transform: rotate(var(--fw-angle, 0deg)) translateY(calc(var(--fw-dist, 40px) * -1));
+  opacity: 0;
+  animation: levelUpFireworkBurst 1.1s ease-out forwards;
+  animation-delay: calc(var(--fw-delay, 0s) + 0.28s);
+}
+
+@keyframes levelUpFireworkLaunch {
+  0% { opacity: 0; transform: scale(0.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes levelUpFireworkBurst {
+  0% { opacity: 1; transform: rotate(var(--fw-angle, 0deg)) translateY(0) scale(1); }
+  100% { opacity: 0; transform: rotate(var(--fw-angle, 0deg)) translateY(calc(var(--fw-dist, 40px) * -1)) scale(0.2); }
+}
+
+.level-up-light-streak {
+  position: absolute;
+  left: var(--streak-x, 50%);
+  top: var(--streak-y, 50%);
+  width: 64px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--streak-color, var(--journey-accent)), transparent);
+  transform: rotate(var(--streak-rotate, 0deg));
+  opacity: 0;
+  animation: levelUpLightStreak 1.8s ease-out forwards;
+  animation-delay: var(--streak-delay, 0s);
+}
+
+@keyframes levelUpLightStreak {
+  0% { opacity: 0; transform: rotate(var(--streak-rotate, 0deg)) scaleX(0.2); }
+  20% { opacity: 0.85; }
+  100% { opacity: 0; transform: rotate(var(--streak-rotate, 0deg)) scaleX(1.6); }
+}
+
+.level-up-ambient-bit--spark {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ab-color, var(--journey-accent));
+  box-shadow: 0 0 12px var(--ab-color);
+}
 
 /* ── Cinematic FX layer ── */
 .level-up-marquee {
@@ -1172,7 +1455,13 @@ body.level-up-active .app-shell {
   .level-up-burst,
   .level-up-ring,
   .level-up-spark,
-  .level-up-emoji-burst {
+  .level-up-emoji-burst,
+  .level-up-carnival-bulb,
+  .level-up-running-track,
+  .level-up-running-bulb,
+  .level-up-firework,
+  .level-up-firework__particle,
+  .level-up-light-streak {
     animation: none !important;
   }
 }

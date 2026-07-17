@@ -238,10 +238,51 @@
   };
 
   const LEVEL_CONFETTI_PALETTES = {
-    rookie: ['#ffd24a', '#ff2d95', '#00e5ff', '#ff8a00', '#ff47d4'],
-    strategist: ['#ffd24a', '#ff9f43', '#ff2d95', '#ffb347', '#00e5ff'],
-    master: ['#ff6bcb', '#b59cff', '#ffd24a', '#ff8ad8', '#00e5ff'],
-    legend: ['#ffd700', '#fff4b0', '#ff9f1c', '#ff2d95', '#ffffff']
+    rookie: ['#cd7f32', '#ffb347', '#ff6b35', '#ffd24a', '#ff8a00'],
+    strategist: ['#c8d4e8', '#00e5ff', '#b347ff', '#e8eef8', '#4d9fff'],
+    master: ['#ffd24a', '#ff2d95', '#b59cff', '#ff6bcb', '#ff8ad8'],
+    legend: ['#f5f8ff', '#e8eef8', '#dce8f8', '#ffd700', '#ffffff', '#b8c9dc']
+  };
+
+  const LEVEL_TIER_JOURNEY = {
+    rookie: {
+      accent: '#cd7f32',
+      secondary: '#ffb347',
+      tertiary: '#ff6b35',
+      emojis: ['🎠', '🎪', '🎡', '🎯', '🃏', '🎈', '🎉', '🌟', '🔥', '⚡'],
+      motions: ['gallop', 'pulse', 'spark'],
+      chaseBase: 2.2,
+      chapterKeys: ['levelUp.chapter.goldRush', 'levelUp.chapter.rubyFlame', 'levelUp.chapter.jadeLuck']
+    },
+    strategist: {
+      accent: '#c8d4e8',
+      secondary: '#00e5ff',
+      tertiary: '#b347ff',
+      emojis: ['⚡', '✨', '🎭', '🔮', '💎', '🌊', '🎆', '💫', '🌀', '🔷'],
+      motions: ['wave', 'pulse', 'flare'],
+      chaseBase: 1.9,
+      chapterKeys: ['levelUp.chapter.neonPulse', 'levelUp.chapter.cyberWave', 'levelUp.chapter.violetCrown']
+    },
+    master: {
+      accent: '#ffd24a',
+      secondary: '#ff2d95',
+      tertiary: '#b347ff',
+      emojis: ['👑', '🔥', '💫', '🏆', '⭐', '🎇', '✨', '💎', '🌟', '⚜️'],
+      motions: ['flare', 'royal', 'wave'],
+      chaseBase: 1.55,
+      chapterKeys: ['levelUp.chapter.violetCrown', 'levelUp.chapter.rubyFlame', 'levelUp.chapter.goldRush']
+    },
+    legend: {
+      accent: '#e8eef8',
+      secondary: '#b8c9dc',
+      tertiary: '#ffd700',
+      platinum: '#f5f8ff',
+      premier: '#dce8f8',
+      emojis: ['👑', '🏆', '💎', '✨', '🌟'],
+      motions: ['royal'],
+      chaseBase: 1.05,
+      chapterKeys: ['levelUp.chapter.platinumPremier', 'levelUp.chapter.legendCrown']
+    }
   };
 
   const CARNIVAL_CELEBRATION_HUES = [42, 320, 280, 15, 195, 330];
@@ -267,9 +308,9 @@
 
   const LEVEL_TIER_PATH = {
     rookie: { color: '#cd7f32', glow: 'rgba(205, 127, 50, 0.45)' },
-    strategist: { color: '#c0c0c0', glow: 'rgba(192, 192, 192, 0.45)' },
+    strategist: { color: '#c8d4e8', glow: 'rgba(200, 212, 232, 0.5)' },
     master: { color: '#ffd24a', glow: 'rgba(255, 210, 74, 0.5)' },
-    legend: { color: '#ff2d95', glow: 'rgba(255, 45, 149, 0.45)' }
+    legend: { color: '#e8eef8', glow: 'rgba(232, 238, 248, 0.55)' }
   };
 
   const els = {
@@ -304,6 +345,8 @@
     levelUpNeonChase: document.querySelector('#level-up-neon-chase'),
     levelUpFxLayer: document.querySelector('#level-up-fx-layer'),
     levelUpMarqueeTrack: document.querySelector('#level-up-marquee-track'),
+    levelUpCarnivalStrands: document.querySelector('#level-up-carnival-strands'),
+    levelUpRunningLights: document.querySelector('#level-up-running-lights'),
     levelUpContinue: document.querySelector('#level-up-continue'),
     profileScreen: document.querySelector('#profile-screen'),
     profileTitle: document.querySelector('#profile-title'),
@@ -2948,6 +2991,10 @@
         'is-revealed',
         'level-up-screen--tier-promo',
         'level-up-screen--legend',
+        'level-up-screen--tier-rookie',
+        'level-up-screen--tier-strategist',
+        'level-up-screen--tier-master',
+        'level-up-screen--tier-legend',
         'level-up-motion-gallop',
         'level-up-motion-pulse',
         'level-up-motion-wave',
@@ -2962,11 +3009,15 @@
       els.levelUp.style.removeProperty('--journey-accent');
       els.levelUp.style.removeProperty('--journey-secondary');
       els.levelUp.style.removeProperty('--journey-tertiary');
+      els.levelUp.style.removeProperty('--journey-platinum');
+      els.levelUp.style.removeProperty('--journey-premier');
       els.levelUp.style.removeProperty('--neon-chase-speed');
     }
     if (els.levelUpNeonChase) els.levelUpNeonChase.innerHTML = '';
     if (els.levelUpFxLayer) els.levelUpFxLayer.innerHTML = '';
     if (els.levelUpMarqueeTrack) els.levelUpMarqueeTrack.innerHTML = '';
+    if (els.levelUpCarnivalStrands) els.levelUpCarnivalStrands.innerHTML = '';
+    if (els.levelUpRunningLights) els.levelUpRunningLights.innerHTML = '';
     if (els.levelUpTo) els.levelUpTo.classList.remove('is-bursting');
     if (els.levelUpChapter) {
       els.levelUpChapter.textContent = '';
@@ -2997,26 +3048,145 @@
     scheduleLevelUpFx(() => wave.remove(), 1300);
   }
 
-  function spawnLevelUpAmbientBits(theme) {
+  function createLevelUpFxRoll(levelUp) {
+    const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(levelUp?.level) || STARTING_LEVEL));
+    const prev = Math.max(STARTING_LEVEL, Number(levelUp?.previousLevel) || level - 1);
+    const nonce = (Date.now() ^ Math.floor(performance.now() * 1000) ^ (Math.random() * 0x7fffffff)) >>> 0;
+    const seed = (nonce * 2654435761 + level * 9973 + prev * 7919 + (levelUp?.kind === 'human' ? 4201 : 0)) >>> 0;
+    return { seed, level, nonce };
+  }
+
+  function buildLevelUpCarnivalStrands(theme, roll) {
+    if (!els.levelUpCarnivalStrands) return;
+    els.levelUpCarnivalStrands.innerHTML = '';
+    const rng = mulberry32(roll.seed ^ 0x9e3779b9);
+    const colors = [theme.accent, theme.secondary, theme.tertiary, theme.platinum || theme.accent, theme.premier || theme.secondary];
+    ['top', 'bottom'].forEach((position, rowIndex) => {
+      const strand = document.createElement('div');
+      strand.className = `level-up-carnival-strand level-up-carnival-strand--${position}`;
+      const bulbCount = 14 + Math.floor(rng() * 8) + Math.floor(roll.level / 3);
+      for (let i = 0; i < bulbCount; i += 1) {
+        const bulb = document.createElement('span');
+        bulb.className = 'level-up-carnival-bulb';
+        bulb.style.setProperty('--carnival-color', colors[(i + rowIndex) % colors.length]);
+        bulb.style.setProperty('--carnival-delay', `${((i / bulbCount) * 1.6 + rng() * 0.4).toFixed(2)}s`);
+        bulb.style.setProperty('--carnival-duration', `${(0.85 + rng() * 0.55).toFixed(2)}s`);
+        strand.appendChild(bulb);
+      }
+      els.levelUpCarnivalStrands.appendChild(strand);
+    });
+  }
+
+  function buildLevelUpRunningLights(theme, roll) {
+    if (!els.levelUpRunningLights) return;
+    els.levelUpRunningLights.innerHTML = '';
+    const rng = mulberry32(roll.seed ^ 0x517cc1b7);
+    const colors = [theme.accent, theme.secondary, theme.tertiary, theme.platinum || '#ffffff', theme.premier || theme.secondary];
+    const trackCount = 2 + Math.floor(roll.level / 12);
+    for (let row = 0; row < trackCount; row += 1) {
+      const track = document.createElement('div');
+      track.className = 'level-up-running-track';
+      const reverse = row % 2 === 1;
+      if (reverse) track.classList.add('level-up-running-track--reverse');
+      track.style.setProperty('--run-speed', `${Math.max(1.6, 2.4 + rng() * 1.2 - roll.level * 0.02).toFixed(2)}s`);
+      const bulbCount = 18 + Math.floor(rng() * 10);
+      const appendBulbs = (target) => {
+        for (let i = 0; i < bulbCount; i += 1) {
+          const bulb = document.createElement('span');
+          bulb.className = 'level-up-running-bulb';
+          bulb.style.setProperty('--run-color', colors[(i + row) % colors.length]);
+          bulb.style.setProperty('--run-i', String(i));
+          target.appendChild(bulb);
+        }
+      };
+      appendBulbs(track);
+      appendBulbs(track);
+      els.levelUpRunningLights.appendChild(track);
+    }
+  }
+
+  function spawnLevelUpFirework(layer, x, y, colors, delaySec, rng) {
+    if (!layer) return;
+    const fw = document.createElement('div');
+    fw.className = 'level-up-firework';
+    fw.style.setProperty('--fw-x', x);
+    fw.style.setProperty('--fw-y', y);
+    fw.style.setProperty('--fw-delay', `${delaySec}s`);
+    const particleCount = 10 + Math.floor(rng() * 10);
+    for (let i = 0; i < particleCount; i += 1) {
+      const particle = document.createElement('span');
+      particle.className = 'level-up-firework__particle';
+      const angle = (360 / particleCount) * i + rng() * 12;
+      particle.style.setProperty('--fw-angle', `${angle}deg`);
+      particle.style.setProperty('--fw-color', colors[Math.floor(rng() * colors.length)]);
+      particle.style.setProperty('--fw-dist', `${(36 + rng() * 64).toFixed(0)}px`);
+      fw.appendChild(particle);
+    }
+    layer.appendChild(fw);
+    scheduleLevelUpFx(() => fw.remove(), 1600 + delaySec * 1000);
+  }
+
+  function spawnLevelUpProceduralFx(theme, style, roll) {
     if (!els.levelUpFxLayer) return;
-    const symbols = ['★', '✨', '♠', '♥', '♦', '♣', 'Lv', '↑', theme?.emoji || '🎠'];
-    for (let i = 0; i < 12; i += 1) {
+    const rng = mulberry32(roll.seed ^ 0xcafebabe);
+    const palette = [theme.accent, theme.secondary, theme.tertiary, theme.platinum, theme.premier].filter(Boolean);
+    const symbols = ['★', '✨', 'Lv', '↑', theme.emoji || '🎠', '♠', '♥', '♦', '♣', '2', '👑', '💫'];
+    const bitCount = Math.floor(8 + style.level * 0.6 + (style.tierPromo ? 6 : 0));
+
+    for (let i = 0; i < bitCount; i += 1) {
       const bit = document.createElement('span');
-      bit.className = 'level-up-ambient-bit';
-      bit.textContent = symbols[i % symbols.length];
-      bit.style.setProperty('--ab-x', `${4 + Math.random() * 92}%`);
-      bit.style.setProperty('--ab-delay', `${Math.random() * 3}s`);
-      bit.style.setProperty('--ab-drift', `${(Math.random() - 0.5) * 80}px`);
-      bit.style.setProperty('--ab-duration', `${3.2 + Math.random() * 2.4}s`);
-      if (theme?.accent) bit.style.setProperty('--ab-color', theme.accent);
+      const isSpark = rng() < 0.22;
+      bit.className = isSpark ? 'level-up-ambient-bit level-up-ambient-bit--spark' : 'level-up-ambient-bit';
+      if (!isSpark) bit.textContent = symbols[Math.floor(rng() * symbols.length)];
+      bit.style.setProperty('--ab-x', `${2 + rng() * 96}%`);
+      bit.style.setProperty('--ab-delay', `${(rng() * 2.8).toFixed(2)}s`);
+      bit.style.setProperty('--ab-drift', `${((rng() - 0.5) * 90).toFixed(0)}px`);
+      bit.style.setProperty('--ab-duration', `${(2.8 + rng() * 2.6).toFixed(2)}s`);
+      bit.style.setProperty('--ab-color', palette[Math.floor(rng() * palette.length)]);
       els.levelUpFxLayer.appendChild(bit);
     }
-    for (let i = 0; i < 2; i += 1) {
+
+    for (let i = 0; i < 2 + Math.floor(style.level / 10); i += 1) {
       const spot = document.createElement('span');
       spot.className = 'level-up-spotlight';
-      spot.style.setProperty('--spot-x', `${22 + i * 36}%`);
-      spot.style.setProperty('--spot-delay', `${i * 0.5}s`);
+      spot.style.setProperty('--spot-x', `${18 + i * 32 + rng() * 8}%`);
+      spot.style.setProperty('--spot-delay', `${(i * 0.45).toFixed(2)}s`);
       els.levelUpFxLayer.appendChild(spot);
+    }
+
+    const fireworkCount = style.tier.skill === 'legend' ? 8
+      : style.tier.skill === 'master' ? 4 + Math.floor(style.level / 6)
+        : style.tier.skill === 'strategist' ? 2 + Math.floor(style.level / 8)
+          : style.tierPromo ? 2 : 0;
+
+    for (let i = 0; i < fireworkCount; i += 1) {
+      const delay = i * 0.32 + rng() * 0.5;
+      scheduleLevelUpFx(() => {
+        spawnLevelUpFirework(
+          els.levelUpFxLayer,
+          `${12 + rng() * 76}%`,
+          `${14 + rng() * 52}%`,
+          palette,
+          0,
+          mulberry32((roll.seed + i * 911) >>> 0)
+        );
+      }, delay * 1000);
+    }
+
+    if (style.tier.skill === 'legend' || style.level >= 22) {
+      for (let i = 0; i < 3 + Math.floor(style.level / 8); i += 1) {
+        scheduleLevelUpFx(() => {
+          const streak = document.createElement('span');
+          streak.className = 'level-up-light-streak';
+          streak.style.setProperty('--streak-x', `${rng() * 100}%`);
+          streak.style.setProperty('--streak-y', `${rng() * 100}%`);
+          streak.style.setProperty('--streak-color', palette[Math.floor(rng() * palette.length)]);
+          streak.style.setProperty('--streak-rotate', `${Math.floor(rng() * 360)}deg`);
+          streak.style.setProperty('--streak-delay', `${(rng() * 1.4).toFixed(2)}s`);
+          els.levelUpFxLayer?.appendChild(streak);
+          scheduleLevelUpFx(() => streak.remove(), 2200);
+        }, 200 + i * 280);
+      }
     }
   }
 
@@ -3081,24 +3251,58 @@
 
   function getLevelJourneyTheme(levelUp) {
     const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(levelUp?.level) || STARTING_LEVEL));
+    const tier = getLevelTier(level);
     const tierPromo = crossedSkillTier(levelUp?.previousLevel || level - 1, level);
-    if (level >= MAX_LEVEL) {
-      return { ...LEVEL_JOURNEY_THEMES[0], id: 'legend-crown', chapterKey: 'levelUp.chapter.legendCrown', emoji: '🏆', accent: '#ffd700', secondary: '#fff4b0', tertiary: '#ff2d95', chase: 1.2, motion: 'royal' };
+    const tierBase = LEVEL_TIER_JOURNEY[tier.skill] || LEVEL_TIER_JOURNEY.rookie;
+    const tierIndex = level - tier.min;
+    const variantA = LEVEL_JOURNEY_THEMES[(level - 1) % LEVEL_JOURNEY_THEMES.length];
+    const variantB = LEVEL_JOURNEY_THEMES[(level * 2 - 1) % LEVEL_JOURNEY_THEMES.length];
+    const emoji = tierBase.emojis[tierIndex % tierBase.emojis.length];
+    const motion = tierBase.motions[(tierIndex + level) % tierBase.motions.length];
+    const chapterPool = tierPromo && tierIndex === 0
+      ? [`levelUp.chapter.tierPromo.${tier.skill}`, ...tierBase.chapterKeys]
+      : [...tierBase.chapterKeys, variantA.chapterKey, variantB.chapterKey];
+    const chapterKey = chapterPool[(level + tierIndex) % chapterPool.length];
+    const chase = Math.max(0.85, tierBase.chaseBase - tierIndex * 0.05 - (tierPromo ? 0.18 : 0));
+
+    if (tier.skill === 'legend') {
+      return {
+        id: 'platinum-premier',
+        tier: tier.skill,
+        emoji,
+        chapterKey: 'levelUp.chapter.platinumPremier',
+        accent: tierBase.accent,
+        secondary: tierBase.secondary,
+        tertiary: tierBase.tertiary,
+        platinum: tierBase.platinum,
+        premier: tierBase.premier,
+        chase,
+        motion: 'royal',
+        intensity: 1.6
+      };
     }
-    if (tierPromo) {
-      const promoThemes = ['violet-crown', 'ruby-flame', 'cyber-wave', 'gold-rush'];
-      const promoId = promoThemes[Math.floor(level / 8) % promoThemes.length];
-      const base = LEVEL_JOURNEY_THEMES.find(entry => entry.id === promoId) || LEVEL_JOURNEY_THEMES[0];
-      return { ...base, chase: Math.max(1.2, base.chase - 0.3) };
-    }
-    return LEVEL_JOURNEY_THEMES[(level - 1) % LEVEL_JOURNEY_THEMES.length];
+
+    return {
+      id: `${tier.skill}-lv${level}-${variantA.id}`,
+      tier: tier.skill,
+      emoji,
+      chapterKey,
+      accent: tierBase.accent,
+      secondary: variantA.secondary,
+      tertiary: variantB.tertiary,
+      platinum: null,
+      premier: null,
+      chase,
+      motion,
+      intensity: 1 + tierIndex * 0.07 + (tier.skill === 'master' ? 0.25 : 0) + (tierPromo ? 0.15 : 0)
+    };
   }
 
   function buildNeonChaseTrack(theme, level) {
     if (!els.levelUpNeonChase) return;
     els.levelUpNeonChase.innerHTML = '';
-    const bulbCount = 28 + (level % 5) * 2;
-    const colors = [theme.accent, theme.secondary, theme.tertiary];
+    const bulbCount = 24 + (level % 8) * 2 + Math.floor(level / 5);
+    const colors = [theme.accent, theme.secondary, theme.tertiary, theme.platinum, theme.premier].filter(Boolean);
     for (let i = 0; i < bulbCount; i += 1) {
       const bulb = document.createElement('span');
       bulb.className = 'level-up-neon-bulb';
@@ -3123,7 +3327,7 @@
       bulb.style.setProperty('--bulb-i', String(i));
       bulb.style.setProperty('--bulb-count', String(bulbCount));
       bulb.style.setProperty('--bulb-color', colors[i % colors.length]);
-      bulb.style.animationDuration = `${theme.chase}s`;
+      bulb.style.animationDuration = `${Math.max(0.75, theme.chase - (i % 5) * 0.04)}s`;
       els.levelUpNeonChase.appendChild(bulb);
     }
   }
@@ -3131,13 +3335,17 @@
   function applyLevelUpJourneyTheme(levelUp) {
     const theme = getLevelJourneyTheme(levelUp);
     const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(levelUp?.level) || STARTING_LEVEL));
+    const tier = getLevelTier(level);
     if (!els.levelUp) return theme;
     els.levelUp.dataset.journeyTheme = theme.id;
+    els.levelUp.dataset.tier = tier.skill;
     els.levelUp.style.setProperty('--journey-accent', theme.accent);
     els.levelUp.style.setProperty('--journey-secondary', theme.secondary);
     els.levelUp.style.setProperty('--journey-tertiary', theme.tertiary);
+    if (theme.platinum) els.levelUp.style.setProperty('--journey-platinum', theme.platinum);
+    if (theme.premier) els.levelUp.style.setProperty('--journey-premier', theme.premier);
     els.levelUp.style.setProperty('--neon-chase-speed', `${theme.chase}s`);
-    els.levelUp.classList.add(`level-up-motion-${theme.motion}`);
+    els.levelUp.classList.add(`level-up-motion-${theme.motion}`, `level-up-screen--tier-${tier.skill}`);
     if (els.levelUpJourneyIcon) els.levelUpJourneyIcon.textContent = theme.emoji;
     applyLevelUpChapter(theme, level);
     buildNeonChaseTrack(theme, level);
@@ -3148,15 +3356,16 @@
     const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(levelUp?.level) || STARTING_LEVEL));
     const tier = levelUp?.tier || getLevelTier(level);
     const tierPromo = crossedSkillTier(levelUp?.previousLevel || level - 1, level);
+    const tierIntensity = { rookie: 0, strategist: 0.15, master: 0.35, legend: 0.55 }[tier.skill] || 0;
     return {
       level,
       tier,
       tierPromo,
       palette: LEVEL_CONFETTI_PALETTES[tier.skill] || LEVEL_CONFETTI_PALETTES.rookie,
-      confettiIntensity: Math.min(88, 24 + level * 2 + (tierPromo ? 14 : 0)),
-      burstCount: Math.min(14, 5 + Math.floor(level / 2) + (tierPromo ? 3 : 0)),
-      ringCount: tier.skill === 'legend' ? 4 : tier.skill === 'master' ? 3 : tier.skill === 'strategist' ? 2 : 1,
-      hue: CARNIVAL_CELEBRATION_HUES[level % CARNIVAL_CELEBRATION_HUES.length]
+      confettiIntensity: Math.min(96, 22 + level * 2.2 + (tierPromo ? 16 : 0) + tierIntensity * 20),
+      burstCount: Math.min(18, 4 + Math.floor(level / 2) + (tierPromo ? 4 : 0) + Math.floor(tierIntensity * 8)),
+      ringCount: tier.skill === 'legend' ? 5 : tier.skill === 'master' ? 4 : tier.skill === 'strategist' ? 3 : 2,
+      hue: CARNIVAL_CELEBRATION_HUES[(level + tier.min) % CARNIVAL_CELEBRATION_HUES.length]
     };
   }
 
@@ -3272,17 +3481,20 @@
     clearLevelUpCelebration();
     const theme = applyLevelUpJourneyTheme(levelUp);
     const copy = getLevelUpCopy(levelUp);
+    const fxRoll = createLevelUpFxRoll(levelUp);
     buildLevelUpMarquee(levelUp, theme, copy);
+    buildLevelUpCarnivalStrands(theme, fxRoll);
+    buildLevelUpRunningLights(theme, fxRoll);
 
     els.levelUp.dataset.level = String(style.level);
     els.levelUp.dataset.tier = style.tier.skill;
     els.levelUp.style.setProperty('--level-up-hue', `${style.hue}deg`);
     els.levelUp.classList.add('is-celebrating', 'is-revealing');
     if (style.tierPromo) els.levelUp.classList.add('level-up-screen--tier-promo');
-    if (style.level >= MAX_LEVEL) els.levelUp.classList.add('level-up-screen--legend');
+    if (style.level >= MAX_LEVEL || style.tier.skill === 'legend') els.levelUp.classList.add('level-up-screen--legend');
 
     spawnLevelUpShockwave();
-    spawnLevelUpAmbientBits(theme);
+    spawnLevelUpProceduralFx(theme, style, fxRoll);
     scheduleLevelUpFx(() => triggerLevelBurst(), 280);
     scheduleLevelUpFx(() => els.levelUpTo?.classList.remove('is-bursting'), 1050);
     scheduleLevelUpFx(() => els.levelUp?.classList.add('is-revealed'), 1100);
@@ -3310,7 +3522,7 @@
     audio.levelUpTimer = scheduleLevelUpFx(() => {
       els.levelUp?.classList.remove('is-celebrating');
       audio.levelUpTimer = null;
-    }, style.level >= MAX_LEVEL ? 2200 : 1600);
+    }, style.level >= MAX_LEVEL ? 3200 : style.tier.skill === 'master' ? 2200 : 1800);
   }
 
   function getSkillUpgradeCopy(tier) {
