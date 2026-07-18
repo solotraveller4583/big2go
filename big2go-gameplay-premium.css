@@ -34,14 +34,14 @@
 }
 
 /* Solo stack — content-sized rows */
-#game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel.hidden) {
+#game-screen.gameplay-premium:not(.hidden):not(.private-room-mode) {
   grid-template-rows: 46px 68px minmax(108px, auto) 26px auto 90px !important;
   gap: 5px !important;
 }
 
-/* Room stack (legacy chat row — unused in voice-only private rooms) */
-#game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel:not(.hidden)) {
-  grid-template-rows: 46px 68px 40px minmax(100px, auto) 26px auto 90px !important;
+/* Legacy room-chat selector kept for cached CSS compatibility */
+#game-screen.gameplay-premium:not(.hidden):has(.room-chat-panel.hidden):not(.private-room-mode) {
+  grid-template-rows: 46px 68px minmax(108px, auto) 26px auto 90px !important;
   gap: 5px !important;
 }
 

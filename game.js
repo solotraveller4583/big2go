@@ -736,30 +736,12 @@
     updatePrivateRoomPresentation();
   }
 
-  function syncSoloLayoutCompat() {
-    const isLive = Boolean(state.liveRoom?.code);
-    let compat = document.querySelector('#room-chat-compat');
-    if (isLive) {
-      compat?.remove();
-      return;
-    }
-    if (!compat && els.game && els.voiceLounge) {
-      compat = document.createElement('section');
-      compat.id = 'room-chat-compat';
-      compat.className = 'room-chat-panel hidden';
-      compat.setAttribute('aria-hidden', 'true');
-      els.voiceLounge.insertAdjacentElement('beforebegin', compat);
-    }
-  }
-
   function updatePrivateRoomPresentation() {
     const isLive = Boolean(state.liveRoom?.code);
     els.game?.classList.toggle('gameplay-premium', !isLive);
     els.game?.classList.toggle('private-room-mode', isLive);
     document.body.classList.toggle('live-room-active', isLive);
-    syncSoloLayoutCompat();
-    els.coinWallet?.classList.remove('hidden');
-    if (isLive) els.coinWallet?.classList.add('hidden');
+    els.coinWallet?.classList.toggle('hidden', isLive);
     els.roomCodeBadge?.classList.toggle('hidden', !isLive);
     if (els.roomCodeBadgeValue && isLive) els.roomCodeBadgeValue.textContent = state.liveRoom.code;
     if (els.tableTitle) {
@@ -783,7 +765,6 @@
     els.game?.classList.remove('private-room-mode');
     els.game?.classList.add('gameplay-premium');
     els.voiceLounge?.classList.add('hidden');
-    syncSoloLayoutCompat();
   }
 
   function showLandingScreen() {

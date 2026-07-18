@@ -123,11 +123,6 @@
 }
 
 /* ── In-game private room mode (NOT solo arena) ── */
-#game-screen.private-room-mode #room-chat-compat,
-#game-screen.private-room-mode .room-chat-panel {
-  display: none !important;
-}
-
 #game-screen.private-room-mode:not(.hidden) {
   --pr-bg: #060810;
   --pr-platinum: #e8eef8;
