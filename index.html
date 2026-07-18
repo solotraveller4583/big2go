@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="big2go-hand-guard.css" />
   <link rel="stylesheet" href="big2go-gameplay-clarity.css?v=34" />
   <link rel="stylesheet" href="big2go-room.css?v=10" />
-  <link rel="stylesheet" href="big2go-room-lobby.css?v=5" />
-  <link rel="stylesheet" href="big2go-voice.css?v=4" />
+  <link rel="stylesheet" href="big2go-room-lobby.css?v=6" />
+  <link rel="stylesheet" href="big2go-voice.css?v=5" />
   <link rel="stylesheet" href="big2go-rejoin.css?v=3" />
   <link rel="stylesheet" href="big2go-coins.css?v=12" />
   <link rel="stylesheet" href="big2go-mobile-redesign.css?v=9" />
@@ -43,7 +43,8 @@
   <link rel="stylesheet" href="big2go-profile.css?v=3" />
   <link rel="stylesheet" href="big2go-landing-v3.css?v=33" />
   <link rel="stylesheet" href="big2go-play-demo.css?v=3" />
-  <link rel="stylesheet" href="big2go-gameplay-premium.css?v=30" />
+  <link rel="stylesheet" href="big2go-gameplay-premium.css?v=31" />
+  <link rel="stylesheet" href="big2go-private-room.css?v=1" />
   <link rel="stylesheet" href="big2go-language.css?v=3" />
 </head>
 <body>
@@ -239,6 +240,7 @@
           <p class="header-subtitle" id="table-subtitle">Beat the trick or let the table pass to the next player.</p>
         </div>
         <div class="coin-wallet" id="coin-wallet" aria-label="Your virtual gold coins"><span class="gold-coin-icon" aria-hidden="true"></span><strong id="coin-balance">100</strong><small data-i18n="game.yourCoins">Your Coins</small></div>
+        <div class="room-code-badge hidden" id="room-code-badge" aria-label="Private room code"><span class="room-code-badge__crest" aria-hidden="true">♛</span><strong id="room-code-badge-value">-----</strong><small data-i18n="game.roomCode">Room</small></div>
         <button class="icon-button" id="sound-button" aria-label="Toggle sound">🔊</button>
       </header>
 
@@ -253,27 +255,25 @@
         <div id="opponent-area" class="opponent-list"></div>
       </section>
 
-      <section class="room-chat-panel hidden" id="room-chat-panel" aria-label="Room chat">
-        <button class="room-chat-toggle" id="room-chat-toggle" type="button" aria-expanded="false">
-          <span data-i18n="game.tableChat">💬 Table Chat</span>
-          <small id="room-chat-preview" data-i18n="game.chatOpen">Tap to open</small>
-          <strong id="room-chat-count">0</strong>
-        </button>
-        <div class="room-chat-head">
-          <strong data-i18n="game.tableChat">Table Chat</strong>
+      <section class="room-voice-lounge hidden" id="room-voice-lounge" aria-label="Voice lounge">
+        <div class="room-voice-lounge__frame">
+          <div class="room-voice-lounge__head">
+            <span class="room-voice-lounge__crest" aria-hidden="true">♛</span>
+            <div class="room-voice-lounge__copy">
+              <strong data-i18n="game.voiceLounge">Voice Lounge</strong>
+              <small id="voice-status" data-i18n="game.voiceTapMic">Tap mic to talk with friends</small>
+            </div>
+            <span class="room-voice-lounge__live" data-i18n="game.voiceLiveBadge">LIVE</span>
+          </div>
+          <div class="room-voice-lounge__controls voice-panel" id="voice-panel">
+            <button type="button" class="voice-btn mic muted" id="voice-mic-button" aria-pressed="false" aria-label="Turn microphone on">🎤</button>
+            <button type="button" class="voice-btn speaker" id="voice-speaker-button" aria-pressed="true" aria-label="Toggle speaker">🔊</button>
+            <button type="button" class="voice-btn mute-all" id="voice-mute-all-button" aria-label="Mute all players">🔇</button>
+            <button type="button" class="voice-btn ptt" id="voice-ptt-button" aria-pressed="false" aria-label="Push to talk">PTT</button>
+          </div>
+          <div class="voice-speaking-banner" id="voice-speaking-banner" aria-live="polite"></div>
+          <div class="voice-mixer" id="voice-mixer" aria-label="Voice mixer"></div>
         </div>
-        <div class="quick-chat-row" aria-label="Quick chat">
-          <button type="button" data-chat-key="game.chatNice" data-i18n="game.chatNice">Nice move</button>
-          <button type="button" data-chat-key="game.chatGood" data-i18n="game.chatGood">Good game</button>
-          <button type="button" data-chat-key="game.chatHurry" data-i18n="game.chatHurry">Hurry up</button>
-          <button type="button" data-chat-quick="🔥">🔥</button>
-          <button type="button" data-chat-quick="😂">😂</button>
-        </div>
-        <div class="room-chat-messages" id="room-chat-messages" aria-live="polite"></div>
-        <form class="room-chat-form" id="room-chat-form">
-          <input id="room-chat-input" type="text" maxlength="120" autocomplete="off" placeholder="Say something…" data-i18n-placeholder="game.chatPlaceholder" aria-label="Chat message" />
-          <button type="submit" id="room-chat-send" data-i18n="game.chatSend">Send</button>
-        </form>
       </section>
 
       <section class="table-arena" aria-label="Current trick">
@@ -407,9 +407,19 @@
       </div>
       <div class="room-lobby-stage">
         <header class="room-lobby-topbar">
-          <h2 id="room-lobby-title" data-i18n="room.title">Private Room</h2>
+          <div class="room-lobby-brand">
+            <span class="room-lobby-crest" aria-hidden="true">♛</span>
+            <div class="room-lobby-brand-copy">
+              <h2 id="room-lobby-title" data-i18n="room.title">Private Room</h2>
+              <p class="room-lobby-tagline" data-i18n="room.vipTagline">Voice lounge for friends</p>
+            </div>
+          </div>
           <button type="button" class="room-lobby-close" id="room-close" aria-label="Close room lobby">✕</button>
         </header>
+            <div class="room-voice-callout" aria-label="Voice chat">
+              <span class="room-voice-callout__icon" aria-hidden="true">🎤</span>
+              <p data-i18n="room.voiceFirst">Voice chat is how you talk at the table — no typing needed.</p>
+            </div>
         <div class="room-lobby-neon">
           <div class="room-lobby-card" id="room-lobby-card">
             <div class="room-mode-tabs" role="tablist" aria-label="Room mode">
@@ -548,10 +558,6 @@
       </div>
     </section>
 
-    <div class="voice-panel hidden" id="voice-panel" aria-label="Voice chat controls">
-      <button type="button" class="voice-btn mic muted" id="voice-mic-button" aria-pressed="false" aria-label="Turn microphone on">🎤</button>
-      <button type="button" class="voice-btn speaker" id="voice-speaker-button" aria-pressed="true" aria-label="Toggle speaker">🔊</button>
-    </div>
     <div id="remote-audio" class="remote-audio" aria-hidden="true"></div>
 
     <dialog id="exit-confirm-dialog" class="exit-confirm-dialog">
@@ -603,11 +609,11 @@
   </main>
   <div id="coin-fx-layer" class="coin-fx-layer" aria-hidden="true"></div>
 
-  <script src="i18n.js?v=16" defer></script>
+  <script src="i18n.js?v=17" defer></script>
   <script src="playDemoScenes.js?v=1" defer></script>
   <script src="aiDialogue.js?v=1" defer></script>
   <script src="aiCharacters.js?v=13" defer></script>
   <script src="aiReactions.js?v=6" defer></script>
-  <script src="game.js?v=145" defer></script>
+  <script src="game.js?v=146" defer></script>
 </body>
 </html>

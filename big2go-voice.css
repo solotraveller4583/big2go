@@ -218,32 +218,32 @@
   .voice-btn.ptt { width: 36px; min-width: 36px; }
 }
 
-/* v4 simplified voice: only mic + speaker, no speaking distractions. */
-.voice-panel {
+/* v4 simplified voice for solo — full lounge UI in private rooms. */
+body:not(.live-room-active) .voice-panel {
   gap: 6px !important;
   max-width: 86px !important;
   padding: 5px !important;
   border-radius: 18px !important;
   background: rgba(7, 6, 31, .54) !important;
 }
-.voice-btn {
+body:not(.live-room-active) .voice-btn {
   width: 34px !important;
   height: 34px !important;
   min-width: 34px !important;
   font-size: 16px !important;
 }
-.voice-btn.speaking,
-.voice-chip.speaking { animation: none !important; }
-.voice-btn.mute-all,
-.voice-btn.ptt,
-.voice-status,
-.voice-mixer,
-.voice-speaking-banner,
-.voice-chip {
+body:not(.live-room-active) .voice-btn.speaking,
+body:not(.live-room-active) .voice-chip.speaking { animation: none !important; }
+body:not(.live-room-active) .voice-btn.mute-all,
+body:not(.live-room-active) .voice-btn.ptt,
+body:not(.live-room-active) .voice-status,
+body:not(.live-room-active) .voice-mixer,
+body:not(.live-room-active) .voice-speaking-banner,
+body:not(.live-room-active) .voice-chip {
   display: none !important;
 }
-.opponent-row.voice-speaking {
+body:not(.live-room-active) .opponent-row.voice-speaking {
   border-color: rgba(255,255,255,.13) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important;
 }
-.opponent-row.voice-speaking .opponent-name::after { content: none !important; }
+body:not(.live-room-active) .opponent-row.voice-speaking .opponent-name::after { content: none !important; }
