@@ -396,15 +396,11 @@
     trickHelp: document.querySelector('#trick-help'),
     turnLabel: document.querySelector('#turn-label'),
     tableSubtitle: document.querySelector('#table-subtitle'),
-    tableTitle: document.querySelector('#table-title'),
-    roomCodeBadge: document.querySelector('#room-code-badge'),
-    roomCodeBadgeValue: document.querySelector('#room-code-badge-value'),
     playerLeftCount: document.querySelector('#player-left-count'),
     trickCount: document.querySelector('#trick-count'),
     roundCount: document.querySelector('#round-count'),
     sparkCount: document.querySelector('#spark-count'),
     coinBalance: document.querySelector('#coin-balance'),
-    coinWallet: document.querySelector('#coin-wallet'),
     prizePoolValue: document.querySelector('#prize-pool-value'),
     coinFxLayer: document.querySelector('#coin-fx-layer'),
     selectedCount: document.querySelector('#selected-count'),
@@ -418,7 +414,14 @@
     heatText: document.querySelector('#heat-text'),
     heatValue: document.querySelector('#heat-value'),
     heatFill: document.querySelector('#heat-fill'),
-    voiceLounge: document.querySelector('#room-voice-lounge'),
+    chatPanel: document.querySelector('#room-chat-panel'),
+    chatToggle: document.querySelector('#room-chat-toggle'),
+    chatPreview: document.querySelector('#room-chat-preview'),
+    chatMessages: document.querySelector('#room-chat-messages'),
+    chatCount: document.querySelector('#room-chat-count'),
+    chatForm: document.querySelector('#room-chat-form'),
+    chatInput: document.querySelector('#room-chat-input'),
+    chatSend: document.querySelector('#room-chat-send'),
     voicePanel: document.querySelector('#voice-panel'),
     voiceMic: document.querySelector('#voice-mic-button'),
     voiceSpeaker: document.querySelector('#voice-speaker-button'),
@@ -733,23 +736,7 @@
     stopVictoryMusic();
     hideAllScreens();
     els.game?.classList.remove('hidden');
-    updatePrivateRoomPresentation();
-  }
-
-  function updatePrivateRoomPresentation() {
-    const isLive = Boolean(state.liveRoom?.code);
-    els.game?.classList.toggle('gameplay-premium', !isLive);
-    els.game?.classList.toggle('private-room-mode', isLive);
-    document.body.classList.toggle('live-room-active', isLive);
-    els.coinWallet?.classList.toggle('hidden', isLive);
-    els.roomCodeBadge?.classList.toggle('hidden', !isLive);
-    if (els.roomCodeBadgeValue && isLive) els.roomCodeBadgeValue.textContent = state.liveRoom.code;
-    if (els.tableTitle) {
-      const titleKey = isLive ? 'game.privateLounge' : 'game.arena';
-      els.tableTitle.textContent = t(titleKey);
-      els.tableTitle.setAttribute('data-i18n', titleKey);
-    }
-    updateVoiceLounge();
+    document.body.classList.toggle('live-room-active', Boolean(state.liveRoom?.code));
   }
 
   function hideAllScreens() {
@@ -762,9 +749,7 @@
     els.profileScreen?.classList.add('hidden');
     els.roomScreen?.classList.add('hidden');
     document.body.classList.remove('live-room-active', 'result-story-active', 'session-complete-active', 'level-up-active', 'profile-active', 'room-lobby-active');
-    els.game?.classList.remove('private-room-mode');
-    els.game?.classList.add('gameplay-premium');
-    els.voiceLounge?.classList.add('hidden');
+    els.voicePanel?.classList.add('hidden');
   }
 
   function showLandingScreen() {
@@ -4771,12 +4756,9 @@
       : (current.isHuman ? t('game.yourTurn') : t('game.playerTurn', { name: current.name }));
     els.tableSubtitle.textContent = state.gameOver
       ? t('game.matchFinished')
-      : state.liveRoom?.code
-        ? t('game.privateStatus', { requirement, round: state.round })
-        : t('game.statusLine', { requirement, round: state.round, sparks: state.sparks });
+      : t('game.statusLine', { requirement, round: state.round, sparks: state.sparks });
     const roomIdEl = document.querySelector('#table-room-id');
-    if (roomIdEl) roomIdEl.textContent = state.liveRoom?.code ? t('game.roomLabel', { code: state.liveRoom.code }) : '';
-    if (els.roomCodeBadgeValue && state.liveRoom?.code) els.roomCodeBadgeValue.textContent = state.liveRoom.code;
+    if (roomIdEl) roomIdEl.textContent = state.liveRoom?.code ? `ROOM ${state.liveRoom.code}` : '';
     els.trickHelp.textContent = selectionFeedback();
     renderCoinHud();
   }
@@ -4788,9 +4770,8 @@
       if (isSelf && !state.liveRoom?.code) return;
       const handCount = player.hand.length;
       const isLastCard = !player.finished && handCount === 1;
-      const voiceMeta = state.liveRoom?.code && player.id ? voiceStatusFor(player.id) : null;
       const row = document.createElement('div');
-      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}${isLastCard ? ' last-card' : ''}${voiceMeta?.speaking ? ' voice-speaking' : ''}`;
+      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}${isLastCard ? ' last-card' : ''}`;
       row.dataset.playerIndex = String(index);
       if (player.characterId) row.dataset.characterId = player.characterId;
       const avatar = document.createElement('div');
@@ -4805,18 +4786,6 @@
       name.className = 'opponent-name';
       name.textContent = player.name || (isSelf ? getResolvedPlayerName() : 'Player');
       nameRow.appendChild(name);
-      if (state.liveRoom?.code && player.id) {
-        const voiceTag = document.createElement('span');
-        const vs = voiceMeta || voiceStatusFor(player.id);
-        voiceTag.className = `opponent-voice-tag${vs.speaking ? ' speaking' : ''}${vs.muted || !vs.enabled ? ' muted' : ''}${!vs.enabled ? ' idle' : ''}`;
-        voiceTag.setAttribute('aria-label', vs.speaking
-          ? t('game.voiceSpeaking', { name: player.name })
-          : vs.enabled
-            ? t('game.voiceOn', { name: player.name })
-            : t('game.voiceOff', { name: player.name }));
-        voiceTag.textContent = vs.speaking ? '🎤' : vs.enabled && !vs.muted ? '🔊' : '🔇';
-        nameRow.appendChild(voiceTag);
-      }
       if (!state.liveRoom?.code) {
         const level = document.createElement('span');
         level.className = 'opponent-level';
@@ -4887,19 +4856,46 @@
 
   function applyChatPayload(chat) {
     state.chat = Array.isArray(chat) ? chat.slice(-30) : [];
-  }
-
-  function updateVoiceLounge() {
-    const isLive = Boolean(state.liveRoom?.code);
-    els.voiceLounge?.classList.toggle('hidden', !isLive);
-    if (!isLive) return;
-    updateVoicePanel();
-    updateSpeakingBanner();
-    renderVoiceMixer();
+    renderChat();
   }
 
   function renderChat() {
-    updateVoiceLounge();
+    if (!els.chatPanel || !els.chatMessages) return;
+    const isLive = Boolean(state.liveRoom?.code);
+    els.chatPanel.classList.toggle('hidden', !isLive);
+    if (!isLive) {
+      state.chatExpanded = false;
+      els.chatPanel?.classList.remove('expanded');
+      return;
+    }
+    els.chatPanel.classList.toggle('expanded', state.chatExpanded);
+    els.chatToggle?.setAttribute('aria-expanded', state.chatExpanded ? 'true' : 'false');
+    if (els.chatPreview) {
+      const latest = state.chat[state.chat.length - 1];
+      els.chatPreview.textContent = latest ? `${latest.name || 'Player'}: ${latest.text || ''}` : 'Tap to open';
+    }
+    els.chatMessages.innerHTML = '';
+    const messages = state.chat.slice(-12);
+    if (!messages.length) {
+      const empty = document.createElement('div');
+      empty.className = 'chat-empty';
+      empty.textContent = 'Say hi or use a quick chat.';
+      els.chatMessages.appendChild(empty);
+    } else {
+      messages.forEach(message => {
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble';
+        bubble.dataset.mine = message.playerId === state.liveRoom?.playerId ? 'true' : 'false';
+        const name = document.createElement('strong');
+        name.textContent = message.playerId === state.liveRoom?.playerId ? 'You' : message.name || 'Player';
+        const text = document.createElement('span');
+        text.textContent = message.text || '';
+        bubble.append(name, text);
+        els.chatMessages.appendChild(bubble);
+      });
+      els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+    }
+    if (els.chatCount) els.chatCount.textContent = String(state.chat.length);
   }
 
   function voiceStatusFor(playerId) {
@@ -4977,41 +4973,23 @@
     if (!els.voiceSpeakingBanner) return;
     const active = speakingPlayers();
     els.voiceSpeakingBanner.classList.toggle('show', active.length > 0);
-    if (!active.length) {
-      els.voiceSpeakingBanner.textContent = '';
-      return;
-    }
-    const names = active.map(entry => {
-      const player = state.players.find(p => p.id === entry.id);
-      return player?.name || entry.name || 'Player';
-    }).join(', ');
-    els.voiceSpeakingBanner.textContent = active.length === 1
-      ? t('game.voiceBannerOne', { name: names })
-      : t('game.voiceBannerMany', { names });
+    els.voiceSpeakingBanner.textContent = active.length ? `🔥 ${active.map(player => player.name).join(', ')} ${active.length === 1 ? 'is' : 'are'} speaking...` : '';
   }
 
   function updateVoicePanel() {
     const isLive = Boolean(state.liveRoom?.code);
     document.body.classList.toggle('live-room-active', isLive);
+    els.voicePanel?.classList.toggle('hidden', !isLive);
     if (!isLive) return;
     els.voiceMic?.classList.toggle('muted', state.voice.micMuted || !state.voice.enabled);
-    els.voiceMic?.classList.toggle('speaking', Boolean(state.voice.speaking && state.voice.enabled && !state.voice.micMuted));
+    els.voiceMic?.classList.remove('speaking');
     els.voiceMic?.setAttribute('aria-pressed', state.voice.enabled && !state.voice.micMuted ? 'true' : 'false');
-    if (els.voiceMic) {
-      els.voiceMic.setAttribute('aria-label', state.voice.enabled && !state.voice.micMuted
-        ? t('game.voiceMicOn')
-        : t('game.voiceMicOff'));
-    }
+    if (els.voiceMic) els.voiceMic.setAttribute('aria-label', state.voice.micMuted ? 'Turn voice on' : 'Turn voice off');
     els.voiceSpeaker?.classList.toggle('muted', state.voice.speakerMuted);
     els.voiceSpeaker?.setAttribute('aria-pressed', state.voice.speakerMuted ? 'false' : 'true');
     if (els.voiceSpeaker) els.voiceSpeaker.textContent = state.voice.speakerMuted ? '🔇' : '🔊';
-    if (els.voiceStatus) {
-      if (!state.voice.enabled) els.voiceStatus.textContent = t('game.voiceTapMic');
-      else if (state.voice.micMuted) els.voiceStatus.textContent = t('game.voiceMuted');
-      else if (state.voice.speaking) els.voiceStatus.textContent = t('game.voiceBroadcasting');
-      else els.voiceStatus.textContent = t('game.voiceReady');
-    }
     state.voice.pushToTalk = false;
+    state.voice.mixerOpen = false;
     updateRemoteAudioMute();
   }
 
@@ -5035,7 +5013,6 @@
     });
     syncVoiceConnections().catch(() => {});
     updateVoicePanel();
-    updateSpeakingBanner();
     renderOpponents();
     renderVoiceMixer();
     resumePendingRemoteAudio();
@@ -5550,9 +5527,12 @@
       return;
     }
     state.lastChatSentAt = now;
+    if (els.chatSend) els.chatSend.disabled = true;
     const result = await sendLiveRoomMessage({ type: 'room:chat', text: message });
     if (result?.chat) applyChatPayload(result.chat);
+    if (result && els.chatInput) els.chatInput.value = '';
     if (result) setTimeout(() => fetchLiveRoomState().catch(() => {}), 120);
+    if (els.chatSend) setTimeout(() => { els.chatSend.disabled = false; }, 900);
   }
 
   function renderCardTile(card, selectable = true) {
@@ -7095,8 +7075,16 @@
     els.roomRejoin?.addEventListener('click', rejoinSavedRoom);
     els.roomExitSession?.addEventListener('click', exitSavedRoom);
     els.share.addEventListener('click', shareGame);
+    els.chatToggle?.addEventListener('click', () => {
+      state.chatExpanded = !state.chatExpanded;
+      renderChat();
+    });
     document.querySelectorAll('[data-reaction]').forEach(button => {
       button.addEventListener('click', () => sendPlayerReaction(button.dataset.reaction || '👏'));
+    });
+    els.chatForm?.addEventListener('submit', event => {
+      event.preventDefault();
+      sendRoomChat(els.chatInput?.value || '');
     });
     els.voiceMic?.addEventListener('click', toggleMic);
     els.voiceMic?.addEventListener('pointerdown', event => {
@@ -7111,6 +7099,13 @@
     els.voiceMuteAll?.addEventListener('click', muteAllVoicePlayers);
     els.voiceMuteAll?.addEventListener('dblclick', toggleVoiceMixer);
     els.voicePtt?.addEventListener('click', togglePushToTalk);
+    document.querySelectorAll('[data-chat-quick]').forEach(button => {
+      button.addEventListener('click', () => {
+        const key = button.dataset.chatKey;
+        const text = key ? t(key) : (button.dataset.chatQuick || button.textContent || '');
+        sendRoomChat(text);
+      });
+    });
     document.querySelector('#profile-button')?.addEventListener('click', showPlayerProfilePanel);
     els.profileClose?.addEventListener('click', hideProfileScreen);
     document.querySelectorAll('[data-home-tab]').forEach(button => {
