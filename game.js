@@ -415,8 +415,7 @@
     heatValue: document.querySelector('#heat-value'),
     heatFill: document.querySelector('#heat-fill'),
     chatPanel: document.querySelector('#room-chat-panel'),
-    roomCommsBar: document.querySelector('#room-comms-bar'),
-    chatToggle: document.querySelector('#room-text-toggle'),
+    chatToggle: document.querySelector('#room-chat-toggle'),
     chatPreview: document.querySelector('#room-chat-preview'),
     chatMessages: document.querySelector('#room-chat-messages'),
     chatCount: document.querySelector('#room-chat-count'),
@@ -738,12 +737,6 @@
     hideAllScreens();
     els.game?.classList.remove('hidden');
     document.body.classList.toggle('live-room-active', Boolean(state.liveRoom?.code));
-    if (state.liveRoom?.code) {
-      renderChat();
-      restoreVoiceInRoom();
-      resumePendingRemoteAudio().catch(() => {});
-      syncVoiceConnections().catch(() => {});
-    }
   }
 
   function hideAllScreens() {
@@ -756,7 +749,7 @@
     els.profileScreen?.classList.add('hidden');
     els.roomScreen?.classList.add('hidden');
     document.body.classList.remove('live-room-active', 'result-story-active', 'session-complete-active', 'level-up-active', 'profile-active', 'room-lobby-active');
-    els.roomCommsBar?.classList.add('hidden');
+    els.voicePanel?.classList.add('hidden');
   }
 
   function showLandingScreen() {
@@ -3706,11 +3699,7 @@
     const pending = state.pendingVictoryReveal;
     dismissLevelUpScreen();
     state.pendingVictoryReveal = null;
-    if (!pending) {
-      showHomeScreen();
-      playUiSound('click');
-      return;
-    }
+    if (!pending) return;
     showGameScreen();
     if (pending.winner?.isHuman) renderConfetti(56);
     showVictoryCelebration(pending.winner, pending.coinPrize, null, pending.brainBonus || null);
@@ -4826,15 +4815,6 @@
       stack.appendChild(nameRow);
       stack.appendChild(stats);
       if (isLastCard) mountLastCardCallout(row);
-      if (state.liveRoom?.code && player.id) {
-        const voice = voiceStatusFor(player.id);
-        if (voice.speaking) row.classList.add('voice-speaking');
-        const voiceTag = document.createElement('span');
-        voiceTag.className = 'opponent-voice-tag';
-        voiceTag.textContent = voice.speaking ? '🎤' : voice.enabled && !voice.muted ? '🎧' : voice.enabled ? '🔇' : '—';
-        voiceTag.title = voice.speaking ? t('game.voiceSpeaking') : voice.enabled ? t('game.voiceConnected') : t('game.voiceOff');
-        nameRow.appendChild(voiceTag);
-      }
       row.appendChild(avatar);
       row.appendChild(stack);
       row.appendChild(online);
@@ -4882,21 +4862,20 @@
   function renderChat() {
     if (!els.chatPanel || !els.chatMessages) return;
     const isLive = Boolean(state.liveRoom?.code);
-    els.roomCommsBar?.classList.toggle('hidden', !isLive);
+    els.chatPanel.classList.toggle('hidden', !isLive);
     if (!isLive) {
       state.chatExpanded = false;
       els.chatPanel?.classList.remove('expanded');
-      els.roomCommsBar?.classList.remove('text-open');
-      els.game?.classList.remove('chat-dock-open');
       return;
     }
     els.chatPanel.classList.toggle('expanded', state.chatExpanded);
-    els.roomCommsBar?.classList.toggle('text-open', state.chatExpanded);
     els.chatToggle?.setAttribute('aria-expanded', state.chatExpanded ? 'true' : 'false');
-    els.chatToggle?.classList.toggle('is-open', state.chatExpanded);
-    els.game?.classList.toggle('chat-dock-open', state.chatExpanded);
+    if (els.chatPreview) {
+      const latest = state.chat[state.chat.length - 1];
+      els.chatPreview.textContent = latest ? `${latest.name || 'Player'}: ${latest.text || ''}` : 'Tap to open';
+    }
     els.chatMessages.innerHTML = '';
-    const messages = state.chat.slice(-2);
+    const messages = state.chat.slice(-12);
     if (!messages.length) {
       const empty = document.createElement('div');
       empty.className = 'chat-empty';
@@ -4914,18 +4893,9 @@
         bubble.append(name, text);
         els.chatMessages.appendChild(bubble);
       });
+      els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
     }
     if (els.chatCount) els.chatCount.textContent = String(state.chat.length);
-    updateVoicePanel();
-  }
-
-  function getVoiceStatusCopy() {
-    if (state.voice.pendingAudioPlay) return t('game.voiceTapHear');
-    if (state.voice.speakerMuted) return t('game.voiceSpeakerOff');
-    if (!state.voice.enabled) return t('game.voiceTapEnable');
-    if (state.voice.micMuted) return t('game.voiceMicOff');
-    if (state.voice.speaking) return t('game.voiceMicLive');
-    return t('game.voiceMicOn');
   }
 
   function voiceStatusFor(playerId) {
@@ -5009,20 +4979,18 @@
   function updateVoicePanel() {
     const isLive = Boolean(state.liveRoom?.code);
     document.body.classList.toggle('live-room-active', isLive);
+    els.voicePanel?.classList.toggle('hidden', !isLive);
     if (!isLive) return;
-    const micLive = state.voice.enabled && !state.voice.micMuted;
-    els.voiceMic?.classList.toggle('muted', !micLive);
-    els.voiceMic?.classList.toggle('speaking', Boolean(state.voice.speaking));
-    els.voiceMic?.setAttribute('aria-pressed', micLive ? 'true' : 'false');
-    if (els.voiceMic) els.voiceMic.setAttribute('aria-label', micLive ? t('game.voiceMicOnLabel') : t('game.voiceTapEnable'));
+    els.voiceMic?.classList.toggle('muted', state.voice.micMuted || !state.voice.enabled);
+    els.voiceMic?.classList.remove('speaking');
+    els.voiceMic?.setAttribute('aria-pressed', state.voice.enabled && !state.voice.micMuted ? 'true' : 'false');
+    if (els.voiceMic) els.voiceMic.setAttribute('aria-label', state.voice.micMuted ? 'Turn voice on' : 'Turn voice off');
     els.voiceSpeaker?.classList.toggle('muted', state.voice.speakerMuted);
     els.voiceSpeaker?.setAttribute('aria-pressed', state.voice.speakerMuted ? 'false' : 'true');
     if (els.voiceSpeaker) els.voiceSpeaker.textContent = state.voice.speakerMuted ? '🔇' : '🔊';
-    if (els.voiceStatus) els.voiceStatus.textContent = getVoiceStatusCopy();
     state.voice.pushToTalk = false;
     state.voice.mixerOpen = false;
     updateRemoteAudioMute();
-    updateSpeakingBanner();
   }
 
   function sendVoiceState({ force = false } = {}) {
@@ -5426,7 +5394,7 @@
   function promptVoicePermission() {
     if (!state.liveRoom?.code || state.voice.permissionAsked || state.voice.enabled) return;
     state.voice.permissionAsked = true;
-    showHelp('Big2Go Voice Chat', '<ul><li><strong>Voice is the main way to talk with friends in a room.</strong></li><li>Tap Allow, then tap the green mic button to talk.</li><li>Keep speaker on to hear friends. Text chat is backup only.</li></ul><div class="voice-permission-actions"><button type="button" id="voice-allow-button" class="primary">Allow Voice</button><button type="button" id="voice-not-now-button" class="secondary">Not Now</button></div>');
+    showHelp('Big2Go needs microphone permission', '<ul><li>Allow voice chat with friends?</li><li>You can keep playing if you choose Not Now.</li><li>Voice uses echo cancellation and noise suppression for mobile play.</li></ul><div class="voice-permission-actions"><button type="button" id="voice-allow-button" class="primary">Allow</button><button type="button" id="voice-not-now-button" class="secondary">Not Now</button></div>');
     setTimeout(() => {
       document.querySelector('#voice-allow-button')?.addEventListener('click', () => {
         document.querySelector('#help-dialog')?.close?.();
@@ -5498,7 +5466,6 @@
     if (state.voice.micMuted) state.voice.speaking = false;
     updateVoicePanel();
     sendVoiceState({ force: true });
-    if (!state.voice.micMuted) renegotiateAllVoicePeers().catch(() => {});
   }
 
   async function setPushToTalkHolding(active) {
@@ -7238,84 +7205,6 @@
     });
   }
 
-  function buildLevelUpPreview(level, options = {}) {
-    const lv = Math.max(STARTING_LEVEL + 1, Math.min(MAX_LEVEL, Number(level) || STARTING_LEVEL + 1));
-    const previousLevel = Math.max(STARTING_LEVEL, Number(options.previousLevel) || lv - 1);
-    const totalWins = Math.max(0, Number(options.totalWins) || LEVEL_WIN_THRESHOLDS[lv] || 0);
-    const kind = options.kind === 'ai' ? 'ai' : 'human';
-    const characterId = options.characterId || 'bruno';
-    const name = kind === 'ai'
-      ? (window.Big2GoAICharacters?.getById?.(characterId)?.name || 'Bruno')
-      : getResolvedPlayerName();
-    return {
-      kind,
-      level: lv,
-      previousLevel,
-      name,
-      characterId: kind === 'ai' ? characterId : undefined,
-      totalWins,
-      tier: getLevelTier(lv),
-      previousTier: getLevelTier(previousLevel),
-      skillUpgraded: crossedSkillTier(previousLevel, lv),
-      preview: true
-    };
-  }
-
-  function previewLevelUpScreen(level, options = {}) {
-    state.pendingVictoryReveal = null;
-    showLevelUpScreen(buildLevelUpPreview(level, options));
-  }
-
-  function parseLevelUpPreviewFromUrl() {
-    const params = new URLSearchParams(window.location.search);
-    const raw = params.get('previewLevelUp') || params.get('previewLevel') || '';
-    if (!raw) return null;
-    const level = Number.parseInt(raw, 10);
-    if (!Number.isFinite(level)) return null;
-    return Math.max(STARTING_LEVEL + 1, Math.min(MAX_LEVEL, level));
-  }
-
-  function clearLevelUpPreviewFromUrl() {
-    const url = new URL(window.location.href);
-    if (!url.searchParams.has('previewLevelUp') && !url.searchParams.has('previewLevel')) return;
-    url.searchParams.delete('previewLevelUp');
-    url.searchParams.delete('previewLevel');
-    const next = `${url.pathname}${url.search}${url.hash}`;
-    window.history.replaceState({}, '', next);
-  }
-
-  function installLevelUpPreviewMode() {
-    const tierPromos = [11, 21, 30];
-    const samples = [3, 7, 11, 15, 21, 27, 30];
-    window.big2goLevelUpPreview = {
-      tierPromos,
-      samples,
-      show: (level, options = {}) => previewLevelUpScreen(level, options),
-      showTierPromo: (index = 0) => previewLevelUpScreen(tierPromos[Math.max(0, Math.min(tierPromos.length - 1, index))]),
-      showRookie: () => previewLevelUpScreen(5),
-      showStrategist: () => previewLevelUpScreen(15),
-      showMaster: () => previewLevelUpScreen(25),
-      showLegend: () => previewLevelUpScreen(30),
-      cycleTierPromos: (() => {
-        let step = 0;
-        return () => {
-          previewLevelUpScreen(tierPromos[step % tierPromos.length]);
-          step += 1;
-          return tierPromos[(step - 1) % tierPromos.length];
-        };
-      })()
-    };
-
-    const isLocal = ['localhost', '127.0.0.1', ''].includes(window.location.hostname)
-      || window.location.protocol === 'file:';
-    if (!isLocal) return;
-
-    const previewLevel = parseLevelUpPreviewFromUrl();
-    if (!previewLevel) return;
-    clearLevelUpPreviewFromUrl();
-    queueMicrotask(() => previewLevelUpScreen(previewLevel));
-  }
-
   function installReconnectTestMode() {
     const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
     if (!isLocal) return;
@@ -7428,7 +7317,6 @@
     renderCoinHud();
     bindEvents();
     installReconnectTestMode();
-    installLevelUpPreviewMode();
     registerServiceWorker();
     window.addEventListener('big2go:languagechange', () => {
       applyInterfaceI18n();
