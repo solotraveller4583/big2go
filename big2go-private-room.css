@@ -1,0 +1,149 @@
+/* Big2Go — Private room in-game layout (scoped; solo arena unchanged) */
+
+#game-screen.private-room-mode #room-chat-panel {
+  display: none !important;
+}
+
+#game-screen.private-room-mode:not(.hidden) {
+  grid-template-rows: 46px 62px minmax(156px, 1fr) 22px auto 88px !important;
+  gap: 5px !important;
+}
+
+#game-screen.private-room-mode .opponent-rail {
+  min-height: 62px !important;
+}
+
+#game-screen.private-room-mode .opponent-list {
+  gap: 5px !important;
+}
+
+#game-screen.private-room-mode .hand-head p {
+  display: none !important;
+}
+
+#game-screen.private-room-mode .hand-card {
+  grid-template-rows: 16px minmax(148px, 1fr) !important;
+}
+
+/* Bigger table play zone */
+#game-screen.private-room-mode .table-arena {
+  min-height: 156px !important;
+  padding: 10px 12px 8px !important;
+  grid-template-rows: 26px 1fr 34px !important;
+  gap: 6px !important;
+  border-color: rgba(56, 209, 126, 0.42) !important;
+  box-shadow:
+    inset 0 0 52px rgba(56, 209, 126, 0.12),
+    inset 0 -16px 32px rgba(0, 0, 0, 0.35),
+    0 10px 28px rgba(0, 0, 0, 0.32) !important;
+}
+
+#game-screen.private-room-mode .table-felt-glow {
+  background: radial-gradient(circle, rgba(56, 209, 126, 0.12), transparent 68%) !important;
+}
+
+#game-screen.private-room-mode #trick-play {
+  min-height: 96px !important;
+  padding: 8px 10px !important;
+}
+
+#game-screen.private-room-mode #trick-play.empty {
+  font-size: 13px !important;
+  padding: 12px 18px !important;
+}
+
+#game-screen.private-room-mode #trick-play .card-tile {
+  width: clamp(54px, 14vw, 68px) !important;
+  height: clamp(76px, 20vw, 94px) !important;
+  min-width: clamp(54px, 14vw, 68px) !important;
+  flex: 0 0 clamp(54px, 14vw, 68px) !important;
+  border-radius: 13px !important;
+}
+
+#game-screen.private-room-mode #trick-play:has(.card-tile:only-child) .card-tile {
+  width: clamp(84px, 22vw, 102px) !important;
+  height: clamp(116px, 30vw, 140px) !important;
+  min-width: clamp(84px, 22vw, 102px) !important;
+  flex-basis: clamp(84px, 22vw, 102px) !important;
+}
+
+#game-screen.private-room-mode .trick-help {
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+}
+
+/* Compact emoji row — one line to free space for cards */
+#game-screen.private-room-mode .reaction-row {
+  min-height: 34px !important;
+  max-height: 34px !important;
+  grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  grid-template-rows: 1fr !important;
+  gap: 3px !important;
+}
+
+#game-screen.private-room-mode .reaction-row button {
+  min-height: 30px !important;
+  font-size: 15px !important;
+}
+
+/* Larger hand cards for friends matches */
+#game-screen.private-room-mode.b2g-match #hand {
+  --card-peek: 20px !important;
+  min-height: 148px !important;
+}
+
+#game-screen.private-room-mode.b2g-match #hand .card-tile {
+  --hand-fit-gutter: 4px;
+  --gp-card-w: min(
+    calc((100cqw - var(--hand-fit-gutter) + 12 * var(--card-peek)) / 12.2),
+    clamp(44px, 11.5vw, 54px)
+  ) !important;
+  width: var(--gp-card-w) !important;
+  min-width: var(--gp-card-w) !important;
+  max-width: var(--gp-card-w) !important;
+  height: calc(var(--gp-card-w) * var(--card-aspect)) !important;
+  flex: 0 0 var(--gp-card-w) !important;
+}
+
+#game-screen.private-room-mode.b2g-match #hand .card-tile.selected {
+  transform: translateY(-10px) !important;
+}
+
+#game-screen.private-room-mode .table-room-id {
+  font-size: 10px !important;
+  color: rgba(125, 255, 190, 0.88) !important;
+  border-color: rgba(56, 209, 126, 0.35) !important;
+}
+
+body.live-room-active .voice-panel {
+  top: calc(env(safe-area-inset-top, 0px) + 118px) !important;
+  right: 10px !important;
+  z-index: 44 !important;
+}
+
+@media (max-width: 380px) {
+  #game-screen.private-room-mode:not(.hidden) {
+    grid-template-rows: 44px 58px minmax(142px, 1fr) 20px auto 84px !important;
+  }
+
+  #game-screen.private-room-mode .table-arena {
+    min-height: 142px !important;
+  }
+
+  #game-screen.private-room-mode.b2g-match #hand .card-tile {
+    --gp-card-w: min(
+      calc((100cqw - var(--hand-fit-gutter) + 12 * var(--card-peek)) / 12.5),
+      clamp(40px, 10.8vw, 48px)
+    ) !important;
+  }
+}
+
+@media (max-height: 700px) {
+  #game-screen.private-room-mode:not(.hidden) {
+    grid-template-rows: 44px 56px minmax(132px, 1fr) 18px auto 82px !important;
+  }
+
+  #game-screen.private-room-mode .table-arena {
+    min-height: 132px !important;
+  }
+}

@@ -731,12 +731,18 @@
     showLandingScreen();
   }
 
+  function updatePrivateRoomMode() {
+    const isLive = Boolean(state.liveRoom?.code);
+    els.game?.classList.toggle('private-room-mode', isLive);
+    document.body.classList.toggle('live-room-active', isLive);
+  }
+
   function showGameScreen() {
     stopLandingMusic();
     stopVictoryMusic();
     hideAllScreens();
     els.game?.classList.remove('hidden');
-    document.body.classList.toggle('live-room-active', Boolean(state.liveRoom?.code));
+    updatePrivateRoomMode();
   }
 
   function hideAllScreens() {
@@ -749,6 +755,7 @@
     els.profileScreen?.classList.add('hidden');
     els.roomScreen?.classList.add('hidden');
     document.body.classList.remove('live-room-active', 'result-story-active', 'session-complete-active', 'level-up-active', 'profile-active', 'room-lobby-active');
+    els.game?.classList.remove('private-room-mode');
     els.voicePanel?.classList.add('hidden');
   }
 
@@ -4860,42 +4867,13 @@
   }
 
   function renderChat() {
-    if (!els.chatPanel || !els.chatMessages) return;
+    if (!els.chatPanel) return;
     const isLive = Boolean(state.liveRoom?.code);
-    els.chatPanel.classList.toggle('hidden', !isLive);
-    if (!isLive) {
-      state.chatExpanded = false;
-      els.chatPanel?.classList.remove('expanded');
-      return;
-    }
-    els.chatPanel.classList.toggle('expanded', state.chatExpanded);
-    els.chatToggle?.setAttribute('aria-expanded', state.chatExpanded ? 'true' : 'false');
-    if (els.chatPreview) {
-      const latest = state.chat[state.chat.length - 1];
-      els.chatPreview.textContent = latest ? `${latest.name || 'Player'}: ${latest.text || ''}` : 'Tap to open';
-    }
-    els.chatMessages.innerHTML = '';
-    const messages = state.chat.slice(-12);
-    if (!messages.length) {
-      const empty = document.createElement('div');
-      empty.className = 'chat-empty';
-      empty.textContent = 'Say hi or use a quick chat.';
-      els.chatMessages.appendChild(empty);
-    } else {
-      messages.forEach(message => {
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble';
-        bubble.dataset.mine = message.playerId === state.liveRoom?.playerId ? 'true' : 'false';
-        const name = document.createElement('strong');
-        name.textContent = message.playerId === state.liveRoom?.playerId ? 'You' : message.name || 'Player';
-        const text = document.createElement('span');
-        text.textContent = message.text || '';
-        bubble.append(name, text);
-        els.chatMessages.appendChild(bubble);
-      });
-      els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
-    }
-    if (els.chatCount) els.chatCount.textContent = String(state.chat.length);
+    els.chatPanel.classList.add('hidden');
+    state.chatExpanded = false;
+    els.chatPanel.classList.remove('expanded');
+    els.chatToggle?.setAttribute('aria-expanded', 'false');
+    if (!isLive) return;
   }
 
   function voiceStatusFor(playerId) {
@@ -7076,6 +7054,7 @@
     els.roomExitSession?.addEventListener('click', exitSavedRoom);
     els.share.addEventListener('click', shareGame);
     els.chatToggle?.addEventListener('click', () => {
+      if (state.liveRoom?.code) return;
       state.chatExpanded = !state.chatExpanded;
       renderChat();
     });
