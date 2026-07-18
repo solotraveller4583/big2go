@@ -138,6 +138,8 @@
     liveRoom: null,
     liveRoomPlayers: [],
     liveRoomCardSyncKey: null,
+    lastSeenTrickKey: null,
+    fiveCardPlayFlash: false,
     playSession: {
       gamesPlayed: 0,
       wins: 0,
@@ -1306,10 +1308,7 @@
       state.lastCardNotified = new Set();
       state.lastHandCounts = {};
       state.lastCardFlashIndex = null;
-      state.fiveCardNotified = new Set();
-      state.fiveCardFlashIndex = null;
       seedLastCardNotifiedFromHands();
-      seedFiveCardNotifiedFromHands();
       els.playerCount.value = String(state.settings.players || 4);
       els.sound.textContent = state.sound ? '🔊' : '🔇';
       showGameScreen();
@@ -4542,11 +4541,10 @@
     state.lastHandCounts = {};
     state.liveRoomCardSyncKey = null;
     state.lastCardFlashIndex = null;
-    state.fiveCardNotified = new Set();
-    state.fiveCardFlashIndex = null;
+    state.lastSeenTrickKey = null;
+    state.fiveCardPlayFlash = false;
     state.hintsUsed = 0;
     seedLastCardNotifiedFromHands();
-    seedFiveCardNotifiedFromHands();
     els.sound.textContent = '🔊';
     showGameScreen();
     updateHeat(10, 'The opening player can lead any valid Big Two hand.');
@@ -4580,71 +4578,45 @@
     });
   }
 
-  function seedFiveCardNotifiedFromHands() {
-    state.fiveCardNotified = state.fiveCardNotified || new Set();
-    state.players.forEach((player, index) => {
-      if (!player.finished && player.hand.length <= 5) {
-        state.fiveCardNotified.add(playerLastCardKey(player, index));
-      }
-    });
+  function trickPlayCelebrationKey(play, leader) {
+    if (!play?.cards?.length) return '';
+    return `${leader}|${play.kind}|${play.cards.map(card => card.id).join(',')}`;
   }
 
-  function queueFiveCardPartyFlash(playerIndex) {
-    if (!Number.isFinite(playerIndex) || playerIndex < 0) return;
-    state.fiveCardFlashIndex = playerIndex;
+  function fiveCardPlayIntensity(play) {
+    return {
+      straight: 24,
+      flush: 26,
+      'full-house': 30,
+      'four-kind': 34,
+      'straight-flush': 40
+    }[play?.kind] || 26;
   }
 
-  function applyPendingFiveCardPartyFlash() {
-    const playerIndex = state.fiveCardFlashIndex;
-    if (playerIndex == null) return;
-    state.fiveCardFlashIndex = null;
-    const row = document.querySelector(`.opponent-row[data-player-index="${playerIndex}"]`);
-    if (row) {
-      row.classList.add('five-card-party-flash');
-      window.setTimeout(() => row.classList.remove('five-card-party-flash'), 2800);
-      return;
-    }
+  function queueFiveCardPlayFlash() {
+    state.fiveCardPlayFlash = true;
+  }
+
+  function applyPendingFiveCardPlayFlash() {
+    if (!state.fiveCardPlayFlash) return;
+    state.fiveCardPlayFlash = false;
+    const trick = els.trickPlay;
+    if (!trick) return;
+    trick.classList.add('five-card-play-flash');
+    window.setTimeout(() => trick.classList.remove('five-card-play-flash'), 2800);
+  }
+
+  function celebrateFiveCardPlay(playerIndex, play) {
+    if (!play || play.count !== 5) return;
     const player = state.players[playerIndex];
-    if (player?.isHuman) {
-      const handCard = document.querySelector('.hand-card');
-      if (!handCard) return;
-      handCard.classList.add('five-card-party-flash');
-      window.setTimeout(() => handCard.classList.remove('five-card-party-flash'), 2800);
-    }
-  }
-
-  function mountFiveCardCallout(row) {
-    if (!row) return;
-    const callout = document.createElement('div');
-    callout.className = 'five-card-callout';
-    callout.setAttribute('aria-label', t('game.fiveCardParty'));
-    callout.textContent = t('game.fiveCardParty');
-    row.appendChild(callout);
-  }
-
-  function renderFiveCardBadge(container, label, extraClass = '') {
-    const badge = document.createElement('span');
-    badge.className = `five-card-badge${extraClass ? ` ${extraClass}` : ''}`;
-    badge.textContent = label;
-    badge.setAttribute('aria-label', t('game.fiveCardParty'));
-    container.appendChild(badge);
-    return badge;
-  }
-
-  function announceFiveCards(playerIndex) {
-    const player = state.players[playerIndex];
-    if (!player || player.finished || player.hand.length !== 5) return;
-    state.fiveCardNotified = state.fiveCardNotified || new Set();
-    const key = playerLastCardKey(player, playerIndex);
-    if (state.fiveCardNotified.has(key)) return;
-    state.fiveCardNotified.add(key);
-    const note = player.isHuman
-      ? t('game.fiveCardPartyYou')
-      : t('game.fiveCardPartyOther', { name: player.name });
+    const playLabel = describePlay(play);
+    const note = player?.isHuman
+      ? t('game.fiveCardPlayYou', { play: playLabel })
+      : t('game.fiveCardPlayOther', { name: player?.name || 'Player', play: playLabel });
+    updateHeat(Math.min(fiveCardPlayIntensity(play), 40), t('game.fiveCardPlayHeat'));
     logState(g('log.warn', { note }));
-    updateHeat(8, t('game.fiveCardPartyHeat'));
-    burstPartyCelebration(player.isHuman ? 32 : 22);
-    queueFiveCardPartyFlash(playerIndex);
+    burstPartyCelebration(fiveCardPlayIntensity(play));
+    queueFiveCardPlayFlash();
   }
 
   function queueLastCardFlash(playerIndex) {
@@ -4836,9 +4808,6 @@
       if (!seedBaseline && count === 1 && prev !== 1 && !player.finished) {
         announceLastCard(index);
       }
-      if (!seedBaseline && count === 5 && prev > 5 && !player.finished) {
-        announceFiveCards(index);
-      }
       state.lastHandCounts[key] = count;
     });
   }
@@ -4895,9 +4864,8 @@
       if (isSelf && !state.liveRoom?.code) return;
       const handCount = player.hand.length;
       const isLastCard = !player.finished && handCount === 1;
-      const isFiveCardParty = !player.finished && handCount === 5;
       const row = document.createElement('div');
-      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}${isLastCard ? ' last-card' : ''}${isFiveCardParty ? ' five-card-party' : ''}`;
+      row.className = `opponent-row${isSelf ? ' self' : ''}${index === state.currentPlayer && !state.gameOver ? ' current' : ''}${player.finished ? ' finished' : ''}${player.connected === false ? ' disconnected' : ''}${isLastCard ? ' last-card' : ''}`;
       row.dataset.playerIndex = String(index);
       if (player.characterId) row.dataset.characterId = player.characterId;
       const avatar = document.createElement('div');
@@ -4928,7 +4896,7 @@
       coins.innerHTML = `${coinIcon()} ${playerCoins(player, index)}`;
       const cards = document.createElement('span');
       cards.className = 'opponent-cards';
-      if (isLastCard || isFiveCardParty) {
+      if (isLastCard) {
         cards.hidden = true;
       } else {
         cards.textContent = player.finished ? t('game.out') : t('game.cards', { count: player.hand.length });
@@ -4941,7 +4909,6 @@
       stack.appendChild(nameRow);
       stack.appendChild(stats);
       if (isLastCard) mountLastCardCallout(row);
-      else if (isFiveCardParty) mountFiveCardCallout(row);
       row.appendChild(avatar);
       row.appendChild(stack);
       row.appendChild(online);
@@ -4953,11 +4920,14 @@
     els.trickPlay.innerHTML = '';
     if (!state.trick.play) {
       els.trickPlay.classList.add('empty');
+      els.trickPlay.classList.remove('five-card-play');
       els.trickPlay.textContent = state.firstTrick ? t('game.trickEmptyOpening') : t('game.trickEmptyOpen');
       els.trickMeta.textContent = '';
       return;
     }
     els.trickPlay.classList.remove('empty');
+    if (state.trick.play.count === 5) els.trickPlay.classList.add('five-card-play');
+    else els.trickPlay.classList.remove('five-card-play');
     state.trick.play.cards.forEach(card => {
       const tile = renderCardTile(card, false);
       tile.disabled = true;
@@ -5708,16 +5678,10 @@
     const handCard = document.querySelector('.hand-card');
     const handHead = document.querySelector('.hand-head');
     handHead?.querySelector('.last-card-badge--you')?.remove();
-    handHead?.querySelector('.five-card-badge--you')?.remove();
-    handCard?.classList.remove('five-card-party');
     if (!state.gameOver && human.hand.length === 1) {
       handCard?.classList.add('last-card');
       if (handHead) renderLastCardBadge(handHead, t('game.lastCard'), 'last-card-badge--you');
       announceLastCard(state.humanIndex);
-    } else if (!state.gameOver && human.hand.length === 5) {
-      handCard?.classList.add('five-card-party');
-      if (handHead) renderFiveCardBadge(handHead, t('game.fiveCardParty'), 'five-card-badge--you');
-      announceFiveCards(state.humanIndex);
     } else {
       handCard?.classList.remove('last-card');
     }
@@ -5735,7 +5699,7 @@
     updateStatus();
     renderCoinHud();
     applyPendingLastCardFlash();
-    applyPendingFiveCardPartyFlash();
+    applyPendingFiveCardPlayFlash();
     els.sparkCount.textContent = String(state.sparks);
     els.roundCount.textContent = String(state.round);
     els.heatFill.style.width = `${state.heat}%`;
@@ -5843,12 +5807,10 @@
     updateHeat(Math.min(heatBoost, 40), comment);
     playUiSound(player.isHuman ? 'cardPlace' : 'ai');
     if (play.count === 5) {
-      sparkle(2);
-      renderConfetti(14 + heatBoost / 2);
+      celebrateFiveCardPlay(playerIndex, play);
     } else {
       sparkle(1);
     }
-    if (player.hand.length === 5) announceFiveCards(playerIndex);
     if (player.hand.length === 2) updateHeat(7, g('log.twoCards', { name: player.name }));
     if (player.hand.length === 1) announceLastCard(playerIndex);
     if (finishIfNeeded(playerIndex)) return;
@@ -6414,6 +6376,7 @@
     if (!game) return;
     cancelAiTimer();
     document.querySelector('#help-dialog')?.close?.();
+    const prevTrickKey = trickPlayCelebrationKey(state.trick?.play, state.trick?.leader);
     state.liveRoom = {
       code: room?.code || state.liveRoom?.code,
       playerId: game.playerId,
@@ -6465,8 +6428,7 @@
       state.liveRoomCardSyncKey = cardSyncKey;
       state.lastHandCounts = {};
       state.lastCardNotified = new Set();
-      state.fiveCardNotified = new Set();
-      state.fiveCardFlashIndex = null;
+      state.lastSeenTrickKey = null;
     }
     if (game.round === 1 && game.firstTrick && !game.trick?.play && shuffleKey !== state.lastShuffleKey) {
       state.lastShuffleKey = shuffleKey;
@@ -6478,6 +6440,15 @@
     state.gameOver = Boolean(game.gameOver);
     state.busy = false;
     syncLiveLastCardFromGame(game);
+    const nextTrickKey = trickPlayCelebrationKey(state.trick?.play, state.trick?.leader);
+    if (state.lastSeenTrickKey == null) {
+      state.lastSeenTrickKey = nextTrickKey || null;
+    } else if (nextTrickKey && nextTrickKey !== prevTrickKey && state.trick?.play?.count === 5) {
+      celebrateFiveCardPlay(state.trick.leader, state.trick.play);
+      state.lastSeenTrickKey = nextTrickKey;
+    } else {
+      state.lastSeenTrickKey = nextTrickKey || null;
+    }
     els.playerCount.value = String(game.players.length);
     showGameScreen();
     if (state.liveRoom?.code) restoreVoiceInRoom();
@@ -7124,13 +7095,11 @@
       }[play.kind] || 6;
       updateHeat(Math.min(heatBoost, 40), comment);
       if (play.count === 5) {
-        sparkle(3);
-        renderConfetti(18 + heatBoost / 2);
+        celebrateFiveCardPlay(state.humanIndex, play);
       } else {
         sparkle(1);
       }
       clearSelection();
-      if (getHumanPlayer().hand.length === 5) announceFiveCards(state.humanIndex);
       if (getHumanPlayer().hand.length === 2) updateHeat(8, 'You are down to 2 cards.');
       if (getHumanPlayer().hand.length === 1) announceLastCard(state.humanIndex);
       if (finishIfNeeded(state.humanIndex)) {

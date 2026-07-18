@@ -151,30 +151,7 @@
   margin-left: 0 !important;
 }
 
-/* Five cards left — larger party callouts in private rooms */
-#game-screen.private-room-mode .five-card-callout {
-  top: -14px !important;
-  min-width: 108px !important;
-  padding: 5px 14px !important;
-  font-size: 11px !important;
-  letter-spacing: 0.12em !important;
-}
-
-#game-screen.private-room-mode .five-card-badge,
-#game-screen.private-room-mode .five-card-badge--you {
-  padding: 3px 11px !important;
-  font-size: 11px !important;
-  letter-spacing: 0.1em !important;
-}
-
-#game-screen.private-room-mode .opponent-row.five-card-party {
-  min-height: 58px !important;
-  padding-top: 10px !important;
-}
-
-#game-screen.private-room-mode .opponent-row.five-card-party .opponent-name {
-  font-size: 13px !important;
-}
+/* Private room voice panel placement */
 
 body.live-room-active .voice-panel {
   top: calc(env(safe-area-inset-top, 0px) + 118px) !important;
@@ -234,12 +211,6 @@ body.live-room-active .voice-panel {
 
   #game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-suit {
     font-size: clamp(30px, 7.6vw, 36px) !important;
-  }
-
-  #game-screen.private-room-mode .five-card-callout {
-    top: -12px !important;
-    min-width: 100px !important;
-    font-size: 10px !important;
   }
 }
 
