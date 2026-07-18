@@ -117,21 +117,63 @@
 
 #game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) {
   gap: 0 !important;
-  padding: 6px 0 6px !important;
+  padding: 8px 2px 6px !important;
 }
 
 #game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-tile {
-  width: clamp(62px, 15.5vw, 76px) !important;
-  height: clamp(86px, 21.5vw, 104px) !important;
-  min-width: clamp(62px, 15.5vw, 76px) !important;
-  max-width: clamp(62px, 15.5vw, 76px) !important;
-  flex: 0 0 clamp(62px, 15.5vw, 76px) !important;
-  margin-left: clamp(-14px, -3.4vw, -11px) !important;
+  width: clamp(72px, 18vw, 88px) !important;
+  height: clamp(100px, 25vw, 120px) !important;
+  min-width: clamp(72px, 18vw, 88px) !important;
+  max-width: clamp(72px, 18vw, 88px) !important;
+  flex: 0 0 clamp(72px, 18vw, 88px) !important;
+  margin-left: clamp(-16px, -3.8vw, -12px) !important;
+  border-radius: 14px !important;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+
+#game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-rank {
+  font-size: clamp(24px, 6.2vw, 30px) !important;
+  font-weight: 950 !important;
+}
+
+#game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-suit-small {
+  font-size: clamp(18px, 4.6vw, 22px) !important;
+}
+
+#game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-suit {
+  font-size: clamp(32px, 8vw, 38px) !important;
 }
 
 #game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(4):last-child) .card-tile:first-child,
 #game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-tile:first-child {
   margin-left: 0 !important;
+}
+
+/* Five cards left — larger party callouts in private rooms */
+#game-screen.private-room-mode .five-card-callout {
+  top: -14px !important;
+  min-width: 108px !important;
+  padding: 5px 14px !important;
+  font-size: 11px !important;
+  letter-spacing: 0.12em !important;
+}
+
+#game-screen.private-room-mode .five-card-badge,
+#game-screen.private-room-mode .five-card-badge--you {
+  padding: 3px 11px !important;
+  font-size: 11px !important;
+  letter-spacing: 0.1em !important;
+}
+
+#game-screen.private-room-mode .opponent-row.five-card-party {
+  min-height: 58px !important;
+  padding-top: 10px !important;
+}
+
+#game-screen.private-room-mode .opponent-row.five-card-party .opponent-name {
+  font-size: 13px !important;
 }
 
 body.live-room-active .voice-panel {
@@ -173,12 +215,31 @@ body.live-room-active .voice-panel {
   }
 
   #game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-tile {
-    width: clamp(58px, 14.8vw, 72px) !important;
-    height: clamp(80px, 20.5vw, 98px) !important;
-    min-width: clamp(58px, 14.8vw, 72px) !important;
-    max-width: clamp(58px, 14.8vw, 72px) !important;
-    flex: 0 0 clamp(58px, 14.8vw, 72px) !important;
-    margin-left: clamp(-12px, -3.2vw, -9px) !important;
+    width: clamp(66px, 16.8vw, 82px) !important;
+    height: clamp(92px, 23.5vw, 112px) !important;
+    min-width: clamp(66px, 16.8vw, 82px) !important;
+    max-width: clamp(66px, 16.8vw, 82px) !important;
+    flex: 0 0 clamp(66px, 16.8vw, 82px) !important;
+    margin-left: clamp(-14px, -3.6vw, -10px) !important;
+    border-radius: 13px !important;
+  }
+
+  #game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-rank {
+    font-size: clamp(22px, 5.8vw, 28px) !important;
+  }
+
+  #game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-suit-small {
+    font-size: clamp(17px, 4.4vw, 21px) !important;
+  }
+
+  #game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-suit {
+    font-size: clamp(30px, 7.6vw, 36px) !important;
+  }
+
+  #game-screen.private-room-mode .five-card-callout {
+    top: -12px !important;
+    min-width: 100px !important;
+    font-size: 10px !important;
   }
 }
 
