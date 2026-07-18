@@ -1,4 +1,4 @@
-const CACHE_NAME = 'big2go-v218';
+const CACHE_NAME = 'big2go-v221';
 const ASSETS = [
   './',
   './index.html',

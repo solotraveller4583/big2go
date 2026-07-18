@@ -1,21 +1,24 @@
-/* Final mobile-room voice placement overrides. Loaded after redesign CSS. */
+/* Voice lives inside the room comms bar — no floating overlay on the table. */
+body.live-room-active .voice-panel,
+#game-screen.b2g-match:not(.hidden) .voice-panel {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  width: auto !important;
+  max-width: none !important;
+  z-index: auto !important;
+}
+
 body.live-room-active .voice-panel:not(.hidden),
 #game-screen.b2g-match:not(.hidden) .voice-panel {
-  position: fixed !important;
-  top: max(58px, calc(env(safe-area-inset-top, 0px) + 58px)) !important;
-  right: 8px !important;
-  width: auto !important;
-  max-width: 86px !important;
-  z-index: 120 !important;
   display: flex !important;
 }
+
 body.live-room-active .voice-panel.hidden,
-#game-screen.b2g-match:not(.hidden) .voice-panel.hidden { display: none !important; }
-#game-screen.b2g-match:not(.hidden) .voice-speaking-banner { display: none !important; }
-@media (max-width: 380px) {
-  body.live-room-active .voice-panel:not(.hidden),
-  #game-screen.b2g-match:not(.hidden) .voice-panel {
-    top: max(54px, calc(env(safe-area-inset-top, 0px) + 54px)) !important;
-    right: 6px !important;
-  }
+#game-screen.b2g-match:not(.hidden) .voice-panel.hidden {
+  display: none !important;
+}
+
+#game-screen.b2g-match:not(.hidden) .voice-speaking-banner {
+  display: none !important;
 }
