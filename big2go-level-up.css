@@ -185,10 +185,11 @@ body.level-up-active .app-shell {
     var(--journey-accent)
   );
   background-size: 280% 280%;
-  animation: levelUpFrameShift 4.8s ease infinite;
+  animation: levelUpFrameShift 3.6s ease infinite;
   filter:
-    drop-shadow(0 0 14px color-mix(in srgb, var(--journey-accent) 55%, transparent))
-    drop-shadow(0 0 28px color-mix(in srgb, var(--journey-tertiary) 35%, transparent));
+    drop-shadow(0 0 18px color-mix(in srgb, var(--journey-accent) 62%, transparent))
+    drop-shadow(0 0 36px color-mix(in srgb, var(--journey-tertiary) 42%, transparent))
+    drop-shadow(0 0 52px color-mix(in srgb, var(--journey-secondary) 28%, transparent));
 }
 
 @keyframes levelUpFrameShift {
@@ -198,7 +199,7 @@ body.level-up-active .app-shell {
 
 .level-up-neon-frame__glow {
   position: absolute;
-  inset: -12px;
+  inset: -16px;
   border-radius: 36px;
   background: conic-gradient(
     from 0deg,
@@ -207,9 +208,9 @@ body.level-up-active .app-shell {
     var(--journey-tertiary),
     var(--journey-accent)
   );
-  opacity: 0.28;
-  filter: blur(16px);
-  animation: levelUpRaysSpin 8s linear infinite;
+  opacity: 0.38;
+  filter: blur(18px);
+  animation: levelUpRaysSpin 6s linear infinite;
   z-index: 0;
   pointer-events: none;
 }
@@ -238,19 +239,19 @@ body.level-up-active .app-shell {
 
 @keyframes neonBulbChase {
   0%, 8%, 100% {
-    opacity: 0.15;
+    opacity: 0.12;
     transform: scale(0.72);
     box-shadow: none;
     filter: brightness(0.7);
   }
   4% {
     opacity: 1;
-    transform: scale(1.35);
+    transform: scale(1.45);
     box-shadow:
-      0 0 8px var(--bulb-color),
-      0 0 16px var(--bulb-color),
-      0 0 28px color-mix(in srgb, var(--bulb-color) 65%, white);
-    filter: brightness(1.35);
+      0 0 10px var(--bulb-color),
+      0 0 22px var(--bulb-color),
+      0 0 36px color-mix(in srgb, var(--bulb-color) 70%, white);
+    filter: brightness(1.45);
   }
 }
 
@@ -555,22 +556,32 @@ body.level-up-active .app-shell {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   overflow: visible;
+  --rank-journey-from: 4%;
+  --rank-journey-to: 4%;
 }
 
 .level-up-rank-fill {
   display: block;
   height: 100%;
+  width: var(--rank-journey-from);
   border-radius: inherit;
   background: linear-gradient(90deg, var(--journey-secondary), var(--journey-accent), var(--journey-tertiary));
   background-size: 200% 100%;
-  animation: levelUpTrackShimmer 2.4s linear infinite;
+  animation:
+    levelUpTrackShimmer 2.4s linear infinite,
+    levelUpRankFillTravel 1.05s cubic-bezier(0.2, 0.9, 0.2, 1) 0.42s forwards;
   box-shadow: 0 0 14px color-mix(in srgb, var(--journey-accent) 45%, transparent);
-  transition: width 0.9s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.level-up-rank-rail--static .level-up-rank-fill {
+  width: var(--rank-journey-to);
+  animation: levelUpTrackShimmer 2.4s linear infinite;
 }
 
 .level-up-rank-pin {
   position: absolute;
   top: 50%;
+  left: var(--rank-journey-from);
   transform: translate(-50%, -50%);
   padding: 2px 7px;
   border-radius: 999px;
@@ -580,7 +591,24 @@ body.level-up-active .app-shell {
   background: var(--journey-accent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--journey-accent) 55%, transparent);
   white-space: nowrap;
-  animation: levelUpRankPinPop 0.65s cubic-bezier(0.2, 0.9, 0.2, 1.15) 0.35s both;
+  animation:
+    levelUpRankPinTravel 1.05s cubic-bezier(0.2, 0.9, 0.2, 1) 0.42s forwards,
+    levelUpRankPinPop 0.65s cubic-bezier(0.2, 0.9, 0.2, 1.15) 1.05s both;
+}
+
+.level-up-rank-rail--static .level-up-rank-pin {
+  left: var(--rank-journey-to);
+  animation: none;
+}
+
+@keyframes levelUpRankFillTravel {
+  from { width: var(--rank-journey-from); }
+  to { width: var(--rank-journey-to); }
+}
+
+@keyframes levelUpRankPinTravel {
+  from { left: var(--rank-journey-from); }
+  to { left: var(--rank-journey-to); }
 }
 
 @keyframes levelUpRankPinPop {
@@ -983,7 +1011,85 @@ body.level-up-active .app-shell {
   --journey-premier: #dce8f8;
 }
 
-/* ── Carnival light strands (top & bottom) ── */
+/* ── Page neon shine (replaces top/bottom bubble strands) ── */
+.level-up-carnival-strands,
+.level-up-running-lights {
+  display: none !important;
+}
+
+.level-up-neon-shine {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -8%, color-mix(in srgb, var(--journey-accent) 34%, transparent), transparent 62%),
+    radial-gradient(ellipse 70% 45% at 8% 92%, color-mix(in srgb, var(--journey-secondary) 24%, transparent), transparent 58%),
+    radial-gradient(ellipse 70% 45% at 92% 88%, color-mix(in srgb, var(--journey-tertiary) 22%, transparent), transparent 58%);
+  animation: levelUpNeonShinePulse 3.4s ease-in-out infinite alternate;
+}
+
+.level-up-neon-shine::before,
+.level-up-neon-shine::after {
+  content: '';
+  position: absolute;
+  inset: -35%;
+  border-radius: 50%;
+  opacity: 0.16;
+  filter: blur(42px);
+  mix-blend-mode: screen;
+  animation: levelUpNeonShineSweep 10s linear infinite;
+}
+
+.level-up-neon-shine::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    var(--journey-accent) 48deg,
+    transparent 96deg,
+    var(--journey-tertiary) 168deg,
+    transparent 228deg,
+    var(--journey-secondary) 300deg,
+    transparent 360deg
+  );
+}
+
+.level-up-neon-shine::after {
+  background: conic-gradient(
+    from 120deg,
+    transparent 0deg,
+    var(--journey-tertiary) 60deg,
+    transparent 120deg,
+    var(--journey-accent) 210deg,
+    transparent 280deg,
+    var(--journey-secondary) 330deg,
+    transparent 360deg
+  );
+  animation-direction: reverse;
+  animation-duration: 14s;
+}
+
+@keyframes levelUpNeonShinePulse {
+  0% { opacity: 0.72; filter: brightness(0.92); }
+  100% { opacity: 1; filter: brightness(1.12); }
+}
+
+@keyframes levelUpNeonShineSweep {
+  to { transform: rotate(360deg); }
+}
+
+.level-up-screen.is-celebrating .level-up-neon-shine {
+  animation-duration: 2.2s;
+}
+
+.level-up-screen.is-celebrating .level-up-neon-shine::before,
+.level-up-screen.is-celebrating .level-up-neon-shine::after {
+  opacity: 0.24;
+  filter: blur(36px);
+}
+
+/* ── Carnival light strands (deprecated — hidden) ── */
 .level-up-carnival-strands {
   position: absolute;
   inset: 0;
@@ -1449,6 +1555,9 @@ body.level-up-active .app-shell {
   .level-up-screen.is-celebrating .level-up-avatar-wrap,
   .level-up-rank-fill,
   .level-up-rank-pin,
+  .level-up-neon-shine,
+  .level-up-neon-shine::before,
+  .level-up-neon-shine::after,
   .level-up-rank-stop--current .level-up-rank-node,
   .level-up-rank-stop--unlocked .level-up-rank-node,
   .level-up-rank-unlock,

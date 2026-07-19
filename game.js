@@ -1837,9 +1837,9 @@
           <p class="level-up-rank-path-label">${t('levelUp.journeyPath')}</p>
           <span class="level-up-rank-path-step">${t('levelUp.tierProgress', { current: level, step: tierStep, steps: tierSpan })}</span>
         </div>
-        <div class="level-up-rank-rail" aria-hidden="true">
-          <span class="level-up-rank-fill" style="width:${fill}%"></span>
-          <span class="level-up-rank-pin" style="left:${fill}%">Lv ${level}</span>
+        <div class="level-up-rank-rail level-up-rank-rail--static" style="--rank-journey-from:${fill}%;--rank-journey-to:${fill}%" aria-hidden="true">
+          <span class="level-up-rank-fill"></span>
+          <span class="level-up-rank-pin">Lv ${level}</span>
         </div>
         <div class="level-up-rank-stops">${stops}</div>
       </div>`;
@@ -3250,7 +3250,23 @@
 
   function getRankJourneyFill(level) {
     const lv = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(level) || STARTING_LEVEL));
-    return Math.min(100, Math.max(4, ((lv - 1) / (MAX_LEVEL - 1)) * 100));
+    const tierIndex = LEVEL_TIERS.findIndex(entry => lv >= entry.min && lv <= entry.max);
+    const tier = LEVEL_TIERS[tierIndex >= 0 ? tierIndex : 0];
+    const segmentCount = LEVEL_TIERS.length;
+    const segmentWidth = 100 / segmentCount;
+    const tierStart = tierIndex * segmentWidth;
+
+    if (tier.max === tier.min) {
+      return Math.min(100, Math.max(4, 100 - segmentWidth * 0.08));
+    }
+
+    const tierSpan = Math.max(1, tier.max - tier.min + 1);
+    const step = Math.max(0, lv - tier.min);
+    const innerPadding = segmentWidth * 0.1;
+    const usable = Math.max(1, segmentWidth - innerPadding * 2);
+    const progress = tierSpan <= 1 ? 1 : step / (tierSpan - 1);
+    const position = tierStart + innerPadding + progress * usable;
+    return Math.min(100, Math.max(4, position));
   }
 
   function getTierStopState(tierEntry, level, tierPromo, previousLevel) {
@@ -3266,6 +3282,7 @@
     const level = Math.max(STARTING_LEVEL, Math.min(MAX_LEVEL, Number(levelUp?.level) || STARTING_LEVEL));
     const previousLevel = Math.max(STARTING_LEVEL, Number(levelUp?.previousLevel) || level - 1);
     const fill = getRankJourneyFill(level);
+    const fromFill = getRankJourneyFill(previousLevel);
     const tierSpan = tier.max - tier.min + 1;
     const tierStep = Math.max(1, level - tier.min + 1);
     const stops = LEVEL_TIERS.map(entry => {
@@ -3284,9 +3301,9 @@
           <p class="level-up-rank-path-label">${t('levelUp.journeyPath')}</p>
           <span class="level-up-rank-path-step">${t('levelUp.tierProgress', { current: level, step: tierStep, steps: tierSpan })}</span>
         </div>
-        <div class="level-up-rank-rail" aria-hidden="true">
-          <span class="level-up-rank-fill" style="width:${fill}%"></span>
-          <span class="level-up-rank-pin" style="left:${fill}%">Lv ${level}</span>
+        <div class="level-up-rank-rail" style="--rank-journey-from:${fromFill}%;--rank-journey-to:${fill}%" aria-hidden="true">
+          <span class="level-up-rank-fill"></span>
+          <span class="level-up-rank-pin">Lv ${level}</span>
         </div>
         <div class="level-up-rank-stops">${stops}</div>
         ${tierPromo ? `<p class="level-up-rank-unlock">${t('levelUp.rankUnlocked')}</p>` : ''}
@@ -3534,8 +3551,6 @@
     const copy = getLevelUpCopy(levelUp);
     const fxRoll = createLevelUpFxRoll(levelUp);
     buildLevelUpMarquee(levelUp, theme, copy);
-    buildLevelUpCarnivalStrands(theme, fxRoll);
-    buildLevelUpRunningLights(theme, fxRoll);
 
     els.levelUp.dataset.level = String(style.level);
     els.levelUp.dataset.tier = style.tier.skill;
