@@ -1,0 +1,335 @@
+/* Big2Go — phone width support
+   Targets: iPhone 320/375/390/430, Android 360/412/480 */
+
+@media (max-width: 480px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+    overscroll-behavior-x: none;
+  }
+
+  .app-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding-left: max(8px, env(safe-area-inset-left)) !important;
+    padding-right: max(8px, env(safe-area-inset-right)) !important;
+  }
+
+  .panel,
+  #home-screen,
+  #game-screen,
+  #room-screen,
+  #profile-screen,
+  #session-complete-screen,
+  #result-story-screen,
+  #level-up-screen {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #game-screen.gameplay-premium:not(.hidden),
+  #game-screen.b2g-match:not(.hidden) {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .blue-ribbon {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* iPhone SE — 320px */
+@media (max-width: 320px) {
+  :root {
+    --b2g-inset-x: 8px;
+    --b2g-card-peek: 18px;
+    --b2g-gp-pad-x: 8px;
+  }
+
+  #home-screen.landing-v3 {
+    --v3-mobile-inset: 8px;
+    --v3-mobile-gap: 4px;
+    --v3-row-header: 40px;
+    --v3-row-profile: 50px;
+    --v3-row-play: 42px;
+    --v3-row-actions: 46px;
+  }
+
+  #home-screen.landing-v3 .home-topbar.instant-topbar {
+    padding: 4px 6px;
+    gap: 4px;
+  }
+
+  #home-screen.landing-v3 .brand-pill,
+  #home-screen.landing-v3 .live-pill,
+  #home-screen.landing-v3 .settings-pill {
+    min-height: 34px;
+    padding-inline: 8px;
+    font-size: 0.72rem;
+  }
+
+  #home-screen.landing-v3 .hero-stage h1 {
+    font-size: clamp(1.45rem, 8vw, 1.75rem) !important;
+  }
+
+  #home-screen.landing-v3 .player-option.mode-card {
+    min-height: 50px;
+    padding: 4px 2px;
+  }
+
+  #home-screen.landing-v3 .player-option.mode-card strong {
+    font-size: 0.72rem;
+  }
+
+  #home-screen.landing-v3 .play-now {
+    font-size: 1rem;
+  }
+
+  #home-screen.landing-v3 .quick-actions .menu-card {
+    font-size: 0.68rem;
+    padding: 6px 4px;
+  }
+
+  #game-screen.gameplay-premium:not(.hidden) {
+    padding-left: var(--b2g-gp-pad-x) !important;
+    padding-right: var(--b2g-gp-pad-x) !important;
+    --gp-mobile-header: 58px;
+    --gp-mobile-opponents: 66px;
+    --gp-mobile-reactions: 50px;
+    --gp-mobile-dock: 112px;
+  }
+
+  #game-screen.gameplay-premium .match-topbar {
+    grid-template-columns: 40px 1fr 72px !important;
+    gap: 6px !important;
+  }
+
+  #game-screen.gameplay-premium .match-title .eyebrow {
+    font-size: 9px !important;
+    letter-spacing: 0.1em !important;
+  }
+
+  #game-screen.gameplay-premium .match-title h2 {
+    font-size: 11px !important;
+  }
+
+  #game-screen.gameplay-premium .coin-hud {
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+  }
+
+  #game-screen.gameplay-premium .action-dock .secondary {
+    font-size: 10px !important;
+    padding-inline: 4px !important;
+  }
+
+  #game-screen.gameplay-premium .play-action {
+    font-size: 15px !important;
+  }
+
+  #game-screen.gameplay-premium.b2g-match #hand,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand {
+    --card-peek: var(--b2g-card-peek) !important;
+  }
+
+  #game-screen.gameplay-premium #trick-play .card-tile {
+    width: clamp(44px, 13.8vw, 52px) !important;
+    height: clamp(62px, 19.2vw, 72px) !important;
+    min-width: clamp(44px, 13.8vw, 52px) !important;
+    flex: 0 0 clamp(44px, 13.8vw, 52px) !important;
+  }
+
+  #game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) .card-tile {
+    width: clamp(48px, 15vw, 56px) !important;
+    height: clamp(66px, 20.5vw, 76px) !important;
+    min-width: clamp(48px, 15vw, 56px) !important;
+    flex: 0 0 clamp(48px, 15vw, 56px) !important;
+    margin-left: clamp(-11px, -3.4vw, -8px) !important;
+  }
+
+  #game-screen.private-room-mode #back-button.back-button {
+    min-width: 50px !important;
+    max-width: 72px !important;
+    padding: 0 8px 0 7px !important;
+  }
+
+  #game-screen.private-room-mode .back-button__label {
+    font-size: 10px !important;
+  }
+
+  #game-screen.private-room-mode #trick-play:has(.card-tile:nth-child(5):last-child) .card-tile {
+    width: clamp(54px, 16.8vw, 62px) !important;
+    height: clamp(74px, 23vw, 86px) !important;
+    min-width: clamp(54px, 16.8vw, 62px) !important;
+    max-width: clamp(54px, 16.8vw, 62px) !important;
+    flex: 0 0 clamp(54px, 16.8vw, 62px) !important;
+    margin-left: clamp(-12px, -3.6vw, -9px) !important;
+  }
+
+  body.live-room-active .voice-panel {
+    top: calc(env(safe-area-inset-top, 0px) + 112px) !important;
+    right: 8px !important;
+  }
+}
+
+/* Android — 360px */
+@media (min-width: 321px) and (max-width: 360px) {
+  :root {
+    --b2g-inset-x: 9px;
+    --b2g-card-peek: 20px;
+    --b2g-gp-pad-x: 9px;
+  }
+
+  #home-screen.landing-v3 {
+    --v3-mobile-inset: 9px;
+  }
+
+  #game-screen.gameplay-premium:not(.hidden) {
+    padding-left: var(--b2g-gp-pad-x) !important;
+    padding-right: var(--b2g-gp-pad-x) !important;
+  }
+
+  #game-screen.gameplay-premium.b2g-match #hand,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand {
+    --card-peek: var(--b2g-card-peek) !important;
+  }
+
+  #game-screen.gameplay-premium .action-dock .secondary {
+    font-size: 11px !important;
+  }
+}
+
+/* iPhone — 375px */
+@media (min-width: 361px) and (max-width: 375px) {
+  :root {
+    --b2g-inset-x: 10px;
+    --b2g-card-peek: 22px;
+    --b2g-gp-pad-x: 10px;
+  }
+
+  #home-screen.landing-v3 {
+    --v3-mobile-inset: 10px;
+  }
+
+  #game-screen.gameplay-premium.b2g-match #hand,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand {
+    --card-peek: var(--b2g-card-peek) !important;
+  }
+}
+
+/* iPhone — 390px */
+@media (min-width: 376px) and (max-width: 390px) {
+  :root {
+    --b2g-inset-x: 10px;
+    --b2g-card-peek: 23px;
+    --b2g-gp-pad-x: 10px;
+  }
+
+  #home-screen.landing-v3 {
+    --v3-mobile-inset: 10px;
+  }
+
+  #game-screen.gameplay-premium.b2g-match #hand,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand {
+    --card-peek: var(--b2g-card-peek) !important;
+  }
+}
+
+/* Android — 412px */
+@media (min-width: 391px) and (max-width: 412px) {
+  :root {
+    --b2g-inset-x: 10px;
+    --b2g-card-peek: 24px;
+    --b2g-gp-pad-x: 10px;
+  }
+
+  #game-screen.gameplay-premium.b2g-match #hand,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand {
+    --card-peek: var(--b2g-card-peek) !important;
+  }
+}
+
+/* iPhone — 430px */
+@media (min-width: 413px) and (max-width: 430px) {
+  :root {
+    --b2g-inset-x: 10px;
+    --b2g-card-peek: 26px;
+    --b2g-gp-pad-x: 10px;
+  }
+
+  #game-screen.gameplay-premium.b2g-match #hand,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand {
+    --card-peek: var(--b2g-card-peek) !important;
+  }
+}
+
+/* Android large — 480px */
+@media (min-width: 431px) and (max-width: 480px) {
+  :root {
+    --b2g-inset-x: 12px;
+    --b2g-card-peek: 28px;
+    --b2g-gp-pad-x: 12px;
+  }
+
+  #home-screen.landing-v3 {
+    --v3-mobile-inset: 12px;
+  }
+
+  #game-screen.gameplay-premium:not(.hidden) {
+    padding-left: var(--b2g-gp-pad-x) !important;
+    padding-right: var(--b2g-gp-pad-x) !important;
+  }
+
+  #game-screen.gameplay-premium.b2g-match #hand,
+  #game-screen.gameplay-premium.b2g-match:has(.room-chat-panel.hidden) #hand {
+    --card-peek: var(--b2g-card-peek) !important;
+  }
+
+  #game-screen.gameplay-premium #trick-play:has(.card-tile:nth-child(5):last-child) .card-tile {
+    width: clamp(58px, 12.1vw, 68px) !important;
+    height: clamp(80px, 16.8vw, 94px) !important;
+    min-width: clamp(58px, 12.1vw, 68px) !important;
+    flex: 0 0 clamp(58px, 12.1vw, 68px) !important;
+  }
+}
+
+/* Shared overflow guards for all supported phone widths */
+@media (max-width: 480px) {
+  #home-screen.landing-v3 .player-panel.table-select,
+  #home-screen.landing-v3 .quick-actions,
+  #home-screen.landing-v3 .player-setup-grid {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #game-screen.gameplay-premium .match-title h2,
+  #game-screen.gameplay-premium .match-title .eyebrow,
+  #game-screen.gameplay-premium .trick-help,
+  #game-screen.gameplay-premium .opponent-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #game-screen.gameplay-premium .reaction-row {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #room-screen .room-card,
+  #room-screen .room-actions,
+  #room-screen .room-player-list {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  dialog,
+  .language-welcome-card {
+    max-width: calc(100vw - 16px) !important;
+  }
+}
