@@ -556,32 +556,23 @@ body.level-up-active .app-shell {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   overflow: visible;
-  --rank-journey-from: 4%;
-  --rank-journey-to: 4%;
 }
 
 .level-up-rank-fill {
   display: block;
   height: 100%;
-  width: var(--rank-journey-from);
+  width: 0;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--journey-secondary), var(--journey-accent), var(--journey-tertiary));
   background-size: 200% 100%;
-  animation:
-    levelUpTrackShimmer 2.4s linear infinite,
-    levelUpRankFillTravel 1.05s cubic-bezier(0.2, 0.9, 0.2, 1) 0.42s forwards;
-  box-shadow: 0 0 14px color-mix(in srgb, var(--journey-accent) 45%, transparent);
-}
-
-.level-up-rank-rail--static .level-up-rank-fill {
-  width: var(--rank-journey-to);
   animation: levelUpTrackShimmer 2.4s linear infinite;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--journey-accent) 45%, transparent);
 }
 
 .level-up-rank-pin {
   position: absolute;
   top: 50%;
-  left: var(--rank-journey-from);
+  left: 0;
   transform: translate(-50%, -50%);
   padding: 2px 7px;
   border-radius: 999px;
@@ -591,24 +582,10 @@ body.level-up-active .app-shell {
   background: var(--journey-accent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--journey-accent) 55%, transparent);
   white-space: nowrap;
-  animation:
-    levelUpRankPinTravel 1.05s cubic-bezier(0.2, 0.9, 0.2, 1) 0.42s forwards,
-    levelUpRankPinPop 0.65s cubic-bezier(0.2, 0.9, 0.2, 1.15) 1.05s both;
 }
 
-.level-up-rank-rail--static .level-up-rank-pin {
-  left: var(--rank-journey-to);
-  animation: none;
-}
-
-@keyframes levelUpRankFillTravel {
-  from { width: var(--rank-journey-from); }
-  to { width: var(--rank-journey-to); }
-}
-
-@keyframes levelUpRankPinTravel {
-  from { left: var(--rank-journey-from); }
-  to { left: var(--rank-journey-to); }
+.level-up-rank-pin--pop {
+  animation: levelUpRankPinPop 0.65s cubic-bezier(0.2, 0.9, 0.2, 1.15) both;
 }
 
 @keyframes levelUpRankPinPop {

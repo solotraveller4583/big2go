@@ -1837,9 +1837,9 @@
           <p class="level-up-rank-path-label">${t('levelUp.journeyPath')}</p>
           <span class="level-up-rank-path-step">${t('levelUp.tierProgress', { current: level, step: tierStep, steps: tierSpan })}</span>
         </div>
-        <div class="level-up-rank-rail level-up-rank-rail--static" style="--rank-journey-from:${fill}%;--rank-journey-to:${fill}%" aria-hidden="true">
-          <span class="level-up-rank-fill"></span>
-          <span class="level-up-rank-pin">Lv ${level}</span>
+        <div class="level-up-rank-rail level-up-rank-rail--static" aria-hidden="true">
+          <span class="level-up-rank-fill" style="width:${fill}%"></span>
+          <span class="level-up-rank-pin" style="left:${fill}%">Lv ${level}</span>
         </div>
         <div class="level-up-rank-stops">${stops}</div>
       </div>`;
@@ -3257,16 +3257,71 @@
     const tierStart = tierIndex * segmentWidth;
 
     if (tier.max === tier.min) {
-      return Math.min(100, Math.max(4, 100 - segmentWidth * 0.08));
+      return Math.min(100, Math.max(4, tierStart + segmentWidth * 0.72));
     }
 
     const tierSpan = Math.max(1, tier.max - tier.min + 1);
     const step = Math.max(0, lv - tier.min);
-    const innerPadding = segmentWidth * 0.1;
+    const innerPadding = segmentWidth * 0.14;
     const usable = Math.max(1, segmentWidth - innerPadding * 2);
-    const progress = tierSpan <= 1 ? 1 : step / (tierSpan - 1);
+    const progress = tierSpan <= 1 ? 1 : step / Math.max(1, tierSpan - 1);
     const position = tierStart + innerPadding + progress * usable;
     return Math.min(100, Math.max(4, position));
+  }
+
+  function setRankJourneyRailPosition(rail, percent) {
+    if (!rail) return;
+    const clamped = Math.max(0, Math.min(100, Number(percent) || 0));
+    const pct = `${clamped}%`;
+    const fill = rail.querySelector('.level-up-rank-fill');
+    const pin = rail.querySelector('.level-up-rank-pin');
+    if (fill) fill.style.width = pct;
+    if (pin) pin.style.left = pct;
+  }
+
+  function animateRankJourneyRail(rail, fromPercent, toPercent, delayMs = 420) {
+    if (!rail || rail.classList.contains('level-up-rank-rail--static')) return;
+
+    if (rail._rankJourneyAnimFrame) {
+      cancelAnimationFrame(rail._rankJourneyAnimFrame);
+      rail._rankJourneyAnimFrame = null;
+    }
+    if (rail._rankJourneyAnimTimeout) {
+      clearTimeout(rail._rankJourneyAnimTimeout);
+      rail._rankJourneyAnimTimeout = null;
+    }
+
+    const from = Math.max(0, Math.min(100, Number(fromPercent) || 0));
+    const to = Math.max(0, Math.min(100, Number(toPercent) || 0));
+    const pin = rail.querySelector('.level-up-rank-pin');
+    pin?.classList.remove('level-up-rank-pin--pop');
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (reducedMotion || from === to) {
+      setRankJourneyRailPosition(rail, to);
+      if (pin && !reducedMotion && from !== to) pin.classList.add('level-up-rank-pin--pop');
+      return;
+    }
+
+    setRankJourneyRailPosition(rail, from);
+    const duration = 1050;
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+    rail._rankJourneyAnimTimeout = window.setTimeout(() => {
+      rail._rankJourneyAnimTimeout = null;
+      const start = performance.now();
+      const tick = now => {
+        const t = Math.min(1, (now - start) / duration);
+        setRankJourneyRailPosition(rail, from + (to - from) * easeOut(t));
+        if (t < 1) {
+          rail._rankJourneyAnimFrame = requestAnimationFrame(tick);
+        } else {
+          rail._rankJourneyAnimFrame = null;
+          pin?.classList.add('level-up-rank-pin--pop');
+        }
+      };
+      rail._rankJourneyAnimFrame = requestAnimationFrame(tick);
+    }, Math.max(0, delayMs));
   }
 
   function getTierStopState(tierEntry, level, tierPromo, previousLevel) {
@@ -3301,9 +3356,9 @@
           <p class="level-up-rank-path-label">${t('levelUp.journeyPath')}</p>
           <span class="level-up-rank-path-step">${t('levelUp.tierProgress', { current: level, step: tierStep, steps: tierSpan })}</span>
         </div>
-        <div class="level-up-rank-rail" style="--rank-journey-from:${fromFill}%;--rank-journey-to:${fill}%" aria-hidden="true">
-          <span class="level-up-rank-fill"></span>
-          <span class="level-up-rank-pin">Lv ${level}</span>
+        <div class="level-up-rank-rail" data-journey-from="${fromFill}" data-journey-to="${fill}" aria-hidden="true">
+          <span class="level-up-rank-fill" style="width:${fromFill}%"></span>
+          <span class="level-up-rank-pin" style="left:${fromFill}%">Lv ${level}</span>
         </div>
         <div class="level-up-rank-stops">${stops}</div>
         ${tierPromo ? `<p class="level-up-rank-unlock">${t('levelUp.rankUnlocked')}</p>` : ''}
@@ -3747,6 +3802,14 @@
             <strong>${nextLabel}</strong>
           </div>
         </div>`;
+      const rail = els.levelUpJourneyStrip.querySelector('.level-up-rank-rail:not(.level-up-rank-rail--static)');
+      if (rail) {
+        animateRankJourneyRail(
+          rail,
+          Number(rail.dataset.journeyFrom),
+          Number(rail.dataset.journeyTo)
+        );
+      }
     }
   }
 
